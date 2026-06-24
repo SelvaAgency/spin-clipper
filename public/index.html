@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>spin-clipper</title>
+<style>
+  :root {
+    --bg: #110a1c;
+    --surface: #1b1130;
+    --surface-2: #241941;
+    --line: #382a5c;
+    --ink: #f1edfb;
+    --ink-dim: #a99bd6;
+    --violet: #7b4fd6;
+    --magenta: #e8418c;
+    --mono: "SF Mono", "JetBrains Mono", ui-monospace, Menlo, monospace;
+    --sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    background-image:
+      radial-gradient(circle at 15% 0%, rgba(123,79,214,0.18), transparent 45%),
+      radial-gradient(circle at 90% 20%, rgba(232,65,140,0.10), transparent 40%);
+    color: var(--ink);
+    font-family: var(--sans);
+    min-height: 100vh;
+  }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 48px 24px 96px; }
+
+  header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 8px; }
+  .brand { font-weight: 800; font-size: 15px; letter-spacing: 0.08em; color: var(--ink-dim); text-transform: uppercase; }
+  .brand b { color: var(--magenta); }
+  h1 { font-size: 28px; margin: 4px 0 4px; letter-spacing: -0.01em; }
+  .sub { color: var(--ink-dim); font-size: 15px; margin-bottom: 36px; line-height: 1.5; max-width: 56ch; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 28px;
+    margin-bottom: 24px;
+  }
+  .card h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-dim); margin: 0 0 18px; font-weight: 700; }
+
+  .moldura-toggle { display: flex; gap: 10px; margin-bottom: 22px; }
+  .moldura-toggle label {
+    flex: 1; border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px;
+    cursor: pointer; font-size: 13px; color: var(--ink-dim); transition: all .15s;
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .moldura-toggle label b { color: var(--ink); font-size: 14px; }
+  .moldura-toggle input { display: none; }
+  .moldura-toggle input:checked + span, .moldura-toggle label:has(input:checked) {
+    border-color: var(--violet); background: rgba(123,79,214,0.12); color: var(--ink);
+  }
+
+  .drop-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+  .drop {
+    position: relative;
+    border: 1.5px dashed var(--line);
+    border-radius: 10px;
+    padding: 22px 14px;
+    text-align: center;
+    font-size: 13px;
+    color: var(--ink-dim);
+    cursor: pointer;
+    transition: border-color .15s, background .15s;
+  }
+  .drop:hover { border-color: var(--violet); background: rgba(123,79,214,0.06); }
+  .drop.filled { border-color: var(--magenta); border-style: solid; color: var(--ink); background: rgba(232,65,140,0.06); }
+  .drop input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  .drop .label { display: block; font-weight: 600; margin-bottom: 2px; color: var(--ink); }
+
+  .outro-row { margin-top: 4px; }
+
+  .field { margin-top: 16px; }
+  .field label { display: block; font-size: 13px; color: var(--ink-dim); margin-bottom: 6px; }
+  .field input[type=number] {
+    width: 100px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 8px;
+    padding: 8px 10px; color: var(--ink); font-size: 14px;
+  }
+
+  button.run {
+    margin-top: 22px; width: 100%; padding: 14px; border: none; border-radius: 10px;
+    background: linear-gradient(135deg, var(--violet), var(--magenta));
+    color: white; font-weight: 700; font-size: 15px; cursor: pointer; letter-spacing: 0.01em;
+    transition: opacity .15s;
+  }
+  button.run:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .log {
+    font-family: var(--mono); font-size: 12.5px; color: #b9aee0;
+    background: #0c0716; border-radius: 10px; padding: 16px; max-height: 220px; overflow-y: auto;
+    white-space: pre-wrap; line-height: 1.6; display: none;
+  }
+  .log.show { display: block; margin-top: 18px; }
+  .log .ok { color: #6be3a3; }
+  .log .err { color: var(--magenta); }
+
+  .clips { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; margin-top: 18px; }
+  .clip { background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+  .clip video { width: 100%; display: block; background: black; aspect-ratio: 9/16; }
+  .clip .meta { padding: 10px 12px; font-size: 12.5px; color: var(--ink-dim); }
+  .clip .meta a { color: var(--magenta); text-decoration: none; font-weight: 600; }
+
+  .hint { font-size: 12px; color: var(--ink-dim); margin-top: 8px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">selva agency <b>/</b> spin clipper</div>
+  </header>
+  <h1>Sobe o vídeo bruto, sai o clipe pronto.</h1>
+  <p class="sub">Acha os melhores momentos, recorta streamer e mesa, aplica a moldura, queima a legenda e fecha com a vinheta SPIN. Tudo automático.</p>
+
+  <form id="form" class="card">
+    <h2>Moldura</h2>
+    <div class="moldura-toggle">
+      <label><input type="radio" name="moldura" value="split" checked /><b>Split</b><span>Streamer em cima, mesa embaixo</span></label>
+      <label><input type="radio" name="moldura" value="full" /><b>Cheia</b><span>Uma fonte só, tela inteira</span></label>
+    </div>
+
+    <h2>Vídeos brutos</h2>
+    <div class="drop-row">
+      <label class="drop" id="drop-streamer">
+        <input type="file" name="streamer" accept="video/*" />
+        <span class="label">Câmera do streamer</span>
+        <span class="hint-inline">arraste ou clique</span>
+      </label>
+      <label class="drop" id="drop-mesa">
+        <input type="file" name="mesa" accept="video/*" />
+        <span class="label">Mesa / roleta</span>
+        <span class="hint-inline">arraste ou clique</span>
+      </label>
+    </div>
+    <div class="drop-row outro-row">
+      <label class="drop" id="drop-outro" style="grid-column: 1 / -1;">
+        <input type="file" name="outro" accept="video/*" />
+        <span class="label">Vinheta final (spin final.mp4)</span>
+        <span class="hint-inline">opcional — se não enviar, o clipe sai sem vinheta</span>
+      </label>
+    </div>
+
+    <div class="field">
+      <label>Máximo de clipes por vídeo</label>
+      <input type="number" name="maxClips" value="8" min="1" max="20" />
+    </div>
+
+    <button class="run" type="submit">Gerar clipes</button>
+    <div class="hint">Vídeos longos demoram mais — o log abaixo mostra o progresso em tempo real.</div>
+    <div class="log" id="log"></div>
+  </form>
+
+  <div class="card" id="results-card" style="display:none;">
+    <h2>Clipes gerados</h2>
+    <div class="clips" id="clips"></div>
+  </div>
+</div>
+
+<script>
+  const form = document.getElementById("form");
+  const logEl = document.getElementById("log");
+  const resultsCard = document.getElementById("results-card");
+  const clipsEl = document.getElementById("clips");
+
+  for (const id of ["drop-streamer", "drop-mesa", "drop-outro"]) {
+    const el = document.getElementById(id);
+    const input = el.querySelector("input");
+    input.addEventListener("change", () => {
+      el.classList.toggle("filled", input.files.length > 0);
+      if (input.files[0]) el.querySelector(".hint-inline").textContent = input.files[0].name;
+    });
+  }
+
+  function logLine(text, cls) {
+    logEl.classList.add("show");
+    const span = document.createElement("div");
+    if (cls) span.className = cls;
+    span.textContent = text;
+    logEl.appendChild(span);
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    logEl.innerHTML = "";
+    resultsCard.style.display = "none";
+    clipsEl.innerHTML = "";
+    form.querySelector("button").disabled = true;
+
+    const fd = new FormData(form);
+    logLine("Enviando vídeos...");
+
+    let jobId;
+    try {
+      const res = await fetch("/api/jobs", { method: "POST", body: fd });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Falha ao criar job");
+      jobId = data.jobId;
+    } catch (err) {
+      logLine("Erro: " + err.message, "err");
+      form.querySelector("button").disabled = false;
+      return;
+    }
+
+    let lastLogLength = 0;
+    const poll = setInterval(async () => {
+      const res = await fetch("/api/jobs/" + jobId);
+      const job = await res.json();
+      for (let i = lastLogLength; i < job.log.length; i++) logLine(job.log[i]);
+      lastLogLength = job.log.length;
+
+      if (job.status === "done") {
+        clearInterval(poll);
+        logLine(\`Pronto! \${job.clips.length} clipe(s) gerado(s).\`, "ok");
+        form.querySelector("button").disabled = false;
+        if (job.clips.length > 0) {
+          resultsCard.style.display = "block";
+          for (const clip of job.clips) {
+            const div = document.createElement("div");
+            div.className = "clip";
+            div.innerHTML = \`
+              <video src="\${clip.url}" controls preload="metadata"></video>
+              <div class="meta">
+                \${clip.startSec.toFixed(1)}s – \${clip.endSec.toFixed(1)}s<br/>
+                \${clip.reason}<br/>
+                <a href="\${clip.url}" download>baixar</a>
+              </div>\`;
+            clipsEl.appendChild(div);
+          }
+        }
+      } else if (job.status === "error") {
+        clearInterval(poll);
+        logLine("Erro: " + job.error, "err");
+        form.querySelector("button").disabled = false;
+      }
+    }, 1500);
+  });
+</script>
+</body>
+</html>

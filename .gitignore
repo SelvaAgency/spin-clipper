@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.env
+data/uploads/
+data/tmp/
+data/output/
+data/jobs.json
+*.log
