@@ -1,0 +1,5 @@
+[phases.setup]
+nixPkgs = ["nodejs", "ffmpeg", "python311"]
+
+[start]
+cmd = "npm start"
