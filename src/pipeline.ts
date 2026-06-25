@@ -6,7 +6,7 @@ import { selectHighlights, type Highlight } from "./lib/selectHighlights.js";
 import { transcribe, sliceTranscript, type Transcript } from "./lib/transcribe.js";
 import { syncAudio, isSyncReliable } from "./lib/sync.js";
 import { composeMoldura } from "./lib/compose.js";
-import { buildAssFile, burnCaptions } from "./lib/captions.js";
+// import { buildAssFile, burnCaptions } from "./lib/captions.js";
 import { appendOutro } from "./lib/outro.js";
 import { run } from "./lib/ffmpegUtils.js";
 
@@ -105,15 +105,16 @@ export async function runPipeline(input: PipelineInput): Promise<PipelineResult>
     });
 
     let captionedPath = composedPath;
-    if (transcript) {
-      const words = sliceTranscript(transcript, highlight.startSec, highlight.endSec);
-      if (words.length > 0) {
-        const assPath = path.join(input.workDir, `${clipId}.ass`);
-        buildAssFile(words, highlight.startSec, assPath);
-        captionedPath = path.join(input.workDir, `${clipId}_legendado.mp4`);
-        await burnCaptions(composedPath, assPath, captionedPath);
-      }
-    }
+
+// LEGENDAS DESATIVADAS TEMPORARIAMENTE
+if (transcript) {
+  const words = sliceTranscript(transcript, highlight.startSec, highlight.endSec);
+
+  if (words.length > 0) {
+    captionedPath = path.join(input.workDir, `${clipId}_legendado.mp4`);
+    fs.copyFileSync(composedPath, captionedPath);
+  }
+}
 
     let finalPath = captionedPath;
     if (input.outroPath) {

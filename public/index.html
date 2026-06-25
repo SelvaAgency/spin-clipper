@@ -170,16 +170,23 @@
   for (const id of ["drop-streamer", "drop-mesa", "drop-outro"]) {
     const el = document.getElementById(id);
     const input = el.querySelector("input");
+
     input.addEventListener("change", () => {
       el.classList.toggle("filled", input.files.length > 0);
-      if (input.files[0]) el.querySelector(".hint-inline").textContent = input.files[0].name;
+
+      if (input.files[0]) {
+        el.querySelector(".hint-inline").textContent = input.files[0].name;
+      }
     });
   }
 
   function logLine(text, cls) {
     logEl.classList.add("show");
+
     const span = document.createElement("div");
+
     if (cls) span.className = cls;
+
     span.textContent = text;
     logEl.appendChild(span);
     logEl.scrollTop = logEl.scrollHeight;
@@ -187,19 +194,31 @@
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
+
     logEl.innerHTML = "";
     resultsCard.style.display = "none";
     clipsEl.innerHTML = "";
+
     form.querySelector("button").disabled = true;
 
     const fd = new FormData(form);
+
     logLine("Enviando vídeos...");
 
     let jobId;
+
     try {
-      const res = await fetch("/api/jobs", { method: "POST", body: fd });
+      const res = await fetch("/api/jobs", {
+        method: "POST",
+        body: fd
+      });
+
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Falha ao criar job");
+
+      if (!res.ok) {
+        throw new Error(data.error || "Falha ao criar job");
+      }
+
       jobId = data.jobId;
     } catch (err) {
       logLine("Erro: " + err.message, "err");
@@ -208,34 +227,49 @@
     }
 
     let lastLogLength = 0;
+
     const poll = setInterval(async () => {
       const res = await fetch("/api/jobs/" + jobId);
       const job = await res.json();
-      for (let i = lastLogLength; i < job.log.length; i++) logLine(job.log[i]);
+
+      for (let i = lastLogLength; i < job.log.length; i++) {
+        logLine(job.log[i]);
+      }
+
       lastLogLength = job.log.length;
 
       if (job.status === "done") {
         clearInterval(poll);
-        logLine(\`Pronto! \${job.clips.length} clipe(s) gerado(s).\`, "ok");
+
+        logLine(`Pronto! ${job.clips.length} clipe(s) gerado(s).`, "ok");
+
         form.querySelector("button").disabled = false;
+
         if (job.clips.length > 0) {
           resultsCard.style.display = "block";
+
           for (const clip of job.clips) {
             const div = document.createElement("div");
+
             div.className = "clip";
-            div.innerHTML = \`
-              <video src="\${clip.url}" controls preload="metadata"></video>
+
+            div.innerHTML = `
+              <video src="${clip.url}" controls preload="metadata"></video>
               <div class="meta">
-                \${clip.startSec.toFixed(1)}s – \${clip.endSec.toFixed(1)}s<br/>
-                \${clip.reason}<br/>
-                <a href="\${clip.url}" download>baixar</a>
-              </div>\`;
+                ${clip.startSec.toFixed(1)}s – ${clip.endSec.toFixed(1)}s<br/>
+                ${clip.reason}<br/>
+                <a href="${clip.url}" download>baixar</a>
+              </div>
+            `;
+
             clipsEl.appendChild(div);
           }
         }
       } else if (job.status === "error") {
         clearInterval(poll);
+
         logLine("Erro: " + job.error, "err");
+
         form.querySelector("button").disabled = false;
       }
     }, 1500);
