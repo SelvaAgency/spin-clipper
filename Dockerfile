@@ -1,13 +1,14 @@
 FROM node:22
 
-RUN apt-get update && \
-    apt-get install -y ffmpeg
+RUN apt-get update && apt-get install -y ffmpeg python3 python3-pip
 
 WORKDIR /app
 
 COPY package*.json ./
-
 RUN npm install
+
+COPY requirements.txt .
+RUN pip3 install -r requirements.txt
 
 COPY . .
 
