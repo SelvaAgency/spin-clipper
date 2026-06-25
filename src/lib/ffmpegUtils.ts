@@ -5,16 +5,31 @@ export interface RunResult {
   stderr: string;
 }
 
-/** Executa um comando e rejeita se o exit code não for 0. Loga stderr em caso de erro. */
-export function run(cmd: string, args: string[]): Promise<RunResult> {
+/**
+ * Executa um comando e rejeita se o exit code não for 0.
+ * timeoutMs (default 20 min) mata o processo se ele não terminar — evita que
+ * um filter_complex com fonte infinita trave o pipeline para sempre.
+ */
+export function run(cmd: string, args: string[], timeoutMs = 20 * 60 * 1000): Promise<RunResult> {
   return new Promise((resolve, reject) => {
     const proc = spawn(cmd, args);
     let stdout = "";
     let stderr = "";
+    let timedOut = false;
+
+    const timer = setTimeout(() => {
+      timedOut = true;
+      proc.kill("SIGKILL");
+      const preview = args.slice(0, 12).join(" ");
+      reject(new Error(`${cmd} timeout após ${timeoutMs / 1000}s. Comando: ${cmd} ${preview}`));
+    }, timeoutMs);
+
     proc.stdout.on("data", (d) => (stdout += d.toString()));
     proc.stderr.on("data", (d) => (stderr += d.toString()));
-    proc.on("error", reject);
+    proc.on("error", (err) => { clearTimeout(timer); reject(err); });
     proc.on("close", (code) => {
+      clearTimeout(timer);
+      if (timedOut) return; // já rejeitou
       if (code === 0) resolve({ stdout, stderr });
       else reject(new Error(`${cmd} saiu com código ${code}\n${stderr.slice(-4000)}`));
     });

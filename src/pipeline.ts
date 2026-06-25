@@ -259,13 +259,20 @@ export async function runPipeline(input: PipelineInput): Promise<PipelineResult>
       : undefined;
 
     if (streamerCut) {
+      log(`  → Cortando streamer em ${highlight.startSec.toFixed(1)}s (${duration.toFixed(1)}s)...`);
       await cutClip(input.streamerPath!, highlight.startSec, duration, streamerCut);
+      const sz = fs.existsSync(streamerCut) ? Math.round(fs.statSync(streamerCut).size / 1024) : 0;
+      log(`  ✓ Streamer cortado (${sz} KB)`);
     }
     if (mesaCut) {
       const mesaStart = highlight.startSec + mesaOffsetSec;
+      log(`  → Cortando mesa em ${mesaStart.toFixed(1)}s (${duration.toFixed(1)}s)...`);
       await cutClip(input.mesaPath!, mesaStart, duration, mesaCut);
+      const sz = fs.existsSync(mesaCut) ? Math.round(fs.statSync(mesaCut).size / 1024) : 0;
+      log(`  ✓ Mesa cortada (${sz} KB)`);
     }
 
+    log(`  → Compondo moldura '${input.moldura}'...`);
     const composedPath = path.join(input.workDir, `${clipId}_composed.mp4`);
     await composeMoldura({
       moldura: input.moldura,
@@ -275,6 +282,8 @@ export async function runPipeline(input: PipelineInput): Promise<PipelineResult>
       outputPath: composedPath,
       primaryAudio: currentMode === "dual" ? "mix" : "streamer",
     });
+    const compSz = fs.existsSync(composedPath) ? Math.round(fs.statSync(composedPath).size / 1024) : 0;
+    log(`  ✓ Composição concluída (${compSz} KB)`);
 
     const words = transcript
       ? sliceTranscript(transcript, highlight.startSec, highlight.endSec)
