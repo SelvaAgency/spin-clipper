@@ -15,6 +15,8 @@ export interface CropApprovalData {
   detected: { x: number; y: number; w: number; h: number };
   videoW: number;
   videoH: number;
+  /** "game" quando se trata do crop da mesa/jogo; omitido para o streamer */
+  target?: "game";
 }
 
 export interface LayoutApprovalData {
@@ -63,9 +65,20 @@ export interface Job {
   status: JobStatus;
   log: string[];
   createdAt: string;
-  clips: Array<{ url: string; reason: string; startSec: number; endSec: number }>;
+  clips: Array<{
+    url: string;
+    reason: string;
+    score?: number;
+    startSec: number;
+    endSec: number;
+    source?: "ia" | "audio";
+    moldura?: string;
+    mode?: string;
+  }>;
   compilationUrl?: string;
   pendingApproval?: ApprovalRequest;
+  /** profileId do streamer associado a este job */
+  profileId?: string;
   error?: string;
 }
 

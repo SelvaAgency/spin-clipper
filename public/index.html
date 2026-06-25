@@ -5,229 +5,135 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>spin-clipper</title>
 <style>
-  :root {
-    --bg: #110a1c;
-    --surface: #1b1130;
-    --surface-2: #241941;
-    --surface-3: #2e2050;
-    --line: #382a5c;
-    --ink: #f1edfb;
-    --ink-dim: #a99bd6;
-    --violet: #7b4fd6;
-    --magenta: #e8418c;
-    --green: #3de89a;
-    --orange: #f5a623;
-    --mono: "SF Mono", "JetBrains Mono", ui-monospace, Menlo, monospace;
-    --sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
-  }
-  * { box-sizing: border-box; }
-  body {
-    margin: 0;
-    background: var(--bg);
-    background-image:
-      radial-gradient(circle at 15% 0%, rgba(123,79,214,0.18), transparent 45%),
-      radial-gradient(circle at 90% 20%, rgba(232,65,140,0.10), transparent 40%);
-    color: var(--ink);
-    font-family: var(--sans);
-    min-height: 100vh;
-  }
-  .wrap { max-width: 920px; margin: 0 auto; padding: 48px 24px 96px; }
-
-  header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 8px; }
-  .brand { font-weight: 800; font-size: 15px; letter-spacing: 0.08em; color: var(--ink-dim); text-transform: uppercase; }
-  .brand b { color: var(--magenta); }
-  h1 { font-size: 28px; margin: 4px 0 4px; letter-spacing: -0.01em; }
-  .sub { color: var(--ink-dim); font-size: 15px; margin-bottom: 36px; line-height: 1.5; max-width: 60ch; }
-
-  .card {
-    background: var(--surface);
-    border: 1px solid var(--line);
-    border-radius: 14px;
-    padding: 28px;
-    margin-bottom: 20px;
-  }
-  .card h2 {
-    font-size: 12px; text-transform: uppercase; letter-spacing: 0.09em;
-    color: var(--ink-dim); margin: 0 0 16px; font-weight: 700;
-  }
-
-  /* Tab selector */
-  .tabs { display: flex; gap: 0; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; margin-bottom: 22px; }
-  .tab-btn {
-    flex: 1; padding: 10px 14px; background: none; border: none; color: var(--ink-dim);
-    font-size: 13px; font-weight: 600; cursor: pointer; transition: all .15s;
-    font-family: var(--sans); border-right: 1px solid var(--line);
-  }
-  .tab-btn:last-child { border-right: none; }
-  .tab-btn.active { background: var(--violet); color: white; }
-  .tab-btn:hover:not(.active) { background: var(--surface-2); }
-
-  .tab-panel { display: none; }
-  .tab-panel.active { display: block; }
-
-  /* Toggle group */
-  .toggle-group { display: flex; gap: 10px; flex-wrap: wrap; }
-  .toggle-group label {
-    flex: 1; min-width: 140px; border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px;
-    cursor: pointer; font-size: 13px; color: var(--ink-dim); transition: all .15s;
-    display: flex; flex-direction: column; gap: 3px;
-  }
-  .toggle-group label b { color: var(--ink); font-size: 14px; }
-  .toggle-group input { display: none; }
-  .toggle-group label:has(input:checked) {
-    border-color: var(--violet); background: rgba(123,79,214,0.12); color: var(--ink);
-  }
-
-  /* Drop zones */
-  .drop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  .drop-grid.single { grid-template-columns: 1fr; }
-  .drop {
-    position: relative; border: 1.5px dashed var(--line); border-radius: 10px;
-    padding: 20px 14px; text-align: center; font-size: 13px; color: var(--ink-dim);
-    cursor: pointer; transition: border-color .15s, background .15s;
-  }
-  .drop:hover { border-color: var(--violet); background: rgba(123,79,214,0.06); }
-  .drop.filled { border-color: var(--magenta); border-style: solid; color: var(--ink); background: rgba(232,65,140,0.06); }
-  .drop input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
-  .drop .label { display: block; font-weight: 600; margin-bottom: 2px; color: var(--ink); }
-  .drop .hint-inline { font-size: 12px; }
-
-  /* URL input */
-  .url-input-wrap { display: flex; gap: 8px; }
-  .url-input-wrap input {
-    flex: 1; background: var(--surface-2); border: 1px solid var(--line); border-radius: 8px;
-    padding: 10px 12px; color: var(--ink); font-size: 14px;
-  }
-  .url-input-wrap input::placeholder { color: var(--ink-dim); }
-  .url-input-wrap input:focus { outline: none; border-color: var(--violet); }
-
-  /* Fields */
-  .field { margin-top: 16px; }
-  .field label { display: block; font-size: 13px; color: var(--ink-dim); margin-bottom: 6px; }
-  .field input[type=number], .field input[type=text] {
-    background: var(--surface-2); border: 1px solid var(--line); border-radius: 8px;
-    padding: 8px 10px; color: var(--ink); font-size: 14px; width: 100%;
-  }
-  .field input[type=number] { width: 100px; }
-
-  /* Duration presets */
-  .duration-presets { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
-  .preset-btn {
-    padding: 6px 14px; border: 1px solid var(--line); border-radius: 6px;
-    background: none; color: var(--ink-dim); font-size: 13px; cursor: pointer;
-    font-family: var(--sans); transition: all .15s;
-  }
-  .preset-btn.active { border-color: var(--violet); background: rgba(123,79,214,0.15); color: var(--ink); }
-  .preset-btn:hover:not(.active) { border-color: var(--ink-dim); }
-
-  /* Checkboxes */
-  .check-group { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
-  .check-row {
-    display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--ink-dim);
-    cursor: pointer;
-  }
-  .check-row input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--violet); cursor: pointer; }
-  .check-row span { line-height: 1.4; }
-  .check-row b { color: var(--ink); }
-
-  /* Run button */
-  button.run {
-    margin-top: 22px; width: 100%; padding: 14px; border: none; border-radius: 10px;
-    background: linear-gradient(135deg, var(--violet), var(--magenta));
-    color: white; font-weight: 700; font-size: 15px; cursor: pointer; letter-spacing: 0.01em;
-    transition: opacity .15s;
-  }
-  button.run:disabled { opacity: 0.5; cursor: not-allowed; }
-
-  /* Log */
-  .log {
-    font-family: var(--mono); font-size: 12.5px; color: #b9aee0;
-    background: #0c0716; border-radius: 10px; padding: 16px; max-height: 200px; overflow-y: auto;
-    white-space: pre-wrap; line-height: 1.6; display: none;
-  }
-  .log.show { display: block; margin-top: 18px; }
-  .log .ok { color: var(--green); }
-  .log .err { color: var(--magenta); }
-  .log .wait { color: var(--orange); }
-
-  /* Approval panels */
-  .approval-panel {
-    border: 2px solid var(--orange); border-radius: 14px;
-    background: rgba(245,166,35,0.06); padding: 24px; margin-bottom: 20px;
-  }
-  .approval-panel h3 {
-    margin: 0 0 6px; font-size: 16px; color: var(--orange);
-    display: flex; align-items: center; gap: 8px;
-  }
-  .approval-panel .sub { margin-bottom: 18px; font-size: 13px; }
-  .approval-actions { display: flex; gap: 10px; margin-top: 18px; flex-wrap: wrap; }
-
-  .btn {
-    padding: 10px 20px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600;
-    cursor: pointer; font-family: var(--sans); transition: opacity .15s;
-  }
-  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-  .btn-approve { background: var(--green); color: #0a1a12; }
-  .btn-reject { background: var(--surface-2); color: var(--ink-dim); border: 1px solid var(--line); }
-  .btn-reprocess { background: var(--surface-2); color: var(--ink-dim); border: 1px solid var(--orange); color: var(--orange); }
-
-  /* Crop preview canvas */
-  .preview-container { position: relative; display: inline-block; max-width: 100%; }
-  .preview-img { max-width: 100%; border-radius: 8px; display: block; }
-  #crop-canvas { position: absolute; top: 0; left: 0; border-radius: 8px; }
-
-  /* Layout preview */
-  #layout-canvas { max-width: 100%; border-radius: 8px; display: block; }
-
-  /* Caption editor */
-  .caption-editor-clips { display: flex; flex-direction: column; gap: 16px; }
-  .caption-clip { background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; padding: 16px; }
-  .caption-clip h4 { margin: 0 0 10px; font-size: 13px; color: var(--ink-dim); font-weight: 600; }
-  .caption-clip video { width: 100%; max-height: 200px; border-radius: 6px; object-fit: contain; background: #000; }
-  .caption-groups { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
-  .caption-group {
-    display: flex; gap: 8px; align-items: center;
-    background: var(--surface-3); border-radius: 6px; padding: 6px 10px;
-  }
-  .caption-group .time-label { font-size: 11px; color: var(--ink-dim); font-family: var(--mono); white-space: nowrap; min-width: 80px; }
-  .caption-group input {
-    flex: 1; background: none; border: none; color: var(--ink); font-size: 13px;
-    font-family: var(--sans); padding: 0;
-  }
-  .caption-group input:focus { outline: none; }
-
-  /* Clips grid */
-  .clips { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; margin-top: 18px; }
-  .clip { background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
-  .clip video { width: 100%; display: block; background: black; aspect-ratio: 9/16; }
-  .clip .meta { padding: 10px 12px; font-size: 12.5px; color: var(--ink-dim); line-height: 1.5; }
-  .clip .meta a { color: var(--magenta); text-decoration: none; font-weight: 600; }
-
-  /* Compilation banner */
-  .compilation-banner {
-    background: linear-gradient(135deg, rgba(123,79,214,0.15), rgba(232,65,140,0.10));
-    border: 1px solid var(--violet); border-radius: 12px; padding: 18px 22px;
-    margin-top: 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  }
-  .compilation-banner .left { font-size: 14px; }
-  .compilation-banner .left b { color: var(--ink); display: block; margin-bottom: 2px; }
-  .compilation-banner .left span { color: var(--ink-dim); font-size: 13px; }
-  .compilation-banner a {
-    padding: 8px 18px; background: var(--violet); color: white; border-radius: 8px;
-    text-decoration: none; font-weight: 700; font-size: 13px; white-space: nowrap;
-  }
-
-  .divider { height: 1px; background: var(--line); margin: 16px 0; }
-  .hint { font-size: 12px; color: var(--ink-dim); margin-top: 8px; }
+:root {
+  --bg:#110a1c; --surface:#1b1130; --surface-2:#241941; --surface-3:#2e2050;
+  --line:#382a5c; --ink:#f1edfb; --ink-dim:#a99bd6;
+  --violet:#7b4fd6; --magenta:#e8418c; --green:#3de89a; --orange:#f5a623;
+  --red:#ff4d6a;
+  --mono:"SF Mono","JetBrains Mono",ui-monospace,Menlo,monospace;
+  --sans:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--bg);background-image:radial-gradient(circle at 15% 0%,rgba(123,79,214,.18),transparent 45%),radial-gradient(circle at 90% 20%,rgba(232,65,140,.10),transparent 40%);color:var(--ink);font-family:var(--sans);min-height:100vh;}
+.wrap{max-width:940px;margin:0 auto;padding:48px 24px 96px;}
+header{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:8px;}
+.brand{font-weight:800;font-size:15px;letter-spacing:.08em;color:var(--ink-dim);text-transform:uppercase;}
+.brand b{color:var(--magenta);}
+h1{font-size:28px;margin:4px 0;letter-spacing:-.01em;}
+.sub{color:var(--ink-dim);font-size:15px;margin-bottom:36px;line-height:1.5;max-width:60ch;}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:28px;margin-bottom:20px;}
+.card h2{font-size:12px;text-transform:uppercase;letter-spacing:.09em;color:var(--ink-dim);margin:0 0 16px;font-weight:700;}
+.tabs{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-bottom:20px;}
+.tab-btn{flex:1;padding:10px 14px;background:none;border:none;border-right:1px solid var(--line);color:var(--ink-dim);font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans);transition:all .15s;}
+.tab-btn:last-child{border-right:none;}
+.tab-btn.active{background:var(--violet);color:#fff;}
+.tab-btn:hover:not(.active){background:var(--surface-2);}
+.tab-panel{display:none;} .tab-panel.active{display:block;}
+.toggle-group{display:flex;gap:10px;flex-wrap:wrap;}
+.toggle-group label{flex:1;min-width:140px;border:1px solid var(--line);border-radius:10px;padding:12px 14px;cursor:pointer;font-size:13px;color:var(--ink-dim);display:flex;flex-direction:column;gap:3px;transition:all .15s;}
+.toggle-group label b{color:var(--ink);font-size:14px;}
+.toggle-group input{display:none;}
+.toggle-group label:has(input:checked){border-color:var(--violet);background:rgba(123,79,214,.12);color:var(--ink);}
+.drop-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.drop-grid.single{grid-template-columns:1fr;}
+.drop{position:relative;border:1.5px dashed var(--line);border-radius:10px;padding:20px 14px;text-align:center;font-size:13px;color:var(--ink-dim);cursor:pointer;transition:border-color .15s,background .15s;}
+.drop:hover{border-color:var(--violet);background:rgba(123,79,214,.06);}
+.drop.filled{border-color:var(--magenta);border-style:solid;color:var(--ink);background:rgba(232,65,140,.06);}
+.drop input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.drop .label{display:block;font-weight:600;margin-bottom:2px;color:var(--ink);}
+.drop .hint-inline{font-size:12px;}
+.url-input-wrap{display:flex;gap:8px;}
+.url-input-wrap input{flex:1;background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:10px 12px;color:var(--ink);font-size:14px;}
+.url-input-wrap input::placeholder{color:var(--ink-dim);}
+.url-input-wrap input:focus{outline:none;border-color:var(--violet);}
+.field{margin-top:16px;}
+.field label{display:block;font-size:13px;color:var(--ink-dim);margin-bottom:6px;}
+.field input[type=number],.field input[type=text],.field select{background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:8px 10px;color:var(--ink);font-size:14px;}
+.field input[type=number]{width:110px;}
+.field select{width:100%;}
+.duration-presets{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;}
+.preset-btn{padding:6px 14px;border:1px solid var(--line);border-radius:6px;background:none;color:var(--ink-dim);font-size:13px;cursor:pointer;font-family:var(--sans);transition:all .15s;}
+.preset-btn.active{border-color:var(--violet);background:rgba(123,79,214,.15);color:var(--ink);}
+.preset-btn:hover:not(.active){border-color:var(--ink-dim);}
+.check-group{display:flex;flex-direction:column;gap:10px;margin-top:16px;}
+.check-row{display:flex;align-items:flex-start;gap:10px;font-size:13px;color:var(--ink-dim);cursor:pointer;}
+.check-row input[type=checkbox]{width:16px;height:16px;accent-color:var(--violet);cursor:pointer;margin-top:2px;flex-shrink:0;}
+.check-row span{line-height:1.4;}
+.check-row b{color:var(--ink);}
+button.run{margin-top:22px;width:100%;padding:14px;border:none;border-radius:10px;background:linear-gradient(135deg,var(--violet),var(--magenta));color:#fff;font-weight:700;font-size:15px;cursor:pointer;transition:opacity .15s;}
+button.run:disabled{opacity:.5;cursor:not-allowed;}
+.log{font-family:var(--mono);font-size:12.5px;color:#b9aee0;background:#0c0716;border-radius:10px;padding:16px;max-height:200px;overflow-y:auto;white-space:pre-wrap;line-height:1.6;display:none;}
+.log.show{display:block;margin-top:18px;}
+.log .ok{color:var(--green);} .log .err{color:var(--magenta);} .log .wait{color:var(--orange);}
+/* ── Approval panels ── */
+.approval-panel{border:2px solid var(--orange);border-radius:14px;background:rgba(245,166,35,.06);padding:24px;margin-bottom:20px;display:none;}
+.approval-panel.visible{display:block;}
+.approval-panel h3{margin:0 0 6px;font-size:16px;color:var(--orange);}
+.approval-panel .desc{font-size:13px;color:var(--ink-dim);margin-bottom:18px;}
+.approval-actions{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap;}
+.btn{padding:10px 20px;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--sans);}
+.btn-approve{background:var(--green);color:#0a1a12;}
+.btn-cancel{background:var(--surface-2);color:var(--ink-dim);border:1px solid var(--line);}
+/* ── Region editor ── */
+.region-editor-wrap{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#000;}
+.editor-toolbar{display:flex;gap:6px;padding:8px 10px;background:var(--surface-2);border-bottom:1px solid var(--line);flex-wrap:wrap;align-items:center;}
+.editor-toolbar .tool-btn{padding:5px 10px;border:1px solid var(--line);border-radius:6px;background:none;color:var(--ink-dim);font-size:12px;cursor:pointer;font-family:var(--sans);}
+.editor-toolbar .tool-btn:hover{border-color:var(--violet);color:var(--ink);}
+.editor-toolbar .sep{width:1px;height:20px;background:var(--line);margin:0 4px;}
+.editor-canvas-wrap{position:relative;cursor:crosshair;user-select:none;}
+canvas.region-canvas{display:block;width:100%;height:auto;}
+.editor-fields{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:10px;background:var(--surface-2);border-top:1px solid var(--line);}
+.editor-fields label{font-size:11px;color:var(--ink-dim);}
+.editor-fields input{width:100%;background:var(--surface-3);border:1px solid var(--line);border-radius:6px;padding:5px 8px;color:var(--ink);font-size:13px;}
+/* second region */
+.region-group{margin-top:14px;}
+.region-group-label{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px;}
+/* ── Caption editor ── */
+.caption-editor-clips{display:flex;flex-direction:column;gap:16px;}
+.caption-clip{background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:16px;}
+.caption-clip h4{margin:0 0 10px;font-size:13px;color:var(--ink-dim);font-weight:600;}
+.caption-clip video{width:100%;max-height:200px;border-radius:6px;object-fit:contain;background:#000;}
+.caption-groups{display:flex;flex-direction:column;gap:6px;margin-top:10px;}
+.caption-group{display:flex;gap:8px;align-items:center;background:var(--surface-3);border-radius:6px;padding:6px 10px;}
+.caption-group .time-label{font-size:11px;color:var(--ink-dim);font-family:var(--mono);white-space:nowrap;min-width:80px;}
+.caption-group input{flex:1;background:none;border:none;color:var(--ink);font-size:13px;font-family:var(--sans);padding:0;}
+.caption-group input:focus{outline:none;}
+/* ── Results ── */
+.clips{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px;margin-top:18px;}
+.clip{background:var(--surface-2);border:1px solid var(--line);border-radius:12px;overflow:hidden;}
+.clip video{width:100%;display:block;background:#000;aspect-ratio:9/16;}
+.clip-meta{padding:10px 12px;font-size:12.5px;color:var(--ink-dim);line-height:1.5;}
+.clip-meta a{color:var(--magenta);text-decoration:none;font-weight:600;}
+.clip-score{display:inline-block;background:rgba(123,79,214,.2);color:var(--violet);border-radius:4px;padding:2px 6px;font-size:11px;font-weight:700;margin-left:4px;}
+/* ── Feedback buttons ── */
+.feedback-row{display:flex;gap:6px;padding:8px 12px 10px;border-top:1px solid var(--line);}
+.fb-btn{flex:1;padding:7px 4px;border:1px solid var(--line);border-radius:8px;background:none;color:var(--ink-dim);font-size:13px;cursor:pointer;font-family:var(--sans);transition:all .15s;text-align:center;}
+.fb-btn:hover{border-color:var(--violet);}
+.fb-btn.active-great{background:rgba(61,232,154,.15);border-color:var(--green);color:var(--green);}
+.fb-btn.active-good{background:rgba(123,79,214,.15);border-color:var(--violet);color:var(--violet);}
+.fb-btn.active-bad{background:rgba(255,77,106,.15);border-color:var(--red);color:var(--red);}
+.compilation-banner{background:linear-gradient(135deg,rgba(123,79,214,.15),rgba(232,65,140,.10));border:1px solid var(--violet);border-radius:12px;padding:18px 22px;margin-top:16px;display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.compilation-banner .left b{color:var(--ink);display:block;margin-bottom:2px;}
+.compilation-banner .left span{color:var(--ink-dim);font-size:13px;}
+.compilation-banner a{padding:8px 18px;background:var(--violet);color:#fff;border-radius:8px;text-decoration:none;font-weight:700;font-size:13px;white-space:nowrap;}
+.divider{height:1px;background:var(--line);margin:16px 0;}
+.hint{font-size:12px;color:var(--ink-dim);margin-top:8px;}
+/* profiles modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:100;display:none;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:28px;min-width:320px;max-width:500px;width:100%;}
+.modal h3{margin:0 0 18px;font-size:16px;}
+.modal-actions{display:flex;gap:8px;margin-top:20px;justify-content:flex-end;}
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
     <div class="brand">selva agency <b>/</b> spin clipper</div>
+    <button class="btn" style="background:var(--surface-2);border:1px solid var(--line);font-size:13px;" onclick="openProfilesModal()">Perfis</button>
   </header>
   <h1>Sobe o vídeo bruto, sai o clipe pronto.</h1>
-  <p class="sub">Detecta reações, recorta, aplica moldura, legenda e fecha com a vinheta. Tudo automático — com validação em cada etapa importante.</p>
+  <p class="sub">Detecta reações, recorta, compõe, legenda. Automático — com validação em cada etapa.</p>
 
   <!-- ── FORM ── -->
   <form id="form" class="card">
@@ -238,183 +144,172 @@
       <button type="button" class="tab-btn" data-tab="combined">Vídeo único (webcam+jogo)</button>
     </div>
 
-    <!-- Tab: dois arquivos -->
     <div id="tab-files" class="tab-panel active">
       <div class="drop-grid">
-        <label class="drop" id="drop-streamer">
-          <input type="file" name="streamer" accept="video/*" />
-          <span class="label">Câmera do streamer</span>
-          <span class="hint-inline">arraste ou clique</span>
-        </label>
-        <label class="drop" id="drop-mesa">
-          <input type="file" name="mesa" accept="video/*" />
-          <span class="label">Mesa / jogo</span>
-          <span class="hint-inline">arraste ou clique</span>
-        </label>
+        <label class="drop" id="drop-streamer"><input type="file" name="streamer" accept="video/*" /><span class="label">Câmera do streamer</span><span class="hint-inline">arraste ou clique</span></label>
+        <label class="drop" id="drop-mesa"><input type="file" name="mesa" accept="video/*" /><span class="label">Mesa / jogo</span><span class="hint-inline">arraste ou clique</span></label>
       </div>
     </div>
-
-    <!-- Tab: link/URL -->
     <div id="tab-url" class="tab-panel">
-      <div class="url-input-wrap">
-        <input type="text" id="url-input" placeholder="https://youtube.com/watch?v=... ou link direto para .mp4" />
-      </div>
-      <p class="hint">Suporta YouTube, Twitch e links diretos de vídeo. O sistema baixa automaticamente.</p>
+      <div class="url-input-wrap"><input type="text" id="url-input" placeholder="https://youtube.com/... ou link direto .mp4" /></div>
+      <p class="hint">Suporta YouTube, Twitch e links diretos. Baixa automaticamente.</p>
     </div>
-
-    <!-- Tab: vídeo único combinado -->
     <div id="tab-combined" class="tab-panel">
       <div class="drop-grid single">
-        <label class="drop" id="drop-combined">
-          <input type="file" name="combined" accept="video/*" />
-          <span class="label">Vídeo combinado (webcam + jogo)</span>
-          <span class="hint-inline">O sistema detecta automaticamente as regiões</span>
-        </label>
+        <label class="drop" id="drop-combined"><input type="file" name="combined" accept="video/*" /><span class="label">Vídeo combinado (webcam + jogo)</span><span class="hint-inline">O sistema detecta as regiões automaticamente</span></label>
       </div>
-      <p class="hint">O sistema vai identificar a webcam e o jogo, mostrar uma prévia e pedir confirmação antes de prosseguir.</p>
     </div>
 
     <div class="divider"></div>
-
-    <!-- Outro -->
     <h2>Vinheta final (opcional)</h2>
     <div class="drop-grid single">
-      <label class="drop" id="drop-outro">
-        <input type="file" name="outro" accept="video/*" />
-        <span class="label">spin final.mp4</span>
-        <span class="hint-inline">opcional — sem vinheta o clipe sai direto</span>
-      </label>
+      <label class="drop" id="drop-outro"><input type="file" name="outro" accept="video/*" /><span class="label">spin final.mp4</span><span class="hint-inline">opcional</span></label>
     </div>
 
     <div class="divider"></div>
-
-    <!-- Moldura -->
     <h2>Moldura</h2>
     <div class="toggle-group">
       <label><input type="radio" name="moldura" value="split" checked /><b>Split</b><span>Streamer em cima, mesa embaixo</span></label>
-      <label><input type="radio" name="moldura" value="full" /><b>Cheia</b><span>Uma fonte só, tela inteira</span></label>
+      <label><input type="radio" name="moldura" value="full" /><b>Cheia</b><span>Fonte única, tela inteira</span></label>
     </div>
 
     <div class="divider"></div>
-
-    <!-- Duração dos clipes -->
     <h2>Duração dos clipes</h2>
     <div class="duration-presets">
       <button type="button" class="preset-btn" data-duration="30">30s</button>
-      <button type="button" class="preset-btn" data-duration="45" id="preset-45">45s</button>
+      <button type="button" class="preset-btn active" data-duration="45">45s</button>
       <button type="button" class="preset-btn" data-duration="60">60s</button>
       <button type="button" class="preset-btn" data-duration="90">90s</button>
       <button type="button" class="preset-btn" data-duration="custom">Personalizado</button>
     </div>
-    <div id="custom-duration-fields" style="display:none; margin-top:10px;">
-      <div style="display:flex; gap:12px; flex-wrap:wrap;">
-        <div class="field">
-          <label>Duração máx. (s)</label>
-          <input type="number" id="maxClipDurationSec" value="45" min="10" max="300" />
-        </div>
-        <div class="field">
-          <label>Contexto antes (s)</label>
-          <input type="number" id="padBeforeSec" value="8" min="0" max="30" />
-        </div>
-        <div class="field">
-          <label>Contexto depois (s)</label>
-          <input type="number" id="padAfterSec" value="6" min="0" max="30" />
-        </div>
+    <div id="custom-duration-fields" style="display:none;margin-top:10px;">
+      <div style="display:flex;gap:12px;flex-wrap:wrap;">
+        <div class="field"><label>Duração máx. (s)</label><input type="number" id="maxClipDurationSec" value="45" min="10" max="300" /></div>
+        <div class="field"><label>Contexto antes (s)</label><input type="number" id="padBeforeSec" value="8" min="0" max="60" /></div>
+        <div class="field"><label>Contexto depois (s)</label><input type="number" id="padAfterSec" value="6" min="0" max="60" /></div>
       </div>
     </div>
+    <!-- hidden field usado pelos presets -->
+    <input type="hidden" id="presetDuration" value="45" />
 
     <div class="divider"></div>
-
-    <!-- Opções gerais -->
     <h2>Opções</h2>
-    <div class="field" style="margin-top:0;">
-      <label>Máximo de clipes</label>
-      <input type="number" name="maxClips" value="8" min="1" max="20" style="width:100px;" />
+    <div class="field" style="margin-top:0;display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap;">
+      <div><label>Máximo de clipes</label><input type="number" name="maxClips" value="8" min="1" max="20" style="width:100px;" /></div>
+      <div class="field" style="margin-top:0;flex:1;min-width:180px;">
+        <label>Perfil do streamer</label>
+        <select id="profileSelect" style="width:100%;"><option value="">Nenhum</option></select>
+      </div>
     </div>
-
     <div class="check-group">
-      <label class="check-row">
-        <input type="checkbox" id="opt-crop" />
-        <span><b>Detectar e cortar bordas automaticamente</b> — remove barra de URL, bordas e áreas vazias. Pede confirmação antes de aplicar.</span>
-      </label>
-      <label class="check-row">
-        <input type="checkbox" id="opt-captions" />
-        <span><b>Legendas automáticas</b> — transcreve a fala, gera legendas e abre o editor antes de queimar. Requer ASSEMBLYAI_API_KEY.</span>
-      </label>
-      <label class="check-row">
-        <input type="checkbox" id="opt-compilation" />
-        <span><b>Gerar compilação</b> — além dos clipes individuais, gera um único vídeo com todos os melhores momentos em sequência.</span>
-      </label>
+      <label class="check-row"><input type="checkbox" id="opt-crop" /><span><b>Detectar e aprovar crop do streamer</b> — remove bordas e barra de URL. Editor visual antes de aplicar.</span></label>
+      <label class="check-row"><input type="checkbox" id="opt-game-crop" /><span><b>Detectar e aprovar crop do jogo</b> — identifica área da mesa, dealer e jogo. Editor visual antes de aplicar.</span></label>
+      <label class="check-row"><input type="checkbox" id="opt-captions" /><span><b>Legendas automáticas</b> — transcreve a fala e abre editor antes de queimar. Requer ASSEMBLYAI_API_KEY.</span></label>
+      <label class="check-row"><input type="checkbox" id="opt-compilation" /><span><b>Gerar compilação</b> — vídeo único com todos os melhores momentos.</span></label>
     </div>
 
     <button class="run" type="submit">Gerar clipes</button>
-    <div class="hint">Vídeos longos demoram mais — o log abaixo mostra o progresso em tempo real.</div>
+    <div class="hint">Vídeos longos demoram mais — log em tempo real abaixo.</div>
     <div class="log" id="log"></div>
   </form>
 
-  <!-- ── CROP APPROVAL ── -->
-  <div id="crop-approval" class="approval-panel" style="display:none;">
-    <h3>✂️ Confirmação de crop</h3>
-    <p class="sub">O sistema detectou a área útil do vídeo. Verifique se o enquadramento está correto antes de continuar.</p>
-    <div class="preview-container">
-      <img id="crop-preview-img" class="preview-img" src="" alt="preview" />
-      <canvas id="crop-canvas"></canvas>
-    </div>
-    <div style="margin-top:12px; display:flex; gap:12px; flex-wrap:wrap;">
-      <div class="field" style="margin-top:0;">
-        <label>X</label><input type="number" id="crop-x" style="width:80px;" />
+  <!-- ── CROP APPROVAL (streamer) ── -->
+  <div id="crop-approval" class="approval-panel">
+    <h3>✂️ Confirmação de crop — Streamer</h3>
+    <p class="desc">Área detectada automaticamente. Arraste os handles para ajustar ou edite os valores diretamente.</p>
+    <div class="region-editor-wrap">
+      <div class="editor-toolbar">
+        <button type="button" class="tool-btn" onclick="editorCrop.fitImage()">Ajustar à tela</button>
+        <button type="button" class="tool-btn" onclick="editorCrop.resetToDefault()">Resetar para sugestão da IA</button>
+        <div class="sep"></div>
+        <span style="font-size:12px;color:var(--ink-dim)">Scroll = zoom &nbsp;|&nbsp; Arraste fundo = pan</span>
       </div>
-      <div class="field" style="margin-top:0;">
-        <label>Y</label><input type="number" id="crop-y" style="width:80px;" />
-      </div>
-      <div class="field" style="margin-top:0;">
-        <label>Largura</label><input type="number" id="crop-w" style="width:90px;" />
-      </div>
-      <div class="field" style="margin-top:0;">
-        <label>Altura</label><input type="number" id="crop-h" style="width:90px;" />
+      <div class="editor-canvas-wrap"><canvas id="canvas-crop" class="region-canvas" width="800" height="450"></canvas></div>
+      <div class="editor-fields">
+        <div><label>X</label><input type="number" id="crop-x" /></div>
+        <div><label>Y</label><input type="number" id="crop-y" /></div>
+        <div><label>W</label><input type="number" id="crop-w" /></div>
+        <div><label>H</label><input type="number" id="crop-h" /></div>
       </div>
     </div>
     <div class="approval-actions">
-      <button type="button" class="btn btn-approve" id="crop-approve">Aprovar enquadramento</button>
-      <button type="button" class="btn btn-reject" id="crop-skip">Usar vídeo inteiro</button>
+      <button type="button" class="btn btn-approve" id="crop-approve">Aprovar crop</button>
+      <button type="button" class="btn btn-cancel" id="crop-skip">Usar vídeo inteiro</button>
     </div>
   </div>
 
-  <!-- ── LAYOUT APPROVAL ── -->
-  <div id="layout-approval" class="approval-panel" style="display:none;">
-    <h3>🎮 Confirmação do layout webcam + jogo</h3>
-    <p class="sub">O sistema identificou automaticamente as regiões. Azul = jogo, Roxo = webcam. Ajuste se necessário.</p>
-    <canvas id="layout-canvas"></canvas>
-    <div style="margin-top:12px;">
-      <strong style="font-size:13px; color:var(--ink-dim);">Webcam</strong>
-      <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:6px;">
-        <div class="field" style="margin-top:0;"><label>X</label><input type="number" id="webcam-x" style="width:80px;" /></div>
-        <div class="field" style="margin-top:0;"><label>Y</label><input type="number" id="webcam-y" style="width:80px;" /></div>
-        <div class="field" style="margin-top:0;"><label>W</label><input type="number" id="webcam-w" style="width:80px;" /></div>
-        <div class="field" style="margin-top:0;"><label>H</label><input type="number" id="webcam-h" style="width:80px;" /></div>
+  <!-- ── GAME CROP APPROVAL ── -->
+  <div id="game-crop-approval" class="approval-panel">
+    <h3>🎮 Confirmação de crop — Mesa / Jogo</h3>
+    <p class="desc">Área do jogo detectada. Ajuste para enquadrar o dealer, a mesa e as cartas. Arraste os handles ou edite os valores.</p>
+    <div class="region-editor-wrap">
+      <div class="editor-toolbar">
+        <button type="button" class="tool-btn" onclick="editorGame.fitImage()">Ajustar à tela</button>
+        <button type="button" class="tool-btn" onclick="editorGame.resetToDefault()">Resetar para sugestão da IA</button>
+        <div class="sep"></div>
+        <span style="font-size:12px;color:var(--ink-dim)">Scroll = zoom &nbsp;|&nbsp; Arraste fundo = pan</span>
       </div>
-      <strong style="font-size:13px; color:var(--ink-dim); margin-top:10px; display:block;">Jogo (área completa)</strong>
-      <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:6px;">
-        <div class="field" style="margin-top:0;"><label>X</label><input type="number" id="game-x" style="width:80px;" /></div>
-        <div class="field" style="margin-top:0;"><label>Y</label><input type="number" id="game-y" style="width:80px;" /></div>
-        <div class="field" style="margin-top:0;"><label>W</label><input type="number" id="game-w" style="width:80px;" /></div>
-        <div class="field" style="margin-top:0;"><label>H</label><input type="number" id="game-h" style="width:80px;" /></div>
+      <div class="editor-canvas-wrap"><canvas id="canvas-game" class="region-canvas" width="800" height="450"></canvas></div>
+      <div class="editor-fields">
+        <div><label>X</label><input type="number" id="game-x" /></div>
+        <div><label>Y</label><input type="number" id="game-y" /></div>
+        <div><label>W</label><input type="number" id="game-w" /></div>
+        <div><label>H</label><input type="number" id="game-h" /></div>
+      </div>
+    </div>
+    <div class="approval-actions">
+      <button type="button" class="btn btn-approve" id="game-crop-approve">Aprovar crop do jogo</button>
+      <button type="button" class="btn btn-cancel" id="game-crop-skip">Usar frame inteiro</button>
+    </div>
+  </div>
+
+  <!-- ── LAYOUT APPROVAL (single-combined) ── -->
+  <div id="layout-approval" class="approval-panel">
+    <h3>🎮 Confirmação do layout — Webcam + Jogo</h3>
+    <p class="desc">Verde = jogo, Roxo = webcam. Arraste os handles de cada região para ajustar.</p>
+    <div class="region-editor-wrap">
+      <div class="editor-toolbar">
+        <button type="button" class="tool-btn" onclick="editorLayout.fitImage()">Ajustar à tela</button>
+        <button type="button" class="tool-btn" onclick="editorLayout.resetToDefault()">Resetar para sugestão da IA</button>
+        <div class="sep"></div>
+        <span style="font-size:12px;color:var(--ink-dim)">Clique na região para selecionar &nbsp;|&nbsp; Scroll = zoom</span>
+      </div>
+      <div class="editor-canvas-wrap"><canvas id="canvas-layout" class="region-canvas" width="800" height="450"></canvas></div>
+      <div>
+        <div class="region-group">
+          <div class="region-group-label" style="color:var(--green)">Jogo</div>
+          <div class="editor-fields">
+            <div><label>X</label><input type="number" id="game2-x" /></div>
+            <div><label>Y</label><input type="number" id="game2-y" /></div>
+            <div><label>W</label><input type="number" id="game2-w" /></div>
+            <div><label>H</label><input type="number" id="game2-h" /></div>
+          </div>
+        </div>
+        <div class="region-group">
+          <div class="region-group-label" style="color:#a07fde;padding:6px 10px 4px;">Webcam</div>
+          <div class="editor-fields">
+            <div><label>X</label><input type="number" id="wcam-x" /></div>
+            <div><label>Y</label><input type="number" id="wcam-y" /></div>
+            <div><label>W</label><input type="number" id="wcam-w" /></div>
+            <div><label>H</label><input type="number" id="wcam-h" /></div>
+          </div>
+        </div>
       </div>
     </div>
     <div class="approval-actions">
       <button type="button" class="btn btn-approve" id="layout-approve">Aprovar layout</button>
-      <button type="button" class="btn btn-reject" id="layout-reject">Cancelar</button>
+      <button type="button" class="btn btn-cancel" id="layout-cancel">Cancelar</button>
     </div>
   </div>
 
   <!-- ── CAPTIONS APPROVAL ── -->
-  <div id="captions-approval" class="approval-panel" style="display:none;">
+  <div id="captions-approval" class="approval-panel">
     <h3>💬 Editor de legendas</h3>
-    <p class="sub">Revise e edite o texto das legendas antes de queimar nos vídeos. Clique no texto de qualquer grupo para editar.</p>
+    <p class="desc">Revise e edite o texto antes de queimar nos vídeos.</p>
     <div class="caption-editor-clips" id="caption-clips-container"></div>
     <div class="approval-actions">
       <button type="button" class="btn btn-approve" id="captions-approve">Aprovar e queimar legendas</button>
-      <button type="button" class="btn btn-reject" id="captions-skip">Pular legendas</button>
+      <button type="button" class="btn btn-cancel" id="captions-skip">Pular legendas</button>
     </div>
   </div>
 
@@ -426,462 +321,706 @@
   </div>
 </div>
 
+<!-- ── PROFILES MODAL ── -->
+<div class="modal-overlay" id="profiles-modal">
+  <div class="modal">
+    <h3>Perfis de streamers</h3>
+    <div id="profiles-list" style="display:flex;flex-direction:column;gap:8px;max-height:280px;overflow-y:auto;margin-bottom:16px;"></div>
+    <button type="button" class="btn btn-approve" onclick="openCreateProfile()">+ Novo perfil</button>
+    <div class="modal-actions"><button type="button" class="btn btn-cancel" onclick="closeProfilesModal()">Fechar</button></div>
+  </div>
+</div>
+<div class="modal-overlay" id="create-profile-modal">
+  <div class="modal">
+    <h3>Novo perfil</h3>
+    <div class="field" style="margin-top:0;"><label>Nome do streamer</label><input type="text" id="pf-name" style="width:100%;" placeholder="Ex: João Casino" /></div>
+    <div class="field"><label>Jogo principal</label>
+      <select id="pf-game" style="width:100%;">
+        <option value="all">Todos</option><option value="baccarat">Baccarat</option>
+        <option value="blackjack">Blackjack</option><option value="roulette">Roleta</option>
+      </select>
+    </div>
+    <div class="field"><label>Duração padrão dos clipes (s)</label><input type="number" id="pf-dur" value="45" min="10" max="300" style="width:100px;" /></div>
+    <div class="field"><label>Notas sobre o estilo</label><input type="text" id="pf-notes" style="width:100%;" placeholder="Ex: grita muito, prefere viradas" /></div>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-cancel" onclick="closeCreateProfile()">Cancelar</button>
+      <button type="button" class="btn btn-approve" onclick="saveProfile()">Salvar</button>
+    </div>
+  </div>
+</div>
+
 <script>
-  // ── State ──────────────────────────────────────────────────────────────────
-  let currentJobId = null;
-  let pollInterval = null;
-  let lastLogLength = 0;
-  let pendingApprovalType = null;
-  let cropApprovalData = null;
-  let layoutApprovalData = null;
-  let captionsApprovalData = null;
-
-  // ── Tab switching ──────────────────────────────────────────────────────────
-  document.querySelectorAll(".tab-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-      document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
-      document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
-      btn.classList.add("active");
-      const panel = document.getElementById("tab-" + btn.dataset.tab);
-      if (panel) panel.classList.add("active");
-    });
-  });
-
-  // ── Drop zone file names ───────────────────────────────────────────────────
-  for (const id of ["drop-streamer", "drop-mesa", "drop-combined", "drop-outro"]) {
-    const el = document.getElementById(id);
-    if (!el) continue;
-    const input = el.querySelector("input");
-    input.addEventListener("change", () => {
-      el.classList.toggle("filled", input.files.length > 0);
-      if (input.files[0]) el.querySelector(".hint-inline").textContent = input.files[0].name;
-    });
+// ════════════════════════════════════════════════════════════════════════════
+// RegionEditor — editor visual drag-resize para regiões no canvas
+// ════════════════════════════════════════════════════════════════════════════
+class RegionEditor {
+  constructor(canvasId, regions, opts = {}) {
+    this.canvas = document.getElementById(canvasId);
+    this.ctx = this.canvas.getContext("2d");
+    this.regions = regions; // [{key,label,color,inputs:{x,y,w,h}}]
+    this.activeIdx = 0;
+    this.defaults = [];
+    this.imgW = opts.imgW || 1920;
+    this.imgH = opts.imgH || 1080;
+    this.img = null;
+    this.scale = 1;
+    this.tx = 0; this.ty = 0;
+    this.drag = null;
+    this.HANDLE_R = 7;
+    this._setupCanvas();
+    this._bindEvents();
+    if (opts.imageUrl) this.setImage(opts.imageUrl);
   }
 
-  // ── Duration presets ───────────────────────────────────────────────────────
-  let selectedDuration = 45;
-  document.getElementById("preset-45").classList.add("active");
+  _setupCanvas() {
+    const dpr = window.devicePixelRatio || 1;
+    const w = this.canvas.clientWidth || 800;
+    const h = Math.round(w * (this.imgH / this.imgW));
+    this.canvas.width  = w * dpr;
+    this.canvas.height = h * dpr;
+    this.canvas.style.height = h + "px";
+    this.ctx.scale(dpr, dpr);
+    this._cw = w; this._ch = h;
+  }
 
-  document.querySelectorAll(".preset-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-      document.querySelectorAll(".preset-btn").forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
-      if (btn.dataset.duration === "custom") {
-        document.getElementById("custom-duration-fields").style.display = "block";
-        selectedDuration = null;
+  setImage(url) {
+    this.img = new Image();
+    this.img.crossOrigin = "anonymous";
+    this.img.onload = () => { this.fitImage(); };
+    this.img.src = url + "?t=" + Date.now();
+  }
+
+  fitImage() {
+    if (!this.img) return;
+    const scaleX = this._cw / this.imgW;
+    const scaleY = this._ch / this.imgH;
+    this.scale = Math.min(scaleX, scaleY) * 0.92;
+    this.tx = (this._cw - this.imgW * this.scale) / 2;
+    this.ty = (this._ch - this.imgH * this.scale) / 2;
+    this.render();
+  }
+
+  setRegion(key, rect) {
+    const r = this.regions.find(r => r.key === key);
+    if (r) r.sel = { ...rect };
+    this.render();
+    this._syncToInputs(key);
+  }
+
+  setDefault(key, rect) {
+    this.defaults.push({ key, rect: { ...rect } });
+    this.setRegion(key, rect);
+  }
+
+  resetToDefault() {
+    for (const d of this.defaults) this.setRegion(d.key, { ...d.rect });
+  }
+
+  getRegion(key) {
+    const r = this.regions.find(r => r.key === key);
+    return r?.sel ? { ...r.sel } : null;
+  }
+
+  // image → screen
+  _iToS(ix, iy) { return { x: ix * this.scale + this.tx, y: iy * this.scale + this.ty }; }
+  // screen → image
+  _sToI(sx, sy) { return { x: (sx - this.tx) / this.scale, y: (sy - this.ty) / this.scale }; }
+
+  _handles(r) {
+    if (!r.sel) return [];
+    const { x, y, w, h } = r.sel;
+    return [
+      { id:"nw", ix:x,     iy:y     },
+      { id:"n",  ix:x+w/2, iy:y     },
+      { id:"ne", ix:x+w,   iy:y     },
+      { id:"e",  ix:x+w,   iy:y+h/2 },
+      { id:"se", ix:x+w,   iy:y+h   },
+      { id:"s",  ix:x+w/2, iy:y+h   },
+      { id:"sw", ix:x,     iy:y+h   },
+      { id:"w",  ix:x,     iy:y+h/2 },
+    ].map(h => { const s = this._iToS(h.ix, h.iy); return { ...h, sx:s.x, sy:s.y }; });
+  }
+
+  _hitTest(sx, sy) {
+    for (let i = 0; i < this.regions.length; i++) {
+      const r = this.regions[i];
+      if (!r.sel) continue;
+      for (const h of this._handles(r)) {
+        if (Math.abs(sx-h.sx) < this.HANDLE_R+2 && Math.abs(sy-h.sy) < this.HANDLE_R+2)
+          return { type: "resize", handleId: h.id, regionIdx: i };
+      }
+      const tl = this._iToS(r.sel.x, r.sel.y);
+      const br = this._iToS(r.sel.x+r.sel.w, r.sel.y+r.sel.h);
+      if (sx>=tl.x && sx<=br.x && sy>=tl.y && sy<=br.y)
+        return { type: "move", regionIdx: i };
+    }
+    return { type: "pan" };
+  }
+
+  _applyResize(regionIdx, handleId, dx, dy) {
+    const r = this.regions[regionIdx];
+    const sel = r.sel;
+    const dxi = dx / this.scale;
+    const dyi = dy / this.scale;
+    let { x, y, w, h } = sel;
+    const minS = 20;
+    if (handleId.includes("w")) { const nw = w - dxi; if (nw > minS) { x += dxi; w = nw; } }
+    if (handleId.includes("e")) { w = Math.max(minS, w + dxi); }
+    if (handleId.includes("n")) { const nh = h - dyi; if (nh > minS) { y += dyi; h = nh; } }
+    if (handleId.includes("s")) { h = Math.max(minS, h + dyi); }
+    // clamp to video bounds
+    x = Math.max(0, Math.min(x, this.imgW - 1));
+    y = Math.max(0, Math.min(y, this.imgH - 1));
+    w = Math.min(w, this.imgW - x);
+    h = Math.min(h, this.imgH - y);
+    r.sel = { x: Math.round(x), y: Math.round(y), w: Math.round(w), h: Math.round(h) };
+  }
+
+  _bindEvents() {
+    const canvas = this.canvas;
+    let lastX, lastY;
+
+    const getPos = (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const src = e.touches ? e.touches[0] : e;
+      return { x: src.clientX - rect.left, y: src.clientY - rect.top };
+    };
+
+    canvas.addEventListener("mousedown", (e) => {
+      const { x, y } = getPos(e);
+      const hit = this._hitTest(x, y);
+      if (hit.type === "resize") {
+        this.activeIdx = hit.regionIdx;
+        this.drag = { ...hit, startX: x, startY: y, snapshot: { ...this.regions[hit.regionIdx].sel } };
+      } else if (hit.type === "move") {
+        this.activeIdx = hit.regionIdx;
+        this.drag = { ...hit, startX: x, startY: y, snapshot: { ...this.regions[hit.regionIdx].sel } };
       } else {
-        document.getElementById("custom-duration-fields").style.display = "none";
-        selectedDuration = Number(btn.dataset.duration);
-        document.getElementById("maxClipDurationSec").value = selectedDuration;
+        this.drag = { type: "pan", startX: x, startY: y, startTx: this.tx, startTy: this.ty };
       }
-    });
-  });
-
-  // ── Log helper ─────────────────────────────────────────────────────────────
-  const logEl = document.getElementById("log");
-  function logLine(text, cls) {
-    logEl.classList.add("show");
-    const span = document.createElement("div");
-    if (cls) span.className = cls;
-    span.textContent = text;
-    logEl.appendChild(span);
-    logEl.scrollTop = logEl.scrollHeight;
-  }
-
-  // ── Form submit ────────────────────────────────────────────────────────────
-  document.getElementById("form").addEventListener("submit", async (e) => {
-    e.preventDefault();
-    startJob();
-  });
-
-  async function startJob() {
-    logEl.innerHTML = "";
-    document.getElementById("results-card").style.display = "none";
-    document.getElementById("clips").innerHTML = "";
-    document.getElementById("compilation-banner").innerHTML = "";
-    hideAllApprovals();
-
-    const form = document.getElementById("form");
-    form.querySelector("button.run").disabled = true;
-
-    const activeTab = document.querySelector(".tab-btn.active").dataset.tab;
-    const fd = new FormData(form);
-
-    // Add mode
-    if (activeTab === "url") {
-      fd.append("mode", "url");
-      const urlVal = document.getElementById("url-input").value.trim();
-      if (!urlVal) { logLine("Informe um link válido.", "err"); form.querySelector("button.run").disabled = false; return; }
-      fd.append("urlLink", urlVal);
-    } else if (activeTab === "combined") {
-      fd.append("mode", "single-combined");
-    } else {
-      fd.append("mode", "files");
-    }
-
-    // Duration
-    const maxDur = document.getElementById("maxClipDurationSec").value;
-    const padBefore = document.getElementById("padBeforeSec").value;
-    const padAfter = document.getElementById("padAfterSec").value;
-    fd.append("maxClipDurationSec", maxDur);
-    fd.append("padBeforeSec", padBefore);
-    fd.append("padAfterSec", padAfter);
-
-    // Options
-    fd.append("detectCrop", document.getElementById("opt-crop").checked ? "true" : "false");
-    fd.append("enableCaptions", document.getElementById("opt-captions").checked ? "true" : "false");
-    fd.append("generateCompilation", document.getElementById("opt-compilation").checked ? "true" : "false");
-
-    logLine("Enviando...");
-
-    try {
-      const res = await fetch("/api/jobs", { method: "POST", body: fd });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Falha ao criar job.");
-      currentJobId = data.jobId;
-      lastLogLength = 0;
-      pollInterval = setInterval(pollJob, 1500);
-    } catch (err) {
-      logLine("Erro: " + err.message, "err");
-      form.querySelector("button.run").disabled = false;
-    }
-  }
-
-  // ── Polling ────────────────────────────────────────────────────────────────
-  async function pollJob() {
-    if (!currentJobId) return;
-    try {
-      const res = await fetch("/api/jobs/" + currentJobId);
-      const job = await res.json();
-
-      for (let i = lastLogLength; i < job.log.length; i++) logLine(job.log[i]);
-      lastLogLength = job.log.length;
-
-      if (job.status === "waiting-crop-approval") {
-        clearInterval(pollInterval); pollInterval = null;
-        logLine("Aguardando sua aprovação do crop...", "wait");
-        showCropApproval(job.pendingApproval.data);
-      } else if (job.status === "waiting-layout-approval") {
-        clearInterval(pollInterval); pollInterval = null;
-        logLine("Aguardando confirmação do layout...", "wait");
-        showLayoutApproval(job.pendingApproval.data);
-      } else if (job.status === "waiting-captions-approval") {
-        clearInterval(pollInterval); pollInterval = null;
-        logLine("Aguardando revisão das legendas...", "wait");
-        showCaptionsApproval(job.pendingApproval.data);
-      } else if (job.status === "done") {
-        clearInterval(pollInterval); pollInterval = null;
-        logLine(`Pronto! ${job.clips.length} clipe(s) gerado(s).`, "ok");
-        document.getElementById("form").querySelector("button.run").disabled = false;
-        showResults(job);
-      } else if (job.status === "error") {
-        clearInterval(pollInterval); pollInterval = null;
-        logLine("Erro: " + job.error, "err");
-        document.getElementById("form").querySelector("button.run").disabled = false;
-      }
-    } catch (e) {
-      console.warn("Poll error:", e);
-    }
-  }
-
-  function resumePolling() {
-    if (!pollInterval) pollInterval = setInterval(pollJob, 1500);
-  }
-
-  function hideAllApprovals() {
-    document.getElementById("crop-approval").style.display = "none";
-    document.getElementById("layout-approval").style.display = "none";
-    document.getElementById("captions-approval").style.display = "none";
-  }
-
-  // ── Crop approval ──────────────────────────────────────────────────────────
-  function showCropApproval(data) {
-    cropApprovalData = data;
-    const panel = document.getElementById("crop-approval");
-
-    document.getElementById("crop-x").value = data.detected.x;
-    document.getElementById("crop-y").value = data.detected.y;
-    document.getElementById("crop-w").value = data.detected.w;
-    document.getElementById("crop-h").value = data.detected.h;
-
-    const img = document.getElementById("crop-preview-img");
-    img.src = data.previewUrl + "?t=" + Date.now();
-    img.onload = () => drawCropOverlay(data);
-
-    // Redraw when user changes values
-    ["crop-x","crop-y","crop-w","crop-h"].forEach(id => {
-      document.getElementById(id).addEventListener("input", () => drawCropOverlay(cropApprovalData));
+      lastX = x; lastY = y;
     });
 
-    panel.style.display = "block";
-    panel.scrollIntoView({ behavior: "smooth" });
-  }
+    window.addEventListener("mousemove", (e) => {
+      if (!this.drag) return;
+      const { x, y } = getPos(e);
+      const dx = x - lastX; const dy = y - lastY;
 
-  function drawCropOverlay(data) {
-    const img = document.getElementById("crop-preview-img");
-    const canvas = document.getElementById("crop-canvas");
-    const scaleX = img.clientWidth / data.videoW;
-    const scaleY = img.clientHeight / data.videoH;
-    canvas.width = img.clientWidth;
-    canvas.height = img.clientHeight;
-    canvas.style.width = img.clientWidth + "px";
-    canvas.style.height = img.clientHeight + "px";
-
-    const x = Number(document.getElementById("crop-x").value) * scaleX;
-    const y = Number(document.getElementById("crop-y").value) * scaleY;
-    const w = Number(document.getElementById("crop-w").value) * scaleX;
-    const h = Number(document.getElementById("crop-h").value) * scaleY;
-
-    const ctx = canvas.getContext("2d");
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Dark overlay outside crop
-    ctx.fillStyle = "rgba(0,0,0,0.55)";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.clearRect(x, y, w, h);
-
-    // Border
-    ctx.strokeStyle = "#e8418c";
-    ctx.lineWidth = 2;
-    ctx.strokeRect(x, y, w, h);
-  }
-
-  document.getElementById("crop-approve").addEventListener("click", async () => {
-    const adjusted = {
-      x: Number(document.getElementById("crop-x").value),
-      y: Number(document.getElementById("crop-y").value),
-      w: Number(document.getElementById("crop-w").value),
-      h: Number(document.getElementById("crop-h").value),
-    };
-    document.getElementById("crop-approval").style.display = "none";
-    await sendApproval("crop", true, adjusted);
-    logLine("Crop aprovado, continuando...", "ok");
-    resumePolling();
-  });
-
-  document.getElementById("crop-skip").addEventListener("click", async () => {
-    const d = cropApprovalData;
-    document.getElementById("crop-approval").style.display = "none";
-    await sendApproval("crop", true, { x: 0, y: 0, w: d.videoW, h: d.videoH });
-    logLine("Crop ignorado — usando vídeo inteiro.", "ok");
-    resumePolling();
-  });
-
-  // ── Layout approval ────────────────────────────────────────────────────────
-  function showLayoutApproval(data) {
-    layoutApprovalData = data;
-    const panel = document.getElementById("layout-approval");
-
-    document.getElementById("webcam-x").value = data.webcam.x;
-    document.getElementById("webcam-y").value = data.webcam.y;
-    document.getElementById("webcam-w").value = data.webcam.w;
-    document.getElementById("webcam-h").value = data.webcam.h;
-    document.getElementById("game-x").value = data.game.x;
-    document.getElementById("game-y").value = data.game.y;
-    document.getElementById("game-w").value = data.game.w;
-    document.getElementById("game-h").value = data.game.h;
-
-    const img = new Image();
-    img.src = data.previewUrl + "?t=" + Date.now();
-    img.onload = () => drawLayoutOverlay(img, data);
-
-    ["webcam-x","webcam-y","webcam-w","webcam-h","game-x","game-y","game-w","game-h"].forEach(id => {
-      document.getElementById(id).addEventListener("input", () => {
-        if (img.complete) drawLayoutOverlay(img, data);
-      });
-    });
-
-    panel.style.display = "block";
-    panel.scrollIntoView({ behavior: "smooth" });
-  }
-
-  function drawLayoutOverlay(img, data) {
-    const canvas = document.getElementById("layout-canvas");
-    const maxW = canvas.parentElement.clientWidth - 48;
-    const scale = Math.min(1, maxW / data.videoW);
-    canvas.width = data.videoW * scale;
-    canvas.height = data.videoH * scale;
-    canvas.style.maxWidth = "100%";
-
-    const ctx = canvas.getContext("2d");
-    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-    const getRegion = (prefix) => ({
-      x: Number(document.getElementById(prefix + "-x").value) * scale,
-      y: Number(document.getElementById(prefix + "-y").value) * scale,
-      w: Number(document.getElementById(prefix + "-w").value) * scale,
-      h: Number(document.getElementById(prefix + "-h").value) * scale,
-    });
-
-    const game = getRegion("game");
-    ctx.strokeStyle = "rgba(61,232,154,0.9)";
-    ctx.lineWidth = 3;
-    ctx.strokeRect(game.x, game.y, game.w, game.h);
-    ctx.fillStyle = "rgba(61,232,154,0.15)";
-    ctx.fillRect(game.x, game.y, game.w, game.h);
-
-    const webcam = getRegion("webcam");
-    ctx.strokeStyle = "rgba(123,79,214,0.9)";
-    ctx.lineWidth = 3;
-    ctx.strokeRect(webcam.x, webcam.y, webcam.w, webcam.h);
-    ctx.fillStyle = "rgba(123,79,214,0.25)";
-    ctx.fillRect(webcam.x, webcam.y, webcam.w, webcam.h);
-  }
-
-  document.getElementById("layout-approve").addEventListener("click", async () => {
-    const adj = {
-      webcam: {
-        x: Number(document.getElementById("webcam-x").value),
-        y: Number(document.getElementById("webcam-y").value),
-        w: Number(document.getElementById("webcam-w").value),
-        h: Number(document.getElementById("webcam-h").value),
-      },
-      game: {
-        x: Number(document.getElementById("game-x").value),
-        y: Number(document.getElementById("game-y").value),
-        w: Number(document.getElementById("game-w").value),
-        h: Number(document.getElementById("game-h").value),
-      },
-    };
-    document.getElementById("layout-approval").style.display = "none";
-    await sendApproval("layout", true, adj);
-    logLine("Layout aprovado, continuando...", "ok");
-    resumePolling();
-  });
-
-  document.getElementById("layout-reject").addEventListener("click", async () => {
-    document.getElementById("layout-approval").style.display = "none";
-    await sendApproval("layout", false, null);
-    logLine("Processamento cancelado.", "err");
-    document.getElementById("form").querySelector("button.run").disabled = false;
-  });
-
-  // ── Captions approval ──────────────────────────────────────────────────────
-  function showCaptionsApproval(data) {
-    captionsApprovalData = data;
-    const container = document.getElementById("caption-clips-container");
-    container.innerHTML = "";
-
-    for (const clip of data.clips) {
-      const div = document.createElement("div");
-      div.className = "caption-clip";
-      div.dataset.clipId = clip.clipId;
-
-      const timeLabel = `${clip.startSec.toFixed(1)}s – ${clip.endSec.toFixed(1)}s`;
-      div.innerHTML = `<h4>Clipe: ${timeLabel}</h4>
-        <video src="${clip.clipUrl}" controls preload="metadata"></video>
-        <div class="caption-groups" id="groups-${clip.clipId}"></div>`;
-
-      const groupsEl = div.querySelector(".caption-groups");
-      for (const group of clip.groups) {
-        const row = document.createElement("div");
-        row.className = "caption-group";
-        row.dataset.groupId = group.id;
-        row.dataset.startSec = group.startSec;
-        row.dataset.endSec = group.endSec;
-
-        const start = group.startSec.toFixed(2);
-        const end = group.endSec.toFixed(2);
-        row.innerHTML = `
-          <span class="time-label">${start}s → ${end}s</span>
-          <input type="text" value="${escapeHtml(group.text)}" />
-        `;
-        groupsEl.appendChild(row);
+      if (this.drag.type === "pan") {
+        this.tx = this.drag.startTx + (x - this.drag.startX);
+        this.ty = this.drag.startTy + (y - this.drag.startY);
+      } else if (this.drag.type === "move") {
+        const r = this.regions[this.drag.regionIdx];
+        const snap = this.drag.snapshot;
+        const dxi = (x - this.drag.startX) / this.scale;
+        const dyi = (y - this.drag.startY) / this.scale;
+        r.sel.x = Math.round(Math.max(0, Math.min(snap.x + dxi, this.imgW - snap.w)));
+        r.sel.y = Math.round(Math.max(0, Math.min(snap.y + dyi, this.imgH - snap.h)));
+      } else if (this.drag.type === "resize") {
+        this._applyResize(this.drag.regionIdx, this.drag.handleId, dx, dy);
       }
 
-      container.appendChild(div);
-    }
+      this.render();
+      if (this.drag.type !== "pan") {
+        this._syncToInputs(this.regions[this.drag.regionIdx]?.key);
+      }
+      lastX = x; lastY = y;
+    });
 
-    document.getElementById("captions-approval").style.display = "block";
-    document.getElementById("captions-approval").scrollIntoView({ behavior: "smooth" });
-  }
+    window.addEventListener("mouseup", () => { this.drag = null; });
 
-  function escapeHtml(s) {
-    return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
-  }
+    canvas.addEventListener("wheel", (e) => {
+      e.preventDefault();
+      const { x, y } = getPos(e);
+      const factor = e.deltaY < 0 ? 1.1 : 0.91;
+      const newScale = Math.max(0.1, Math.min(20, this.scale * factor));
+      this.tx = x - (x - this.tx) * (newScale / this.scale);
+      this.ty = y - (y - this.ty) * (newScale / this.scale);
+      this.scale = newScale;
+      this.render();
+    }, { passive: false });
 
-  document.getElementById("captions-approve").addEventListener("click", async () => {
-    const clips = [];
-    document.querySelectorAll(".caption-clip").forEach(clipEl => {
-      const clipId = clipEl.dataset.clipId;
-      const groups = [];
-      clipEl.querySelectorAll(".caption-group").forEach(row => {
-        groups.push({
-          id: row.dataset.groupId,
-          text: row.querySelector("input").value,
-          startSec: Number(row.dataset.startSec),
-          endSec: Number(row.dataset.endSec),
+    // Sync from number inputs
+    for (const r of this.regions) {
+      for (const [k, id] of Object.entries(r.inputs)) {
+        const el = document.getElementById(id);
+        if (!el) continue;
+        el.addEventListener("input", () => {
+          if (!r.sel) r.sel = { x:0, y:0, w:100, h:100 };
+          r.sel[k] = Math.max(0, Number(el.value));
+          this.render();
         });
-      });
-      clips.push({ clipId, groups });
-    });
-
-    document.getElementById("captions-approval").style.display = "none";
-    await sendApproval("captions", true, { clips });
-    logLine("Legendas aprovadas, queimando nos clipes...", "ok");
-    resumePolling();
-  });
-
-  document.getElementById("captions-skip").addEventListener("click", async () => {
-    document.getElementById("captions-approval").style.display = "none";
-    await sendApproval("captions", false, null);
-    logLine("Legendas ignoradas.", "ok");
-    resumePolling();
-  });
-
-  // ── Send approval ──────────────────────────────────────────────────────────
-  async function sendApproval(type, approved, adjustedData) {
-    try {
-      const res = await fetch(`/api/jobs/${currentJobId}/approve`, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ type, approved, adjustedData }),
-      });
-      if (!res.ok) {
-        const d = await res.json();
-        logLine("Erro ao enviar aprovação: " + (d.error || res.status), "err");
       }
-    } catch (err) {
-      logLine("Erro de rede ao enviar aprovação: " + err.message, "err");
     }
   }
 
-  // ── Show results ───────────────────────────────────────────────────────────
-  function showResults(job) {
-    const resultsCard = document.getElementById("results-card");
-    const clipsEl = document.getElementById("clips");
-    const bannerEl = document.getElementById("compilation-banner");
+  _syncToInputs(key) {
+    const r = this.regions.find(r => r.key === key);
+    if (!r?.sel) return;
+    for (const [k, id] of Object.entries(r.inputs)) {
+      const el = document.getElementById(id);
+      if (el) el.value = r.sel[k];
+    }
+  }
 
-    if (job.compilationUrl) {
-      bannerEl.innerHTML = `
-        <div class="compilation-banner">
-          <div class="left">
-            <b>Compilação gerada</b>
-            <span>Todos os melhores momentos em um único vídeo</span>
-          </div>
-          <a href="${job.compilationUrl}" download>Baixar compilação</a>
-        </div>`;
+  render() {
+    const { ctx, _cw: cw, _ch: ch } = this;
+    ctx.clearRect(0, 0, cw, ch);
+    ctx.fillStyle = "#111";
+    ctx.fillRect(0, 0, cw, ch);
+
+    // Draw image
+    if (this.img?.complete) {
+      ctx.drawImage(this.img, this.tx, this.ty, this.imgW * this.scale, this.imgH * this.scale);
     }
 
-    if (job.clips.length > 0) {
-      resultsCard.style.display = "block";
-      for (const clip of job.clips) {
-        const div = document.createElement("div");
-        div.className = "clip";
-        div.innerHTML = `
-          <video src="${clip.url}" controls preload="metadata"></video>
-          <div class="meta">
-            ${clip.startSec.toFixed(1)}s – ${clip.endSec.toFixed(1)}s<br/>
-            ${clip.reason}<br/>
-            <a href="${clip.url}" download>baixar</a>
-          </div>`;
-        clipsEl.appendChild(div);
+    // Draw each region
+    for (let i = 0; i < this.regions.length; i++) {
+      const r = this.regions[i];
+      if (!r.sel) continue;
+      const isActive = i === this.activeIdx;
+      const tl = this._iToS(r.sel.x, r.sel.y);
+      const sw = r.sel.w * this.scale;
+      const sh = r.sel.h * this.scale;
+
+      // Darkening for single-region editors
+      if (this.regions.length === 1) {
+        ctx.save();
+        ctx.fillStyle = "rgba(0,0,0,0.5)";
+        ctx.fillRect(this.tx, this.ty, this.imgW * this.scale, this.imgH * this.scale);
+        ctx.clearRect(tl.x, tl.y, sw, sh);
+        ctx.restore();
+        // Re-draw the selection area from the image
+        if (this.img?.complete) {
+          ctx.drawImage(
+            this.img,
+            r.sel.x, r.sel.y, r.sel.w, r.sel.h,
+            tl.x, tl.y, sw, sh
+          );
+        }
       }
+
+      // Selection border
+      ctx.strokeStyle = r.color;
+      ctx.lineWidth = isActive ? 2.5 : 1.5;
+      ctx.setLineDash(isActive ? [] : [6, 4]);
+      ctx.strokeRect(tl.x, tl.y, sw, sh);
+      ctx.setLineDash([]);
+
+      // Label
+      ctx.fillStyle = r.color;
+      ctx.font = "bold 12px sans-serif";
+      ctx.fillText(r.label, tl.x + 6, tl.y + 16);
+
+      // Handles (only active)
+      if (isActive) {
+        for (const h of this._handles(r)) {
+          ctx.fillStyle = "#fff";
+          ctx.fillRect(h.sx - this.HANDLE_R, h.sy - this.HANDLE_R, this.HANDLE_R*2, this.HANDLE_R*2);
+          ctx.strokeStyle = r.color;
+          ctx.lineWidth = 1.5;
+          ctx.strokeRect(h.sx - this.HANDLE_R, h.sy - this.HANDLE_R, this.HANDLE_R*2, this.HANDLE_R*2);
+        }
+      }
+    }
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// Editor instances (criados quando os dados chegam)
+// ════════════════════════════════════════════════════════════════════════════
+let editorCrop   = null;
+let editorGame   = null;
+let editorLayout = null;
+
+function buildCropEditor(canvasId, xId, yId, wId, hId, imgUrl, vW, vH) {
+  const editor = new RegionEditor(canvasId, [
+    { key:"crop", label:"Crop", color:"#e8418c", sel:null, inputs:{x:xId,y:yId,w:wId,h:hId} }
+  ], { imgW: vW, imgH: vH, imageUrl: imgUrl });
+  return editor;
+}
+
+function buildLayoutEditor(imgUrl, vW, vH) {
+  return new RegionEditor("canvas-layout", [
+    { key:"game",  label:"Jogo",   color:"#3de89a", sel:null, inputs:{x:"game2-x",y:"game2-y",w:"game2-w",h:"game2-h"} },
+    { key:"webcam",label:"Webcam", color:"#a07fde", sel:null, inputs:{x:"wcam-x",  y:"wcam-y",  w:"wcam-w",  h:"wcam-h" } },
+  ], { imgW: vW, imgH: vH, imageUrl: imgUrl });
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// App state
+// ════════════════════════════════════════════════════════════════════════════
+let currentJobId = null, pollInterval = null, lastLogLen = 0;
+
+// ── Tab switching
+document.querySelectorAll(".tab-btn").forEach(btn =>
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById("tab-" + btn.dataset.tab)?.classList.add("active");
+  })
+);
+
+// ── Drop zones
+for (const id of ["drop-streamer","drop-mesa","drop-combined","drop-outro"]) {
+  const el = document.getElementById(id);
+  if (!el) continue;
+  const input = el.querySelector("input");
+  input?.addEventListener("change", () => {
+    el.classList.toggle("filled", input.files.length > 0);
+    if (input.files[0]) el.querySelector(".hint-inline").textContent = input.files[0].name;
+  });
+}
+
+// ── Duration presets
+document.querySelectorAll(".preset-btn").forEach(btn =>
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".preset-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    const dur = btn.dataset.duration;
+    if (dur === "custom") {
+      document.getElementById("custom-duration-fields").style.display = "block";
+      document.getElementById("presetDuration").value = "custom";
     } else {
-      resultsCard.style.display = "block";
-      clipsEl.innerHTML = '<p style="color:var(--ink-dim); font-size:14px;">Nenhum clipe foi gerado.</p>';
+      document.getElementById("custom-duration-fields").style.display = "none";
+      document.getElementById("presetDuration").value = dur;
+      document.getElementById("maxClipDurationSec").value = dur;
     }
+  })
+);
+
+// ── Log
+const logEl = document.getElementById("log");
+function logLine(text, cls) {
+  logEl.classList.add("show");
+  const span = document.createElement("div");
+  if (cls) span.className = cls;
+  span.textContent = text;
+  logEl.appendChild(span);
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+// ── Form submit
+document.getElementById("form").addEventListener("submit", e => { e.preventDefault(); startJob(); });
+
+async function startJob() {
+  logEl.innerHTML = "";
+  document.getElementById("results-card").style.display = "none";
+  document.getElementById("clips").innerHTML = "";
+  document.getElementById("compilation-banner").innerHTML = "";
+  hideAllApprovals();
+
+  const form = document.getElementById("form");
+  form.querySelector("button.run").disabled = true;
+
+  const fd = new FormData(form);
+  const activeTab = document.querySelector(".tab-btn.active").dataset.tab;
+
+  if (activeTab === "url") {
+    const urlVal = document.getElementById("url-input").value.trim();
+    if (!urlVal) { logLine("Informe um link válido.", "err"); form.querySelector("button.run").disabled = false; return; }
+    fd.append("mode","url"); fd.append("urlLink", urlVal);
+  } else if (activeTab === "combined") {
+    fd.append("mode","single-combined");
+  } else {
+    fd.append("mode","files");
   }
+
+  // Duration: só envia pads quando no modo personalizado
+  const isCustom = document.getElementById("presetDuration").value === "custom";
+  fd.append("maxClipDurationSec", document.getElementById("maxClipDurationSec").value);
+  if (isCustom) {
+    fd.append("padBeforeSec", document.getElementById("padBeforeSec").value);
+    fd.append("padAfterSec",  document.getElementById("padAfterSec").value);
+  }
+  // pads NÃO são enviados em modo preset → selectHighlights.ts os deriva de maxClipDurationSec
+
+  fd.append("detectCrop",         document.getElementById("opt-crop").checked       ? "true" : "false");
+  fd.append("detectGameCrop",     document.getElementById("opt-game-crop").checked   ? "true" : "false");
+  fd.append("enableCaptions",     document.getElementById("opt-captions").checked    ? "true" : "false");
+  fd.append("generateCompilation",document.getElementById("opt-compilation").checked ? "true" : "false");
+
+  const profileId = document.getElementById("profileSelect").value;
+  if (profileId) fd.append("profileId", profileId);
+
+  logLine("Enviando...");
+  try {
+    const res = await fetch("/api/jobs", { method:"POST", body:fd });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Falha ao criar job.");
+    currentJobId = data.jobId;
+    lastLogLen = 0;
+    pollInterval = setInterval(pollJob, 1500);
+  } catch (err) {
+    logLine("Erro: " + err.message, "err");
+    form.querySelector("button.run").disabled = false;
+  }
+}
+
+// ── Polling
+async function pollJob() {
+  if (!currentJobId) return;
+  try {
+    const res  = await fetch("/api/jobs/" + currentJobId);
+    const job  = await res.json();
+    for (let i = lastLogLen; i < job.log.length; i++) logLine(job.log[i]);
+    lastLogLen = job.log.length;
+
+    if      (job.status === "waiting-crop-approval") { clearInterval(pollInterval); pollInterval=null; handleCropApproval(job.pendingApproval.data); }
+    else if (job.status === "waiting-layout-approval") { clearInterval(pollInterval); pollInterval=null; handleLayoutApproval(job.pendingApproval.data); }
+    else if (job.status === "waiting-captions-approval") { clearInterval(pollInterval); pollInterval=null; handleCaptionsApproval(job.pendingApproval.data); }
+    else if (job.status === "done")  { clearInterval(pollInterval); pollInterval=null; logLine(`Pronto! ${job.clips.length} clipe(s).`,"ok"); document.getElementById("form").querySelector("button.run").disabled=false; showResults(job); }
+    else if (job.status === "error") { clearInterval(pollInterval); pollInterval=null; logLine("Erro: "+job.error,"err"); document.getElementById("form").querySelector("button.run").disabled=false; }
+  } catch(e) { console.warn("poll err",e); }
+}
+
+function resumePolling() { if (!pollInterval) pollInterval = setInterval(pollJob, 1500); }
+function hideAllApprovals() {
+  for (const id of ["crop-approval","game-crop-approval","layout-approval","captions-approval"])
+    document.getElementById(id).classList.remove("visible");
+}
+
+// ── Crop approval (streamer)
+function handleCropApproval(data) {
+  // Check if this is for game (target field) or streamer
+  if (data.target === "game") { handleGameCropApproval(data); return; }
+
+  const panel = document.getElementById("crop-approval");
+  editorCrop = buildCropEditor("canvas-crop","crop-x","crop-y","crop-w","crop-h", data.previewUrl, data.videoW, data.videoH);
+  editorCrop.setDefault("crop", data.detected);
+  panel.classList.add("visible");
+  panel.scrollIntoView({ behavior:"smooth" });
+  logLine("Aguardando aprovação do crop...", "wait");
+}
+
+function handleGameCropApproval(data) {
+  const panel = document.getElementById("game-crop-approval");
+  editorGame = buildCropEditor("canvas-game","game-x","game-y","game-w","game-h", data.previewUrl, data.videoW, data.videoH);
+  editorGame.setDefault("crop", data.detected);
+  panel.classList.add("visible");
+  panel.scrollIntoView({ behavior:"smooth" });
+  logLine("Aguardando aprovação do crop do jogo...", "wait");
+}
+
+document.getElementById("crop-approve").addEventListener("click", async () => {
+  const sel = editorCrop?.getRegion("crop");
+  document.getElementById("crop-approval").classList.remove("visible");
+  await sendApproval("crop", true, sel);
+  logLine("Crop aprovado.", "ok");
+  resumePolling();
+});
+document.getElementById("crop-skip").addEventListener("click", async () => {
+  document.getElementById("crop-approval").classList.remove("visible");
+  await sendApproval("crop", true, null); // null → pipeline usa frame inteiro
+  logLine("Crop ignorado, usando frame inteiro.", "ok");
+  resumePolling();
+});
+
+document.getElementById("game-crop-approve").addEventListener("click", async () => {
+  const sel = editorGame?.getRegion("crop");
+  document.getElementById("game-crop-approval").classList.remove("visible");
+  await sendApproval("crop", true, sel);
+  logLine("Crop do jogo aprovado.", "ok");
+  resumePolling();
+});
+document.getElementById("game-crop-skip").addEventListener("click", async () => {
+  document.getElementById("game-crop-approval").classList.remove("visible");
+  await sendApproval("crop", true, null);
+  logLine("Crop do jogo ignorado.", "ok");
+  resumePolling();
+});
+
+// ── Layout approval (single-combined)
+function handleLayoutApproval(data) {
+  const panel = document.getElementById("layout-approval");
+  editorLayout = buildLayoutEditor(data.previewUrl, data.videoW, data.videoH);
+  editorLayout.setDefault("game",   data.game);
+  editorLayout.setDefault("webcam", data.webcam);
+  panel.classList.add("visible");
+  panel.scrollIntoView({ behavior:"smooth" });
+  logLine("Aguardando confirmação do layout...", "wait");
+}
+
+document.getElementById("layout-approve").addEventListener("click", async () => {
+  const adj = { game: editorLayout?.getRegion("game"), webcam: editorLayout?.getRegion("webcam") };
+  document.getElementById("layout-approval").classList.remove("visible");
+  await sendApproval("layout", true, adj);
+  logLine("Layout aprovado.", "ok");
+  resumePolling();
+});
+document.getElementById("layout-cancel").addEventListener("click", async () => {
+  document.getElementById("layout-approval").classList.remove("visible");
+  await sendApproval("layout", false, null);
+  logLine("Processamento cancelado.", "err");
+  document.getElementById("form").querySelector("button.run").disabled = false;
+});
+
+// ── Captions approval
+function handleCaptionsApproval(data) {
+  const container = document.getElementById("caption-clips-container");
+  container.innerHTML = "";
+  for (const clip of data.clips) {
+    const div = document.createElement("div");
+    div.className = "caption-clip";
+    div.dataset.clipId = clip.clipId;
+    div.innerHTML = `<h4>${clip.startSec.toFixed(1)}s – ${clip.endSec.toFixed(1)}s</h4>
+      <video src="${clip.clipUrl}" controls preload="metadata"></video>
+      <div class="caption-groups" id="grps-${clip.clipId}"></div>`;
+    const grpsEl = div.querySelector(".caption-groups");
+    for (const g of clip.groups) {
+      const row = document.createElement("div");
+      row.className = "caption-group";
+      row.dataset.gid = g.id; row.dataset.start = g.startSec; row.dataset.end = g.endSec;
+      row.innerHTML = `<span class="time-label">${g.startSec.toFixed(2)}→${g.endSec.toFixed(2)}</span>
+        <input type="text" value="${g.text.replace(/"/g,'&quot;')}" />`;
+      grpsEl.appendChild(row);
+    }
+    container.appendChild(div);
+  }
+  document.getElementById("captions-approval").classList.add("visible");
+  document.getElementById("captions-approval").scrollIntoView({ behavior:"smooth" });
+  logLine("Aguardando revisão das legendas...", "wait");
+}
+
+document.getElementById("captions-approve").addEventListener("click", async () => {
+  const clips = [];
+  document.querySelectorAll(".caption-clip").forEach(clipEl => {
+    const groups = [];
+    clipEl.querySelectorAll(".caption-group").forEach(row =>
+      groups.push({ id:row.dataset.gid, text:row.querySelector("input").value, startSec:+row.dataset.start, endSec:+row.dataset.end })
+    );
+    clips.push({ clipId:clipEl.dataset.clipId, groups });
+  });
+  document.getElementById("captions-approval").classList.remove("visible");
+  await sendApproval("captions", true, { clips });
+  logLine("Legendas aprovadas.", "ok");
+  resumePolling();
+});
+document.getElementById("captions-skip").addEventListener("click", async () => {
+  document.getElementById("captions-approval").classList.remove("visible");
+  await sendApproval("captions", false, null);
+  logLine("Legendas ignoradas.", "ok");
+  resumePolling();
+});
+
+// ── sendApproval
+async function sendApproval(type, approved, adjustedData) {
+  try {
+    const res = await fetch(`/api/jobs/${currentJobId}/approve`, {
+      method:"POST", headers:{"content-type":"application/json"},
+      body: JSON.stringify({ type, approved, adjustedData }),
+    });
+    if (!res.ok) { const d = await res.json(); logLine("Erro ao aprovar: "+(d.error||res.status),"err"); }
+  } catch(e) { logLine("Erro de rede: "+e.message,"err"); }
+}
+
+// ── Feedback
+async function sendFeedback(jobId, clipIndex, rating, clipCard) {
+  try {
+    await fetch(`/api/jobs/${jobId}/feedback`, {
+      method:"POST", headers:{"content-type":"application/json"},
+      body: JSON.stringify({ clipIndex, rating }),
+    });
+    // Update button UI
+    clipCard.querySelectorAll(".fb-btn").forEach(b => b.classList.remove("active-great","active-good","active-bad"));
+    const btn = clipCard.querySelector(`[data-rating="${rating}"]`);
+    if (btn) btn.classList.add(`active-${rating}`);
+  } catch(e) { console.warn("feedback err",e); }
+}
+
+// ── Show results
+function showResults(job) {
+  const resultsCard = document.getElementById("results-card");
+  const clipsEl     = document.getElementById("clips");
+  const bannerEl    = document.getElementById("compilation-banner");
+
+  if (job.compilationUrl) {
+    bannerEl.innerHTML = `<div class="compilation-banner">
+      <div class="left"><b>Compilação gerada</b><span>Todos os melhores momentos em sequência</span></div>
+      <a href="${job.compilationUrl}" download>Baixar compilação</a></div>`;
+  }
+
+  resultsCard.style.display = "block";
+  if (!job.clips.length) { clipsEl.innerHTML='<p style="color:var(--ink-dim)">Nenhum clipe gerado.</p>'; return; }
+
+  job.clips.forEach((clip, idx) => {
+    const dur = (clip.endSec - clip.startSec).toFixed(1);
+    const scoreTag = clip.score != null ? `<span class="clip-score">${clip.score}</span>` : "";
+    const sourceTag = clip.source === "ia" ? "IA" : "áudio";
+    const div = document.createElement("div");
+    div.className = "clip";
+    div.innerHTML = `
+      <video src="${clip.url}" controls preload="metadata"></video>
+      <div class="clip-meta">
+        ${clip.startSec.toFixed(1)}s – ${clip.endSec.toFixed(1)}s &nbsp;·&nbsp; ${dur}s${scoreTag}<br/>
+        <span style="font-size:11px;color:var(--ink-dim);text-transform:uppercase;">${sourceTag}</span><br/>
+        ${clip.reason}<br/>
+        <a href="${clip.url}" download>baixar</a>
+      </div>
+      <div class="feedback-row">
+        <button class="fb-btn" data-rating="great" title="Muito bom" onclick="sendFeedback('${job.id}',${idx},'great',this.closest('.clip'))">👍 Ótimo</button>
+        <button class="fb-btn" data-rating="good"  title="Bom"      onclick="sendFeedback('${job.id}',${idx},'good', this.closest('.clip'))">👌 Bom</button>
+        <button class="fb-btn" data-rating="bad"   title="Ruim"     onclick="sendFeedback('${job.id}',${idx},'bad',  this.closest('.clip'))">👎 Ruim</button>
+      </div>`;
+    clipsEl.appendChild(div);
+  });
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// Creator Profiles
+// ════════════════════════════════════════════════════════════════════════════
+async function loadProfiles() {
+  try {
+    const res = await fetch("/api/profiles");
+    const profiles = await res.json();
+    const sel = document.getElementById("profileSelect");
+    sel.innerHTML = '<option value="">Nenhum</option>';
+    for (const p of profiles) sel.innerHTML += `<option value="${p.id}">${p.name} (${p.preferredGame}, ${p.clipDurationSec}s)</option>`;
+
+    const list = document.getElementById("profiles-list");
+    list.innerHTML = "";
+    if (!profiles.length) { list.innerHTML = '<p style="color:var(--ink-dim);font-size:13px;">Nenhum perfil criado.</p>'; return; }
+    for (const p of profiles) {
+      const row = document.createElement("div");
+      row.style.cssText = "display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--surface-2);border-radius:8px;";
+      row.innerHTML = `<div><b style="font-size:14px;">${p.name}</b><br/><span style="font-size:12px;color:var(--ink-dim);">${p.preferredGame} · ${p.clipDurationSec}s · ${p.notes||"sem notas"}</span></div>
+        <button onclick="deleteProfile('${p.id}')" style="background:none;border:1px solid var(--line);color:var(--ink-dim);border-radius:6px;padding:4px 10px;cursor:pointer;font-size:12px;">Excluir</button>`;
+      list.appendChild(row);
+    }
+  } catch(e) { console.warn("profiles err",e); }
+}
+
+function openProfilesModal()  { loadProfiles(); document.getElementById("profiles-modal").classList.add("open"); }
+function closeProfilesModal() { document.getElementById("profiles-modal").classList.remove("open"); }
+function openCreateProfile()  { closeProfilesModal(); document.getElementById("create-profile-modal").classList.add("open"); }
+function closeCreateProfile() { document.getElementById("create-profile-modal").classList.remove("open"); }
+
+async function saveProfile() {
+  const name  = document.getElementById("pf-name").value.trim();
+  if (!name) { alert("Informe o nome."); return; }
+  try {
+    await fetch("/api/profiles", {
+      method:"POST", headers:{"content-type":"application/json"},
+      body: JSON.stringify({
+        name, preferredGame: document.getElementById("pf-game").value,
+        clipDurationSec: +document.getElementById("pf-dur").value,
+        audioSensitivity: 1, notes: document.getElementById("pf-notes").value,
+      }),
+    });
+    closeCreateProfile();
+    loadProfiles();
+  } catch(e) { alert("Erro ao salvar: "+e.message); }
+}
+
+async function deleteProfile(id) {
+  if (!confirm("Excluir este perfil?")) return;
+  await fetch("/api/profiles/"+id, { method:"DELETE" });
+  loadProfiles();
+}
+
+// Init
+loadProfiles();
 </script>
 </body>
 </html>

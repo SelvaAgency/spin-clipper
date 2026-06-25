@@ -43,12 +43,16 @@ export interface PipelineInput {
   padBeforeSec?: number;
   /** Seconds of context after the audio peak (default 6) */
   padAfterSec?: number;
-  /** Auto-detect and ask user to approve crop region */
+  /** Auto-detect and ask user to approve crop region (streamer) */
   detectCropEnabled?: boolean;
+  /** Detectar e pedir aprovação do crop do vídeo de mesa/jogo */
+  detectGameCropEnabled?: boolean;
   /** Enable automatic captions + editor */
   enableCaptions?: boolean;
   /** Generate a single compilation video after individual clips */
   generateCompilationEnabled?: boolean;
+  /** Jogo preferido para calibrar o scoring da IA */
+  preferredGame?: "baccarat" | "blackjack" | "roulette" | "all";
   workDir: string;
   outDir: string;
   onProgress?: (msg: string) => void;
@@ -185,6 +189,47 @@ export async function runPipeline(input: PipelineInput): Promise<PipelineResult>
     }
   }
 
+  // ─── 4a. Game crop approval (modo dual: crop do vídeo de mesa) ──────────────
+  if (input.detectGameCropEnabled && input.mesaPath) {
+    log("Detectando área útil do vídeo de mesa/jogo...");
+    const gameCropInfo = await detectCrop(input.mesaPath);
+    const gameVideoInfo = await probe(input.mesaPath);
+
+    const gamePreviewPath = path.join(previewDir, "game_crop_preview.jpg");
+    await extractPreviewFrame(input.mesaPath, gamePreviewPath);
+
+    updateJob(input.jobId, {
+      status: "waiting-crop-approval",
+      pendingApproval: {
+        type: "crop",
+        data: {
+          previewUrl: `/clips/${input.jobId}/previews/game_crop_preview.jpg`,
+          detected: gameCropInfo,
+          videoW: gameVideoInfo.width,
+          videoH: gameVideoInfo.height,
+          target: "game",
+        },
+      },
+    });
+    log("Aguardando confirmação do crop do jogo...");
+
+    const gameCropResponse: ApprovalResponse = await waitForApproval(input.jobId);
+    updateJob(input.jobId, { status: "running", pendingApproval: undefined });
+
+    const finalGameCrop: CropInfo = gameCropResponse.adjustedData ?? gameCropInfo;
+    const isFullGameFrame =
+      finalGameCrop.x === 0 && finalGameCrop.y === 0 &&
+      finalGameCrop.w === gameVideoInfo.width && finalGameCrop.h === gameVideoInfo.height;
+
+    if (!isFullGameFrame) {
+      log(`Aplicando crop do jogo: ${finalGameCrop.w}x${finalGameCrop.h} em ${finalGameCrop.x},${finalGameCrop.y}...`);
+      const croppedMesaPath = path.join(input.workDir, "mesa_game_cropped.mp4");
+      await cropVideo(input.mesaPath, finalGameCrop, croppedMesaPath);
+      (input as any).mesaPath = croppedMesaPath;
+      log("Crop do jogo aplicado.");
+    }
+  }
+
   // ─── 4. Synchronization (dual mode) ─────────────────────────────────────────
   let mesaOffsetSec = 0;
   if ((input as any).mode === "dual") {
@@ -212,28 +257,38 @@ export async function runPipeline(input: PipelineInput): Promise<PipelineResult>
   if (candidates.length === 0) return { clips: [] };
 
   // ─── 6. Transcription ────────────────────────────────────────────────────────
+  // Transcreve se ASSEMBLYAI_API_KEY estiver configurada E legendas estiverem ativadas,
+  // OU se ANTHROPIC_API_KEY estiver configurada (precisamos do transcript para o scoring).
   let transcript: Transcript | null = null;
-  if (process.env.ASSEMBLYAI_API_KEY && (input.enableCaptions || true)) {
+  const needTranscript = Boolean(
+    (process.env.ASSEMBLYAI_API_KEY && input.enableCaptions) ||
+    (process.env.ASSEMBLYAI_API_KEY && process.env.ANTHROPIC_API_KEY)
+  );
+  if (needTranscript) {
     log("Transcrevendo áudio...");
     try {
       transcript = await transcribe(analysisSource);
-      log("Transcrição concluída.");
+      log(`Transcrição concluída (${transcript.words.length} palavras).`);
     } catch (err: any) {
       log(`Transcrição falhou: ${err.message}. Continuando sem legenda.`);
     }
   } else {
-    log("ASSEMBLYAI_API_KEY não configurada — sem transcrição.");
+    log("Transcrição desativada (sem ASSEMBLYAI_API_KEY ou legendas não ativadas).");
   }
 
   // ─── 7. Highlight selection ──────────────────────────────────────────────────
-  log("Selecionando os melhores momentos...");
+  log(`Selecionando melhores momentos (jogo=${input.preferredGame ?? "all"}, maxDur=${input.maxClipDurationSec ?? 45}s)...`);
   const highlights = await selectHighlights(candidates, transcript, {
-    maxClips: input.maxClips ?? 8,
-    maxClipDurationSec: input.maxClipDurationSec ?? 45,
-    padBeforeSec: input.padBeforeSec ?? 8,
-    padAfterSec: input.padAfterSec ?? 6,
+    maxClips:          input.maxClips ?? 8,
+    maxClipDurationSec: input.maxClipDurationSec,
+    padBeforeSec:      input.padBeforeSec,
+    padAfterSec:       input.padAfterSec,
+    preferredGame:     input.preferredGame,
   });
-  log(`${highlights.length} momentos selecionados.`);
+  log(`${highlights.length} momentos selecionados:`);
+  highlights.forEach((h, i) =>
+    log(`  [${i + 1}] ${h.startSec.toFixed(1)}s–${h.endSec.toFixed(1)}s (${(h.endSec - h.startSec).toFixed(1)}s) score=${h.score ?? "?"} fonte=${h.source} — ${h.reason}`)
+  );
 
   // ─── 8. Clip cutting + composition ──────────────────────────────────────────
   const composedClips: Array<{
