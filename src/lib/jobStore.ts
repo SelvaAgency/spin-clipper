@@ -1,7 +1,62 @@
 import fs from "node:fs";
 import path from "node:path";
 
-export type JobStatus = "queued" | "running" | "done" | "error";
+export type JobStatus =
+  | "queued"
+  | "running"
+  | "waiting-crop-approval"
+  | "waiting-layout-approval"
+  | "waiting-captions-approval"
+  | "done"
+  | "error";
+
+export interface CropApprovalData {
+  previewUrl: string;
+  detected: { x: number; y: number; w: number; h: number };
+  videoW: number;
+  videoH: number;
+}
+
+export interface LayoutApprovalData {
+  previewUrl: string;
+  webcam: { x: number; y: number; w: number; h: number };
+  game: { x: number; y: number; w: number; h: number };
+  videoW: number;
+  videoH: number;
+}
+
+export interface CaptionGroup {
+  id: string;
+  text: string;
+  startSec: number;
+  endSec: number;
+}
+
+export interface ClipCaptionData {
+  clipId: string;
+  clipUrl: string;
+  startSec: number;
+  endSec: number;
+  groups: CaptionGroup[];
+}
+
+export interface CaptionsApprovalData {
+  clips: ClipCaptionData[];
+}
+
+export type ApprovalData = CropApprovalData | LayoutApprovalData | CaptionsApprovalData;
+
+export interface ApprovalRequest {
+  type: "crop" | "layout" | "captions";
+  data: ApprovalData;
+}
+
+export interface ApprovalResponse {
+  type: "crop" | "layout" | "captions";
+  approved: boolean;
+  /** For crop: { x, y, w, h }. For layout: { webcam, game }. For captions: { clips: [{ clipId, groups }] } */
+  adjustedData?: any;
+}
 
 export interface Job {
   id: string;
@@ -9,6 +64,8 @@ export interface Job {
   log: string[];
   createdAt: string;
   clips: Array<{ url: string; reason: string; startSec: number; endSec: number }>;
+  compilationUrl?: string;
+  pendingApproval?: ApprovalRequest;
   error?: string;
 }
 

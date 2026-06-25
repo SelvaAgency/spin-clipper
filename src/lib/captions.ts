@@ -28,7 +28,7 @@ function formatAssTime(sec: number): string {
     .padStart(5, "0")}`;
 }
 
-function groupWords(
+export function groupWords(
   words: TranscriptWord[],
   maxWordsPerGroup = 4
 ): TranscriptWord[][] {
