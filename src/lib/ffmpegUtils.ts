@@ -26,7 +26,24 @@ export function run(cmd: string, args: string[], timeoutMs = 20 * 60 * 1000): Pr
 
     proc.stdout.on("data", (d) => (stdout += d.toString()));
     proc.stderr.on("data", (d) => (stderr += d.toString()));
-    proc.on("error", (err) => { clearTimeout(timer); reject(err); });
+    proc.on("error", (err: NodeJS.ErrnoException) => {
+      clearTimeout(timer);
+      if (err.code === "ENOENT") {
+        const friendlyNames: Record<string, string> = {
+          ffmpeg:   "ffmpeg",
+          ffprobe:  "ffprobe",
+          "yt-dlp": "yt-dlp",
+          python3:  "python3",
+        };
+        const name = friendlyNames[cmd] ?? cmd;
+        reject(new Error(
+          `'${name}' não foi encontrado no servidor. ` +
+          `Verifique se está instalado e disponível no PATH.`
+        ));
+      } else {
+        reject(err);
+      }
+    });
     proc.on("close", (code) => {
       clearTimeout(timer);
       if (timedOut) return; // já rejeitou
@@ -44,7 +61,10 @@ export function runCapture(cmd: string, args: string[]): Promise<Buffer> {
     let stderr = "";
     proc.stdout.on("data", (d) => chunks.push(d as Buffer));
     proc.stderr.on("data", (d) => (stderr += d.toString()));
-    proc.on("error", reject);
+    proc.on("error", (err: NodeJS.ErrnoException) => {
+      if (err.code === "ENOENT") reject(new Error(`'${cmd}' não foi encontrado no servidor.`));
+      else reject(err);
+    });
     proc.on("close", (code) => {
       if (code === 0) resolve(Buffer.concat(chunks));
       else reject(new Error(`${cmd} saiu com código ${code}\n${stderr.slice(-4000)}`));

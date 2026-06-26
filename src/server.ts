@@ -6,12 +6,44 @@ import fs from "node:fs";
 import { v4 as uuid } from "uuid";
 import { runPipeline, type PipelineInput } from "./pipeline.js";
 import { getVideoInfo } from "./lib/download.js";
+import { run } from "./lib/ffmpegUtils.js";
 import { createJob, updateJob, appendLog, getJob } from "./lib/jobStore.js";
 import { submitApproval } from "./lib/approvalQueue.js";
 import { saveFeedback, getAllFeedback, getFeedbackByJob, getFeedbackStats } from "./lib/feedbackStore.js";
 import {
   createProfile, getProfile, listProfiles, updateProfile, deleteProfile,
 } from "./lib/creatorProfile.js";
+
+// ── Verifica dependências na inicialização ────────────────────────────────────
+async function checkDependency(
+  label: string,
+  cmd: string,
+  args: string[]
+): Promise<void> {
+  try {
+    await run(cmd, args, 10_000);
+    console.log(`  ✓ ${label}`);
+  } catch (err: any) {
+    const missing = err.message.includes("não foi encontrado") || (err as NodeJS.ErrnoException).code === "ENOENT";
+    if (missing) {
+      console.log(`  ✗ ${label} — NÃO ENCONTRADO (instale antes de usar esta função)`);
+    } else {
+      // Saiu com código != 0 mas o binário existe (ex: ffmpeg -version no stdout, saída 0 ok)
+      console.log(`  ✓ ${label}`);
+    }
+  }
+}
+
+async function printDependencies(): Promise<void> {
+  console.log("\n  Dependências:");
+  await checkDependency("ffmpeg",   "ffmpeg",   ["-version"]);
+  await checkDependency("ffprobe",  "ffprobe",  ["-version"]);
+  await checkDependency("yt-dlp",   "yt-dlp",   ["--version"]);
+  await checkDependency("python3",  "python3",  ["--version"]);
+  await checkDependency("numpy",    "python3",  ["-c", "import numpy"]);
+  await checkDependency("scipy",    "python3",  ["-c", "import scipy"]);
+  console.log("");
+}
 
 const app = express();
 const PORT = process.env.PORT ?? 3000;
@@ -256,6 +288,7 @@ app.delete("/api/profiles/:id", (req, res) => {
   res.json({ ok: true });
 });
 
-app.listen(PORT, () => {
-  console.log(`spin-clipper rodando em http://localhost:${PORT}`);
+app.listen(PORT, async () => {
+  console.log(`\nspin-clipper rodando em http://localhost:${PORT}`);
+  await printDependencies();
 });

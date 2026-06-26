@@ -1,5 +1,12 @@
 [phases.setup]
-nixPkgs = ["nodejs", "ffmpeg", "python311"]
+# yt-dlp disponível como pacote nix — sem necessidade de pip para ele
+nixPkgs = ["nodejs", "ffmpeg", "python311", "yt-dlp"]
+
+[phases.install]
+cmds = [
+  "npm ci",
+  "pip3 install --no-cache-dir numpy scipy"
+]
 
 [start]
 cmd = "npm start"
