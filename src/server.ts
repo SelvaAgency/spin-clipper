@@ -5,6 +5,7 @@ import path from "node:path";
 import fs from "node:fs";
 import { v4 as uuid } from "uuid";
 import { runPipeline, type PipelineInput } from "./pipeline.js";
+import { getVideoInfo } from "./lib/download.js";
 import { createJob, updateJob, appendLog, getJob } from "./lib/jobStore.js";
 import { submitApproval } from "./lib/approvalQueue.js";
 import { saveFeedback, getAllFeedback, getFeedbackByJob, getFeedbackStats } from "./lib/feedbackStore.js";
@@ -48,6 +49,10 @@ app.post(
     const maxClips   = Number(req.body.maxClips ?? 8);
     const urlLink    = req.body.urlLink?.trim() || undefined;
     const profileId  = req.body.profileId?.trim() || undefined;
+
+    // Download parcial de live: offsets em segundos
+    const urlStartSec = req.body.urlStartSec ? Number(req.body.urlStartSec) : undefined;
+    const urlEndSec   = req.body.urlEndSec   ? Number(req.body.urlEndSec)   : undefined;
 
     // Duração: quando pads não vêm do body (modo preset), ficam undefined
     // e selectHighlights.ts os deriva de maxClipDurationSec automaticamente.
@@ -105,6 +110,8 @@ app.post(
       combinedPath: combinedFile?.path,
       outroPath:    outroFile?.path,
       urlLink,
+      urlStartSec,
+      urlEndSec,
       moldura,
       maxClips,
       maxClipDurationSec,
@@ -146,6 +153,18 @@ app.post(
   }
 );
 
+// ─── GET /api/video-info?url=... ─────────────────────────────────────────────
+app.get("/api/video-info", async (req, res) => {
+  const url = (req.query.url as string)?.trim();
+  if (!url) return res.status(400).json({ error: "Parâmetro 'url' é obrigatório." });
+  try {
+    const info = await getVideoInfo(url);
+    res.json(info);
+  } catch (err: any) {
+    res.status(422).json({ error: err.message ?? "Falha ao obter informações do vídeo." });
+  }
+});
+
 // ─── GET /api/jobs/:id ────────────────────────────────────────────────────────
 app.get("/api/jobs/:id", (req, res) => {
   const job = getJob(req.params.id);
@@ -175,7 +194,7 @@ app.post("/api/jobs/:id/feedback", (req, res) => {
   const job = getJob(req.params.id);
   if (!job) return res.status(404).json({ error: "Job não encontrado." });
 
-  const { clipIndex, rating, edits } = req.body;
+  const { clipIndex, rating, edits, tags, comment } = req.body;
   if (clipIndex === undefined) {
     return res.status(400).json({ error: "clipIndex é obrigatório." });
   }
@@ -188,6 +207,8 @@ app.post("/api/jobs/:id/feedback", (req, res) => {
     clipIndex,
     clipUrl: clip.url,
     rating,
+    tags: Array.isArray(tags) ? tags : undefined,
+    comment: comment?.trim() || undefined,
     edits,
     metadata: {
       startSec:    clip.startSec,

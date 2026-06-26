@@ -10,7 +10,7 @@ import { composeMoldura } from "./lib/compose.js";
 import { buildAssFile, burnCaptions, groupWords } from "./lib/captions.js";
 import { appendOutro } from "./lib/outro.js";
 import { run, probe } from "./lib/ffmpegUtils.js";
-import { downloadVideo } from "./lib/download.js";
+import { downloadVideo, type DownloadOptions } from "./lib/download.js";
 import { detectCrop, extractPreviewFrame, type CropInfo } from "./lib/cropDetect.js";
 import { detectSplitRegions, type Region } from "./lib/splitDetect.js";
 import { generateCompilation } from "./lib/compilation.js";
@@ -35,6 +35,10 @@ export interface PipelineInput {
   outroPath?: string;
   /** URL to download video from (yt-dlp or direct HTTP) */
   urlLink?: string;
+  /** Partial download: start offset in seconds */
+  urlStartSec?: number;
+  /** Partial download: end offset in seconds */
+  urlEndSec?: number;
   moldura: "split" | "full";
   maxClips?: number;
   /** Max duration of each generated clip in seconds (default 45) */
@@ -75,7 +79,10 @@ export async function runPipeline(input: PipelineInput): Promise<PipelineResult>
   if (input.urlLink) {
     log("Baixando vídeo do link fornecido...");
     const downloadPath = path.join(input.workDir, "downloaded.mp4");
-    await downloadVideo(input.urlLink, downloadPath, log);
+    const dlOpts: DownloadOptions = {};
+    if (input.urlStartSec !== undefined) dlOpts.startSec = input.urlStartSec;
+    if (input.urlEndSec   !== undefined) dlOpts.endSec   = input.urlEndSec;
+    await downloadVideo(input.urlLink, downloadPath, log, dlOpts);
     // Assign to appropriate field based on mode
     if (input.mode === "single-combined") {
       (input as any).combinedPath = downloadPath;
