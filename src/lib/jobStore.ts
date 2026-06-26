@@ -8,7 +8,8 @@ export type JobStatus =
   | "waiting-layout-approval"
   | "waiting-captions-approval"
   | "done"
-  | "error";
+  | "error"
+  | "cancelled";
 
 export interface CropApprovalData {
   previewUrl: string;

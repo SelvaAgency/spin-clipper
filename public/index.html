@@ -273,7 +273,10 @@ canvas.region-canvas{display:block;cursor:default;}
     </div>
 
     <button class="run" type="submit">Gerar clipes</button>
-    <div class="hint">Vídeos longos demoram mais — log em tempo real abaixo.</div>
+    <div style="display:flex;align-items:center;gap:12px;margin-top:12px;">
+      <div class="hint" style="margin-top:0;">Vídeos longos demoram mais — log em tempo real abaixo.</div>
+      <button type="button" class="btn btn-cancel" id="cancel-job-btn" style="display:none;margin-left:auto;padding:6px 14px;font-size:13px;" onclick="cancelCurrentJob()">✕ Cancelar download</button>
+    </div>
     <div class="log" id="log"></div>
   </form>
 
@@ -731,6 +734,9 @@ document.getElementById("form").addEventListener("submit", e => { e.preventDefau
 
 async function startJob() {
   logEl.innerHTML = "";
+  document.getElementById("cancel-job-btn").style.display = "none";
+  document.getElementById("cancel-job-btn").disabled = false;
+  document.getElementById("cancel-job-btn").textContent = "✕ Cancelar download";
   document.getElementById("results-card").style.display = "none";
   document.getElementById("clips").innerHTML = "";
   document.getElementById("compilation-banner").innerHTML = "";
@@ -782,6 +788,7 @@ async function startJob() {
     if (!res.ok) throw new Error(data.error || "Falha ao criar job.");
     currentJobId = data.jobId;
     lastLogLen = 0;
+    document.getElementById("cancel-job-btn").style.display = "inline-flex";
     pollInterval = setInterval(pollJob, 1500);
   } catch (err) {
     logLine("Erro: " + err.message, "err");
@@ -839,18 +846,38 @@ async function pollJob() {
       handleCaptionsApproval(job.pendingApproval.data);
     } else if (job.status === "done") {
       clearInterval(pollInterval); pollInterval = null;
+      document.getElementById("cancel-job-btn").style.display = "none";
       logLine(`Pronto! ${job.clips.length} clipe(s) gerado(s).`, "ok");
       document.getElementById("form").querySelector("button.run").disabled = false;
       showResults(job);
     } else if (job.status === "error") {
       clearInterval(pollInterval); pollInterval = null;
+      document.getElementById("cancel-job-btn").style.display = "none";
       logLine("Erro: " + job.error, "err");
+      document.getElementById("form").querySelector("button.run").disabled = false;
+    } else if (job.status === "cancelled") {
+      clearInterval(pollInterval); pollInterval = null;
+      document.getElementById("cancel-job-btn").style.display = "none";
+      logLine("Download cancelado pelo usuário.", "err");
       document.getElementById("form").querySelector("button.run").disabled = false;
     }
   } catch(e) { console.warn("poll err", e); }
 }
 
 function resumePolling() { if (!pollInterval) pollInterval = setInterval(pollJob, 1500); }
+
+async function cancelCurrentJob() {
+  if (!currentJobId) return;
+  const btn = document.getElementById("cancel-job-btn");
+  btn.disabled = true; btn.textContent = "Cancelando...";
+  try {
+    await fetch(`/api/jobs/${currentJobId}/cancel`, { method: "POST" });
+    logLine("Solicitação de cancelamento enviada.", "wait");
+  } catch(e) {
+    logLine("Erro ao cancelar: " + e.message, "err");
+    btn.disabled = false; btn.textContent = "✕ Cancelar download";
+  }
+}
 function hideAllApprovals() {
   ["crop-approval","game-crop-approval","layout-approval","captions-approval"]
     .forEach(id => document.getElementById(id).classList.remove("visible"));

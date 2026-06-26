@@ -79,7 +79,7 @@ export async function runPipeline(input: PipelineInput): Promise<PipelineResult>
   if (input.urlLink) {
     log("Baixando vídeo do link fornecido...");
     const downloadPath = path.join(input.workDir, "downloaded.mp4");
-    const dlOpts: DownloadOptions = {};
+    const dlOpts: DownloadOptions = { jobId: input.jobId };
     if (input.urlStartSec !== undefined) dlOpts.startSec = input.urlStartSec;
     if (input.urlEndSec   !== undefined) dlOpts.endSec   = input.urlEndSec;
     await downloadVideo(input.urlLink, downloadPath, log, dlOpts);

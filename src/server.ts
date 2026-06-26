@@ -5,9 +5,9 @@ import path from "node:path";
 import fs from "node:fs";
 import { v4 as uuid } from "uuid";
 import { runPipeline, type PipelineInput } from "./pipeline.js";
-import { getVideoInfo } from "./lib/download.js";
+import { getVideoInfo, cancelDownload } from "./lib/download.js";
 import { run } from "./lib/ffmpegUtils.js";
-import { createJob, updateJob, appendLog, getJob } from "./lib/jobStore.js";
+import { createJob, updateJob, appendLog, getJob, type JobStatus } from "./lib/jobStore.js";
 import { submitApproval } from "./lib/approvalQueue.js";
 import { saveFeedback, getAllFeedback, getFeedbackByJob, getFeedbackStats } from "./lib/feedbackStore.js";
 import {
@@ -199,8 +199,15 @@ app.post(
 
       updateJob(jobId, { status: "done", clips, compilationUrl });
     } catch (err: any) {
-      console.error(err);
-      updateJob(jobId, { status: "error", error: err.message ?? String(err) });
+      const msg        = err.message ?? String(err);
+      const cancelled  = msg.includes("cancelado");
+      const curJob     = getJob(jobId);
+      // Se o status já foi setado para "cancelled" pelo endpoint /cancel,
+      // não sobrescreve com "error".
+      if (!cancelled && curJob?.status !== "cancelled") {
+        console.error(err);
+        updateJob(jobId, { status: "error", error: msg });
+      }
     }
   }
 );
@@ -222,6 +229,21 @@ app.get("/api/jobs/:id", (req, res) => {
   const job = getJob(req.params.id);
   if (!job) return res.status(404).json({ error: "Job não encontrado." });
   res.json(job);
+});
+
+// ─── POST /api/jobs/:id/cancel ───────────────────────────────────────────────
+app.post("/api/jobs/:id/cancel", (req, res) => {
+  const job = getJob(req.params.id);
+  if (!job) return res.status(404).json({ error: "Job não encontrado." });
+
+  const terminal: JobStatus[] = ["done", "error", "cancelled"];
+  if (terminal.includes(job.status as JobStatus)) {
+    return res.status(409).json({ error: "Job já finalizado." });
+  }
+
+  updateJob(req.params.id, { status: "cancelled" });
+  const killed = cancelDownload(req.params.id);
+  res.json({ ok: true, killed });
 });
 
 // ─── POST /api/jobs/:id/approve ───────────────────────────────────────────────
