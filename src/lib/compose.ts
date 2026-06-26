@@ -9,11 +9,23 @@ export interface ComposeInput {
   fullSource?: "streamer" | "mesa";
   outputPath: string;
   primaryAudio?: "streamer" | "mesa" | "mix";
+  /** User-approved crop applied before scaling (coordinates in the original video space) */
+  streamerCrop?: { x: number; y: number; w: number; h: number };
+  /** User-approved crop applied before scaling (coordinates in the original video space) */
+  mesaCrop?: { x: number; y: number; w: number; h: number };
 }
 
-function scaleCropFilter(window: VideoWindow, inputLabel: string, outLabel: string): string {
+function buildVideoFilter(
+  window: VideoWindow,
+  inputLabel: string,
+  outLabel: string,
+  preCrop?: { x: number; y: number; w: number; h: number }
+): string {
+  const cropPart = preCrop
+    ? `crop=${preCrop.w}:${preCrop.h}:${preCrop.x}:${preCrop.y},`
+    : "";
   return (
-    `[${inputLabel}]scale=${window.width}:${window.height}:force_original_aspect_ratio=increase,` +
+    `[${inputLabel}]${cropPart}scale=${window.width}:${window.height}:force_original_aspect_ratio=increase,` +
     `crop=${window.width}:${window.height}[${outLabel}]`
   );
 }
@@ -32,7 +44,7 @@ export async function composeMoldura(input: ComposeInput): Promise<void> {
     if (!source) {
       throw new Error("Moldura 'full' precisa do clipe da fonte escolhida em fullSource.");
     }
-    return composeFull(source, moldura.windows[0], moldura, molduraPath, input.outputPath);
+    return composeFull(source, moldura.windows[0], moldura, molduraPath, input.outputPath, input);
   }
 }
 
@@ -67,8 +79,8 @@ async function composeSplit(
   //  • -stream_loop -1 no PNG → moldura loop infinito; não é o input mais
   //    curto, então -shortest termina nos clipes de vídeo (14 s), não no PNG (1 frame).
   const filter = [
-    scaleCropFilter(topWindow, "0:v", "cam"),
-    scaleCropFilter(bottomWindow, "1:v", "mesa"),
+    buildVideoFilter(topWindow, "0:v", "cam", input.streamerCrop),
+    buildVideoFilter(bottomWindow, "1:v", "mesa", input.mesaCrop),
     `color=c=black:s=${moldura.canvasWidth}x${moldura.canvasHeight}[bg]`,
     `[bg][cam]overlay=${topWindow.x}:${topWindow.y}:eof_action=endall[tmp1]`,
     `[tmp1][mesa]overlay=${bottomWindow.x}:${bottomWindow.y}:eof_action=endall[tmp2]`,
@@ -108,7 +120,8 @@ async function composeFull(
   window: VideoWindow,
   moldura: ReturnType<typeof getMoldura>,
   molduraPath: string,
-  outputPath: string
+  outputPath: string,
+  input: ComposeInput
 ): Promise<void> {
   const srcInfo = await probe(sourceClip);
   console.log(
@@ -117,8 +130,9 @@ async function composeFull(
   );
 
   // Mesmo fix: eof_action=endall em todos os overlays + -stream_loop -1 no PNG.
+  const sourceCrop = input.fullSource === "mesa" ? input.mesaCrop : input.streamerCrop;
   const filter = [
-    scaleCropFilter(window, "0:v", "src"),
+    buildVideoFilter(window, "0:v", "src", sourceCrop),
     `color=c=black:s=${moldura.canvasWidth}x${moldura.canvasHeight}[bg]`,
     `[bg][src]overlay=${window.x}:${window.y}:eof_action=endall[tmp1]`,
     `[tmp1][1:v]overlay=0:0:eof_action=endall,format=yuv420p[outv]`,

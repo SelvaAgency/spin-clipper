@@ -137,7 +137,15 @@ export async function runPipeline(input: PipelineInput): Promise<PipelineResult>
     (input as any).moldura = "split";
   }
 
-  // ─── 3. Crop detection ───────────────────────────────────────────────────────
+  // Coordenadas de crop aprovadas pelo usuário. Nunca são recalculadas após aprovação.
+  // São passadas diretamente ao composeMoldura para aplicação no filter_complex.
+  let approvedStreamerCrop: CropInfo | undefined;
+  let approvedMesaCrop: CropInfo | undefined;
+
+  // ─── 3. Crop detection (streamer) ────────────────────────────────────────────
+  // A IA sugere uma região — NÃO aplica o crop ainda.
+  // O usuário vê o frame ORIGINAL, ajusta a caixa e aprova.
+  // As coordenadas aprovadas são congeladas e usadas na renderização final.
   if (input.detectCropEnabled) {
     const targetPath = input.streamerPath ?? input.mesaPath;
     if (targetPath) {
@@ -165,31 +173,23 @@ export async function runPipeline(input: PipelineInput): Promise<PipelineResult>
       const cropResponse: ApprovalResponse = await waitForApproval(input.jobId);
       updateJob(input.jobId, { status: "running", pendingApproval: undefined });
 
-      const finalCrop: CropInfo = cropResponse.adjustedData ?? cropInfo;
-
-      const isFullFrame =
-        finalCrop.x === 0 &&
-        finalCrop.y === 0 &&
-        finalCrop.w === videoInfo.width &&
-        finalCrop.h === videoInfo.height;
-
-      if (!isFullFrame) {
-        log(`Aplicando crop: ${finalCrop.w}x${finalCrop.h} em ${finalCrop.x},${finalCrop.y}...`);
+      if (cropResponse.adjustedData) {
+        // Salvar as coordenadas aprovadas — serão aplicadas na composição final.
         if (input.streamerPath) {
-          const croppedPath = path.join(input.workDir, "streamer_cropped.mp4");
-          await cropVideo(input.streamerPath, finalCrop, croppedPath);
-          (input as any).streamerPath = croppedPath;
+          approvedStreamerCrop = cropResponse.adjustedData as CropInfo;
+          log(`Crop do streamer salvo: ${approvedStreamerCrop.w}x${approvedStreamerCrop.h} em ${approvedStreamerCrop.x},${approvedStreamerCrop.y}`);
+        } else {
+          approvedMesaCrop = cropResponse.adjustedData as CropInfo;
+          log(`Crop salvo: ${approvedMesaCrop.w}x${approvedMesaCrop.h} em ${approvedMesaCrop.x},${approvedMesaCrop.y}`);
         }
-        if (input.mesaPath) {
-          const croppedPath = path.join(input.workDir, "mesa_cropped.mp4");
-          await cropVideo(input.mesaPath, finalCrop, croppedPath);
-          (input as any).mesaPath = croppedPath;
-        }
+      } else {
+        log("Usando frame completo do vídeo.");
       }
     }
   }
 
   // ─── 4a. Game crop approval (modo dual: crop do vídeo de mesa) ──────────────
+  // Mesma lógica: sugestão da IA → aprovação → coordenadas congeladas.
   if (input.detectGameCropEnabled && input.mesaPath) {
     log("Detectando área útil do vídeo de mesa/jogo...");
     const gameCropInfo = await detectCrop(input.mesaPath);
@@ -216,17 +216,11 @@ export async function runPipeline(input: PipelineInput): Promise<PipelineResult>
     const gameCropResponse: ApprovalResponse = await waitForApproval(input.jobId);
     updateJob(input.jobId, { status: "running", pendingApproval: undefined });
 
-    const finalGameCrop: CropInfo = gameCropResponse.adjustedData ?? gameCropInfo;
-    const isFullGameFrame =
-      finalGameCrop.x === 0 && finalGameCrop.y === 0 &&
-      finalGameCrop.w === gameVideoInfo.width && finalGameCrop.h === gameVideoInfo.height;
-
-    if (!isFullGameFrame) {
-      log(`Aplicando crop do jogo: ${finalGameCrop.w}x${finalGameCrop.h} em ${finalGameCrop.x},${finalGameCrop.y}...`);
-      const croppedMesaPath = path.join(input.workDir, "mesa_game_cropped.mp4");
-      await cropVideo(input.mesaPath, finalGameCrop, croppedMesaPath);
-      (input as any).mesaPath = croppedMesaPath;
-      log("Crop do jogo aplicado.");
+    if (gameCropResponse.adjustedData) {
+      approvedMesaCrop = gameCropResponse.adjustedData as CropInfo;
+      log(`Crop do jogo salvo: ${approvedMesaCrop.w}x${approvedMesaCrop.h} em ${approvedMesaCrop.x},${approvedMesaCrop.y}`);
+    } else {
+      log("Usando frame completo do jogo.");
     }
   }
 
@@ -336,6 +330,9 @@ export async function runPipeline(input: PipelineInput): Promise<PipelineResult>
       fullSource: currentMode === "single-mesa" ? "mesa" : "streamer",
       outputPath: composedPath,
       primaryAudio: currentMode === "dual" ? "mix" : "streamer",
+      // Coordenadas aprovadas pelo usuário — aplicadas uma única vez aqui no filter_complex
+      streamerCrop: approvedStreamerCrop,
+      mesaCrop: approvedMesaCrop,
     });
     const compSz = fs.existsSync(composedPath) ? Math.round(fs.statSync(composedPath).size / 1024) : 0;
     log(`  ✓ Composição concluída (${compSz} KB)`);

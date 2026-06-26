@@ -28,7 +28,7 @@ h1{font-size:28px;margin:4px 0;letter-spacing:-.01em;}
 .tab-btn:last-child{border-right:none;}
 .tab-btn.active{background:var(--violet);color:#fff;}
 .tab-btn:hover:not(.active){background:var(--surface-2);}
-.tab-panel{display:none;} .tab-panel.active{display:block;}
+.tab-panel{display:none;}.tab-panel.active{display:block;}
 .toggle-group{display:flex;gap:10px;flex-wrap:wrap;}
 .toggle-group label{flex:1;min-width:140px;border:1px solid var(--line);border-radius:10px;padding:12px 14px;cursor:pointer;font-size:13px;color:var(--ink-dim);display:flex;flex-direction:column;gap:3px;transition:all .15s;}
 .toggle-group label b{color:var(--ink);font-size:14px;}
@@ -64,30 +64,37 @@ button.run{margin-top:22px;width:100%;padding:14px;border:none;border-radius:10p
 button.run:disabled{opacity:.5;cursor:not-allowed;}
 .log{font-family:var(--mono);font-size:12.5px;color:#b9aee0;background:#0c0716;border-radius:10px;padding:16px;max-height:200px;overflow-y:auto;white-space:pre-wrap;line-height:1.6;display:none;}
 .log.show{display:block;margin-top:18px;}
-.log .ok{color:var(--green);} .log .err{color:var(--magenta);} .log .wait{color:var(--orange);}
+.log .ok{color:var(--green);}.log .err{color:var(--magenta);}.log .wait{color:var(--orange);}
+
 /* ── Approval panels ── */
 .approval-panel{border:2px solid var(--orange);border-radius:14px;background:rgba(245,166,35,.06);padding:24px;margin-bottom:20px;display:none;}
 .approval-panel.visible{display:block;}
-.approval-panel h3{margin:0 0 6px;font-size:16px;color:var(--orange);}
-.approval-panel .desc{font-size:13px;color:var(--ink-dim);margin-bottom:18px;}
-.approval-actions{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap;}
+.approval-panel h3{margin:0 0 4px;font-size:16px;color:var(--orange);}
+.approval-panel .desc{font-size:13px;color:var(--ink-dim);margin:0 0 18px;line-height:1.5;}
+.step-bar{display:flex;align-items:center;gap:0;margin-bottom:18px;}
+.step-pip{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;padding:5px 12px;border-radius:20px;border:1px solid var(--line);color:var(--ink-dim);}
+.step-pip.active{background:var(--orange);border-color:var(--orange);color:#1a0e00;}
+.step-pip.done{background:rgba(61,232,154,.15);border-color:var(--green);color:var(--green);}
+.step-connector{flex:1;height:1px;background:var(--line);max-width:40px;}
+.approval-actions{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap;align-items:center;}
 .btn{padding:10px 20px;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--sans);}
 .btn-approve{background:var(--green);color:#0a1a12;}
+.btn-secondary{background:var(--surface-2);color:var(--ink);border:1px solid var(--line);}
 .btn-cancel{background:var(--surface-2);color:var(--ink-dim);border:1px solid var(--line);}
+
 /* ── Region editor ── */
 .region-editor-wrap{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#000;}
-.editor-toolbar{display:flex;gap:6px;padding:8px 10px;background:var(--surface-2);border-bottom:1px solid var(--line);flex-wrap:wrap;align-items:center;}
-.editor-toolbar .tool-btn{padding:5px 10px;border:1px solid var(--line);border-radius:6px;background:none;color:var(--ink-dim);font-size:12px;cursor:pointer;font-family:var(--sans);}
-.editor-toolbar .tool-btn:hover{border-color:var(--violet);color:var(--ink);}
-.editor-toolbar .sep{width:1px;height:20px;background:var(--line);margin:0 4px;}
-.editor-canvas-wrap{position:relative;cursor:crosshair;user-select:none;}
-canvas.region-canvas{display:block;width:100%;height:auto;}
+.editor-toolbar{display:flex;gap:6px;padding:8px 10px;background:var(--surface-2);border-bottom:1px solid var(--line);align-items:center;flex-wrap:wrap;}
+.tool-btn{padding:5px 10px;border:1px solid var(--line);border-radius:6px;background:none;color:var(--ink-dim);font-size:12px;cursor:pointer;font-family:var(--sans);transition:all .15s;}
+.tool-btn:hover{border-color:var(--violet);color:var(--ink);}
+.editor-hint{font-size:11px;color:var(--ink-dim);margin-left:auto;}
+.editor-canvas-wrap{display:flex;justify-content:center;background:#000;line-height:0;}
+canvas.region-canvas{display:block;cursor:default;}
 .editor-fields{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:10px;background:var(--surface-2);border-top:1px solid var(--line);}
 .editor-fields label{font-size:11px;color:var(--ink-dim);}
-.editor-fields input{width:100%;background:var(--surface-3);border:1px solid var(--line);border-radius:6px;padding:5px 8px;color:var(--ink);font-size:13px;}
-/* second region */
-.region-group{margin-top:14px;}
-.region-group-label{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px;}
+.editor-fields input{width:100%;background:var(--surface-3);border:1px solid var(--line);border-radius:6px;padding:5px 8px;color:var(--ink);font-size:13px;font-family:var(--mono);}
+.editor-fields input:focus{outline:none;border-color:var(--violet);}
+
 /* ── Caption editor ── */
 .caption-editor-clips{display:flex;flex-direction:column;gap:16px;}
 .caption-clip{background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:16px;}
@@ -98,6 +105,7 @@ canvas.region-canvas{display:block;width:100%;height:auto;}
 .caption-group .time-label{font-size:11px;color:var(--ink-dim);font-family:var(--mono);white-space:nowrap;min-width:80px;}
 .caption-group input{flex:1;background:none;border:none;color:var(--ink);font-size:13px;font-family:var(--sans);padding:0;}
 .caption-group input:focus{outline:none;}
+
 /* ── Results ── */
 .clips{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px;margin-top:18px;}
 .clip{background:var(--surface-2);border:1px solid var(--line);border-radius:12px;overflow:hidden;}
@@ -105,7 +113,6 @@ canvas.region-canvas{display:block;width:100%;height:auto;}
 .clip-meta{padding:10px 12px;font-size:12.5px;color:var(--ink-dim);line-height:1.5;}
 .clip-meta a{color:var(--magenta);text-decoration:none;font-weight:600;}
 .clip-score{display:inline-block;background:rgba(123,79,214,.2);color:var(--violet);border-radius:4px;padding:2px 6px;font-size:11px;font-weight:700;margin-left:4px;}
-/* ── Feedback buttons ── */
 .feedback-row{display:flex;gap:6px;padding:8px 12px 10px;border-top:1px solid var(--line);}
 .fb-btn{flex:1;padding:7px 4px;border:1px solid var(--line);border-radius:8px;background:none;color:var(--ink-dim);font-size:13px;cursor:pointer;font-family:var(--sans);transition:all .15s;text-align:center;}
 .fb-btn:hover{border-color:var(--violet);}
@@ -118,8 +125,9 @@ canvas.region-canvas{display:block;width:100%;height:auto;}
 .compilation-banner a{padding:8px 18px;background:var(--violet);color:#fff;border-radius:8px;text-decoration:none;font-weight:700;font-size:13px;white-space:nowrap;}
 .divider{height:1px;background:var(--line);margin:16px 0;}
 .hint{font-size:12px;color:var(--ink-dim);margin-top:8px;}
-/* profiles modal */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:100;display:none;}
+
+/* ── Profiles modal ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:100;}
 .modal-overlay.open{display:flex;}
 .modal{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:28px;min-width:320px;max-width:500px;width:100%;}
 .modal h3{margin:0 0 18px;font-size:16px;}
@@ -130,7 +138,7 @@ canvas.region-canvas{display:block;width:100%;height:auto;}
 <div class="wrap">
   <header>
     <div class="brand">selva agency <b>/</b> spin clipper</div>
-    <button class="btn" style="background:var(--surface-2);border:1px solid var(--line);font-size:13px;" onclick="openProfilesModal()">Perfis</button>
+    <button class="btn btn-cancel" onclick="openProfilesModal()">Perfis</button>
   </header>
   <h1>Sobe o vídeo bruto, sai o clipe pronto.</h1>
   <p class="sub">Detecta reações, recorta, compõe, legenda. Automático — com validação em cada etapa.</p>
@@ -163,7 +171,7 @@ canvas.region-canvas{display:block;width:100%;height:auto;}
     <div class="divider"></div>
     <h2>Vinheta final (opcional)</h2>
     <div class="drop-grid single">
-      <label class="drop" id="drop-outro"><input type="file" name="outro" accept="video/*" /><span class="label">spin final.mp4</span><span class="hint-inline">opcional</span></label>
+      <label class="drop" id="drop-outro"><input type="file" name="outro" accept="video/*" /><span class="label">Outro / spin final.mp4</span><span class="hint-inline">opcional</span></label>
     </div>
 
     <div class="divider"></div>
@@ -189,23 +197,19 @@ canvas.region-canvas{display:block;width:100%;height:auto;}
         <div class="field"><label>Contexto depois (s)</label><input type="number" id="padAfterSec" value="6" min="0" max="60" /></div>
       </div>
     </div>
-    <!-- hidden field usado pelos presets -->
     <input type="hidden" id="presetDuration" value="45" />
 
     <div class="divider"></div>
     <h2>Opções</h2>
-    <div class="field" style="margin-top:0;display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap;">
-      <div><label>Máximo de clipes</label><input type="number" name="maxClips" value="8" min="1" max="20" style="width:100px;" /></div>
-      <div class="field" style="margin-top:0;flex:1;min-width:180px;">
-        <label>Perfil do streamer</label>
-        <select id="profileSelect" style="width:100%;"><option value="">Nenhum</option></select>
-      </div>
+    <div style="display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap;margin-top:0;">
+      <div class="field" style="margin-top:0;"><label>Máximo de clipes</label><input type="number" name="maxClips" value="8" min="1" max="20" style="width:100px;" /></div>
+      <div class="field" style="margin-top:0;flex:1;min-width:180px;"><label>Perfil do streamer</label><select id="profileSelect" style="width:100%;"><option value="">Nenhum</option></select></div>
     </div>
     <div class="check-group">
-      <label class="check-row"><input type="checkbox" id="opt-crop" /><span><b>Detectar e aprovar crop do streamer</b> — remove bordas e barra de URL. Editor visual antes de aplicar.</span></label>
-      <label class="check-row"><input type="checkbox" id="opt-game-crop" /><span><b>Detectar e aprovar crop do jogo</b> — identifica área da mesa, dealer e jogo. Editor visual antes de aplicar.</span></label>
+      <label class="check-row"><input type="checkbox" id="opt-crop" /><span><b>Recortar streamer</b> — remove bordas, barra de URL. A IA sugere, você confirma o enquadramento.</span></label>
+      <label class="check-row"><input type="checkbox" id="opt-game-crop" /><span><b>Recortar mesa / jogo</b> — enquadra dealer e cartas. A IA sugere, você confirma.</span></label>
       <label class="check-row"><input type="checkbox" id="opt-captions" /><span><b>Legendas automáticas</b> — transcreve a fala e abre editor antes de queimar. Requer ASSEMBLYAI_API_KEY.</span></label>
-      <label class="check-row"><input type="checkbox" id="opt-compilation" /><span><b>Gerar compilação</b> — vídeo único com todos os melhores momentos.</span></label>
+      <label class="check-row"><input type="checkbox" id="opt-compilation" /><span><b>Gerar compilação</b> — vídeo único com todos os melhores momentos em sequência.</span></label>
     </div>
 
     <button class="run" type="submit">Gerar clipes</button>
@@ -213,99 +217,93 @@ canvas.region-canvas{display:block;width:100%;height:auto;}
     <div class="log" id="log"></div>
   </form>
 
-  <!-- ── CROP APPROVAL (streamer) ── -->
+  <!-- ══════════════════════════════════════════════════════
+       CROP — STREAMER
+  ══════════════════════════════════════════════════════ -->
   <div id="crop-approval" class="approval-panel">
-    <h3>✂️ Confirmação de crop — Streamer</h3>
-    <p class="desc">Área detectada automaticamente. Arraste os handles para ajustar ou edite os valores diretamente.</p>
+    <h3>✂️ Enquadramento — Streamer</h3>
+    <p class="desc">Frame original do vídeo. Arraste os cantos ou bordas da caixa para definir exatamente a área que deve aparecer no clipe. Os números abaixo mostram as coordenadas em pixels.</p>
     <div class="region-editor-wrap">
       <div class="editor-toolbar">
-        <button type="button" class="tool-btn" onclick="editorCrop.fitImage()">Ajustar à tela</button>
-        <button type="button" class="tool-btn" onclick="editorCrop.resetToDefault()">Resetar para sugestão da IA</button>
-        <div class="sep"></div>
-        <span style="font-size:12px;color:var(--ink-dim)">Scroll = zoom &nbsp;|&nbsp; Arraste fundo = pan</span>
+        <button type="button" class="tool-btn" id="crop-reset-btn">Resetar para sugestão da IA</button>
+        <span class="editor-hint">Arraste a caixa para mover &nbsp;·&nbsp; Arraste as bordas/cantos para redimensionar</span>
       </div>
-      <div class="editor-canvas-wrap"><canvas id="canvas-crop" class="region-canvas" width="800" height="450"></canvas></div>
+      <div class="editor-canvas-wrap"><canvas id="canvas-crop" class="region-canvas"></canvas></div>
       <div class="editor-fields">
         <div><label>X</label><input type="number" id="crop-x" /></div>
         <div><label>Y</label><input type="number" id="crop-y" /></div>
-        <div><label>W</label><input type="number" id="crop-w" /></div>
-        <div><label>H</label><input type="number" id="crop-h" /></div>
+        <div><label>W (largura)</label><input type="number" id="crop-w" /></div>
+        <div><label>H (altura)</label><input type="number" id="crop-h" /></div>
       </div>
     </div>
     <div class="approval-actions">
-      <button type="button" class="btn btn-approve" id="crop-approve">Aprovar crop</button>
+      <button type="button" class="btn btn-approve" id="crop-approve">Salvar enquadramento</button>
       <button type="button" class="btn btn-cancel" id="crop-skip">Usar vídeo inteiro</button>
     </div>
   </div>
 
-  <!-- ── GAME CROP APPROVAL ── -->
+  <!-- ══════════════════════════════════════════════════════
+       CROP — JOGO / MESA
+  ══════════════════════════════════════════════════════ -->
   <div id="game-crop-approval" class="approval-panel">
-    <h3>🎮 Confirmação de crop — Mesa / Jogo</h3>
-    <p class="desc">Área do jogo detectada. Ajuste para enquadrar o dealer, a mesa e as cartas. Arraste os handles ou edite os valores.</p>
+    <h3>🎮 Enquadramento — Mesa / Jogo</h3>
+    <p class="desc">Frame original do vídeo de jogo. Enquadre o dealer, a mesa e as cartas. A área selecionada será usada exatamente assim no clipe final.</p>
     <div class="region-editor-wrap">
       <div class="editor-toolbar">
-        <button type="button" class="tool-btn" onclick="editorGame.fitImage()">Ajustar à tela</button>
-        <button type="button" class="tool-btn" onclick="editorGame.resetToDefault()">Resetar para sugestão da IA</button>
-        <div class="sep"></div>
-        <span style="font-size:12px;color:var(--ink-dim)">Scroll = zoom &nbsp;|&nbsp; Arraste fundo = pan</span>
+        <button type="button" class="tool-btn" id="game-crop-reset-btn">Resetar para sugestão da IA</button>
+        <span class="editor-hint">Arraste a caixa para mover &nbsp;·&nbsp; Arraste as bordas/cantos para redimensionar</span>
       </div>
-      <div class="editor-canvas-wrap"><canvas id="canvas-game" class="region-canvas" width="800" height="450"></canvas></div>
+      <div class="editor-canvas-wrap"><canvas id="canvas-game" class="region-canvas"></canvas></div>
       <div class="editor-fields">
         <div><label>X</label><input type="number" id="game-x" /></div>
         <div><label>Y</label><input type="number" id="game-y" /></div>
-        <div><label>W</label><input type="number" id="game-w" /></div>
-        <div><label>H</label><input type="number" id="game-h" /></div>
+        <div><label>W (largura)</label><input type="number" id="game-w" /></div>
+        <div><label>H (altura)</label><input type="number" id="game-h" /></div>
       </div>
     </div>
     <div class="approval-actions">
-      <button type="button" class="btn btn-approve" id="game-crop-approve">Aprovar crop do jogo</button>
+      <button type="button" class="btn btn-approve" id="game-crop-approve">Salvar enquadramento do jogo</button>
       <button type="button" class="btn btn-cancel" id="game-crop-skip">Usar frame inteiro</button>
     </div>
   </div>
 
-  <!-- ── LAYOUT APPROVAL (single-combined) ── -->
+  <!-- ══════════════════════════════════════════════════════
+       LAYOUT — VÍDEO ÚNICO (dois passos)
+  ══════════════════════════════════════════════════════ -->
   <div id="layout-approval" class="approval-panel">
-    <h3>🎮 Confirmação do layout — Webcam + Jogo</h3>
-    <p class="desc">Verde = jogo, Roxo = webcam. Arraste os handles de cada região para ajustar.</p>
+    <h3 id="layout-title">📷 Passo 1 de 2 — Webcam</h3>
+    <p class="desc" id="layout-desc">Selecione a área onde a webcam aparece no vídeo. A caixa cobre apenas esse elemento.</p>
+    <div class="step-bar">
+      <div class="step-pip active" id="layout-step-1">1 Webcam</div>
+      <div class="step-connector"></div>
+      <div class="step-pip" id="layout-step-2">2 Mesa / Jogo</div>
+    </div>
     <div class="region-editor-wrap">
       <div class="editor-toolbar">
-        <button type="button" class="tool-btn" onclick="editorLayout.fitImage()">Ajustar à tela</button>
-        <button type="button" class="tool-btn" onclick="editorLayout.resetToDefault()">Resetar para sugestão da IA</button>
-        <div class="sep"></div>
-        <span style="font-size:12px;color:var(--ink-dim)">Clique na região para selecionar &nbsp;|&nbsp; Scroll = zoom</span>
+        <button type="button" class="tool-btn" id="layout-reset-btn">Resetar para sugestão da IA</button>
+        <span class="editor-hint">Arraste a caixa para mover &nbsp;·&nbsp; Arraste as bordas/cantos para redimensionar</span>
       </div>
-      <div class="editor-canvas-wrap"><canvas id="canvas-layout" class="region-canvas" width="800" height="450"></canvas></div>
-      <div>
-        <div class="region-group">
-          <div class="region-group-label" style="color:var(--green)">Jogo</div>
-          <div class="editor-fields">
-            <div><label>X</label><input type="number" id="game2-x" /></div>
-            <div><label>Y</label><input type="number" id="game2-y" /></div>
-            <div><label>W</label><input type="number" id="game2-w" /></div>
-            <div><label>H</label><input type="number" id="game2-h" /></div>
-          </div>
-        </div>
-        <div class="region-group">
-          <div class="region-group-label" style="color:#a07fde;padding:6px 10px 4px;">Webcam</div>
-          <div class="editor-fields">
-            <div><label>X</label><input type="number" id="wcam-x" /></div>
-            <div><label>Y</label><input type="number" id="wcam-y" /></div>
-            <div><label>W</label><input type="number" id="wcam-w" /></div>
-            <div><label>H</label><input type="number" id="wcam-h" /></div>
-          </div>
-        </div>
+      <div class="editor-canvas-wrap"><canvas id="canvas-layout" class="region-canvas"></canvas></div>
+      <div class="editor-fields">
+        <div><label>X</label><input type="number" id="layout-x" /></div>
+        <div><label>Y</label><input type="number" id="layout-y" /></div>
+        <div><label>W (largura)</label><input type="number" id="layout-w" /></div>
+        <div><label>H (altura)</label><input type="number" id="layout-h" /></div>
       </div>
     </div>
     <div class="approval-actions">
-      <button type="button" class="btn btn-approve" id="layout-approve">Aprovar layout</button>
-      <button type="button" class="btn btn-cancel" id="layout-cancel">Cancelar</button>
+      <button type="button" class="btn btn-approve" id="layout-next-btn">Próximo: Mesa →</button>
+      <button type="button" class="btn btn-secondary" id="layout-back-btn" style="display:none">← Voltar para webcam</button>
+      <button type="button" class="btn btn-cancel" id="layout-cancel-btn">Cancelar</button>
     </div>
   </div>
 
-  <!-- ── CAPTIONS APPROVAL ── -->
+  <!-- ══════════════════════════════════════════════════════
+       CAPTIONS
+  ══════════════════════════════════════════════════════ -->
   <div id="captions-approval" class="approval-panel">
     <h3>💬 Editor de legendas</h3>
-    <p class="desc">Revise e edite o texto antes de queimar nos vídeos.</p>
+    <p class="desc">Revise e edite o texto antes de queimar nos vídeos. Clique em qualquer linha para corrigir.</p>
     <div class="caption-editor-clips" id="caption-clips-container"></div>
     <div class="approval-actions">
       <button type="button" class="btn btn-approve" id="captions-approve">Aprovar e queimar legendas</button>
@@ -335,10 +333,7 @@ canvas.region-canvas{display:block;width:100%;height:auto;}
     <h3>Novo perfil</h3>
     <div class="field" style="margin-top:0;"><label>Nome do streamer</label><input type="text" id="pf-name" style="width:100%;" placeholder="Ex: João Casino" /></div>
     <div class="field"><label>Jogo principal</label>
-      <select id="pf-game" style="width:100%;">
-        <option value="all">Todos</option><option value="baccarat">Baccarat</option>
-        <option value="blackjack">Blackjack</option><option value="roulette">Roleta</option>
-      </select>
+      <select id="pf-game" style="width:100%;"><option value="all">Todos</option><option value="baccarat">Baccarat</option><option value="blackjack">Blackjack</option><option value="roulette">Roleta</option></select>
     </div>
     <div class="field"><label>Duração padrão dos clipes (s)</label><input type="number" id="pf-dur" value="45" min="10" max="300" style="width:100px;" /></div>
     <div class="field"><label>Notas sobre o estilo</label><input type="text" id="pf-notes" style="width:100%;" placeholder="Ex: grita muito, prefere viradas" /></div>
@@ -351,84 +346,82 @@ canvas.region-canvas{display:block;width:100%;height:auto;}
 
 <script>
 // ════════════════════════════════════════════════════════════════════════════
-// RegionEditor — editor visual drag-resize para regiões no canvas
+//  RegionEditor
+//  Editor de região simples — sem zoom, sem pan.
+//  A imagem ocupa o canvas inteiro. Apenas a caixa de seleção é interativa.
+//  Estilo: Windows Snipping Tool / OBS / Photoshop crop.
 // ════════════════════════════════════════════════════════════════════════════
 class RegionEditor {
-  constructor(canvasId, regions, opts = {}) {
-    this.canvas = document.getElementById(canvasId);
-    this.ctx = this.canvas.getContext("2d");
-    this.regions = regions; // [{key,label,color,inputs:{x,y,w,h}}]
-    this.activeIdx = 0;
-    this.defaults = [];
-    this.imgW = opts.imgW || 1920;
-    this.imgH = opts.imgH || 1080;
-    this.img = null;
-    this.scale = 1;
-    this.tx = 0; this.ty = 0;
-    this.drag = null;
-    this.HANDLE_R = 7;
-    this._setupCanvas();
+  constructor(canvasId, key, color, label, inputs, opts = {}) {
+    this.canvas  = document.getElementById(canvasId);
+    this.ctx     = this.canvas.getContext("2d");
+    this.key     = key;
+    this.color   = color;
+    this.label   = label;
+    this.inputs  = inputs; // { x, y, w, h } — IDs dos campos numéricos
+    this.imgW    = opts.imgW || 1920;
+    this.imgH    = opts.imgH || 1080;
+    this.img     = null;
+    this.sel     = null;  // { x, y, w, h } em coordenadas de imagem
+    this.default = null;
+    this.drag    = null;
+    this.HR      = 8;     // handle radius px (display)
+    this._buildCanvas();
     this._bindEvents();
-    if (opts.imageUrl) this.setImage(opts.imageUrl);
+    if (opts.imageUrl) this._loadImage(opts.imageUrl);
   }
 
-  _setupCanvas() {
+  // ── Setup ──────────────────────────────────────────────────────────────────
+  _buildCanvas() {
     const dpr = window.devicePixelRatio || 1;
-    const w = this.canvas.clientWidth || 800;
-    const h = Math.round(w * (this.imgH / this.imgW));
-    this.canvas.width  = w * dpr;
-    this.canvas.height = h * dpr;
-    this.canvas.style.height = h + "px";
+    // Parent width; fallback to 800 if not yet laid out
+    const parentW = this.canvas.parentElement
+      ? this.canvas.parentElement.getBoundingClientRect().width || 800
+      : 800;
+    const MAX_H = 580;
+    let cw = Math.round(parentW);
+    let ch = Math.round(cw * this.imgH / this.imgW);
+    if (ch > MAX_H) { ch = MAX_H; cw = Math.round(ch * this.imgW / this.imgH); }
+    this.cw = cw; this.ch = ch;
+    this.canvas.width  = cw * dpr;
+    this.canvas.height = ch * dpr;
+    this.canvas.style.width  = cw + "px";
+    this.canvas.style.height = ch + "px";
     this.ctx.scale(dpr, dpr);
-    this._cw = w; this._ch = h;
   }
 
-  setImage(url) {
+  _loadImage(url) {
     this.img = new Image();
     this.img.crossOrigin = "anonymous";
-    this.img.onload = () => { this.fitImage(); };
+    this.img.onload = () => this.render();
     this.img.src = url + "?t=" + Date.now();
   }
 
-  fitImage() {
-    if (!this.img) return;
-    const scaleX = this._cw / this.imgW;
-    const scaleY = this._ch / this.imgH;
-    this.scale = Math.min(scaleX, scaleY) * 0.92;
-    this.tx = (this._cw - this.imgW * this.scale) / 2;
-    this.ty = (this._ch - this.imgH * this.scale) / 2;
+  // ── Coordinate mapping (linear — image ↔ display) ─────────────────────────
+  // No scale/translate transforms. Image always fills the canvas exactly.
+  _iTD(ix, iy) { return { x: ix / this.imgW * this.cw, y: iy / this.imgH * this.ch }; }
+  _dTI(dx, dy) { return { x: dx / this.cw * this.imgW, y: dy / this.ch * this.imgH }; }
+
+  // ── Public API ─────────────────────────────────────────────────────────────
+  setRegion(rect) {
+    this.sel = { x: Math.round(rect.x), y: Math.round(rect.y), w: Math.round(rect.w), h: Math.round(rect.h) };
     this.render();
+    this._syncFields();
   }
 
-  setRegion(key, rect) {
-    const r = this.regions.find(r => r.key === key);
-    if (r) r.sel = { ...rect };
-    this.render();
-    this._syncToInputs(key);
+  setDefault(rect) {
+    this.default = { ...rect };
+    this.setRegion(rect);
   }
 
-  setDefault(key, rect) {
-    this.defaults.push({ key, rect: { ...rect } });
-    this.setRegion(key, rect);
-  }
+  resetToDefault() { if (this.default) this.setRegion(this.default); }
 
-  resetToDefault() {
-    for (const d of this.defaults) this.setRegion(d.key, { ...d.rect });
-  }
+  getRegion() { return this.sel ? { ...this.sel } : null; }
 
-  getRegion(key) {
-    const r = this.regions.find(r => r.key === key);
-    return r?.sel ? { ...r.sel } : null;
-  }
-
-  // image → screen
-  _iToS(ix, iy) { return { x: ix * this.scale + this.tx, y: iy * this.scale + this.ty }; }
-  // screen → image
-  _sToI(sx, sy) { return { x: (sx - this.tx) / this.scale, y: (sy - this.ty) / this.scale }; }
-
-  _handles(r) {
-    if (!r.sel) return [];
-    const { x, y, w, h } = r.sel;
+  // ── Hit testing ────────────────────────────────────────────────────────────
+  _handles() {
+    if (!this.sel) return [];
+    const { x, y, w, h } = this.sel;
     return [
       { id:"nw", ix:x,     iy:y     },
       { id:"n",  ix:x+w/2, iy:y     },
@@ -438,219 +431,173 @@ class RegionEditor {
       { id:"s",  ix:x+w/2, iy:y+h   },
       { id:"sw", ix:x,     iy:y+h   },
       { id:"w",  ix:x,     iy:y+h/2 },
-    ].map(h => { const s = this._iToS(h.ix, h.iy); return { ...h, sx:s.x, sy:s.y }; });
+    ].map(h => { const d = this._iTD(h.ix, h.iy); return { ...h, dx: d.x, dy: d.y }; });
   }
 
-  _hitTest(sx, sy) {
-    for (let i = 0; i < this.regions.length; i++) {
-      const r = this.regions[i];
-      if (!r.sel) continue;
-      for (const h of this._handles(r)) {
-        if (Math.abs(sx-h.sx) < this.HANDLE_R+2 && Math.abs(sy-h.sy) < this.HANDLE_R+2)
-          return { type: "resize", handleId: h.id, regionIdx: i };
-      }
-      const tl = this._iToS(r.sel.x, r.sel.y);
-      const br = this._iToS(r.sel.x+r.sel.w, r.sel.y+r.sel.h);
-      if (sx>=tl.x && sx<=br.x && sy>=tl.y && sy<=br.y)
-        return { type: "move", regionIdx: i };
-    }
-    return { type: "pan" };
+  _hitTest(dx, dy) {
+    if (!this.sel) return null;
+    const HR = this.HR;
+    for (const h of this._handles())
+      if (Math.abs(dx - h.dx) <= HR + 2 && Math.abs(dy - h.dy) <= HR + 2)
+        return { type: "resize", id: h.id };
+    const tl = this._iTD(this.sel.x, this.sel.y);
+    const br = this._iTD(this.sel.x + this.sel.w, this.sel.y + this.sel.h);
+    if (dx >= tl.x && dx <= br.x && dy >= tl.y && dy <= br.y)
+      return { type: "move" };
+    return null;
   }
 
-  _applyResize(regionIdx, handleId, dx, dy) {
-    const r = this.regions[regionIdx];
-    const sel = r.sel;
-    const dxi = dx / this.scale;
-    const dyi = dy / this.scale;
-    let { x, y, w, h } = sel;
-    const minS = 20;
-    if (handleId.includes("w")) { const nw = w - dxi; if (nw > minS) { x += dxi; w = nw; } }
-    if (handleId.includes("e")) { w = Math.max(minS, w + dxi); }
-    if (handleId.includes("n")) { const nh = h - dyi; if (nh > minS) { y += dyi; h = nh; } }
-    if (handleId.includes("s")) { h = Math.max(minS, h + dyi); }
-    // clamp to video bounds
+  _cursor(hit) {
+    if (!hit) return "default";
+    if (hit.type === "move") return "move";
+    const c = { nw:"nw-resize", ne:"ne-resize", se:"se-resize", sw:"sw-resize",
+                 n:"n-resize",  e:"e-resize",   s:"s-resize",   w:"w-resize" };
+    return c[hit.id] || "crosshair";
+  }
+
+  // ── Drag logic ─────────────────────────────────────────────────────────────
+  _applyResize(id, ddx, ddy) {
+    const dxi = ddx / this.cw * this.imgW;
+    const dyi = ddy / this.ch * this.imgH;
+    const MIN = 16;
+    let { x, y, w, h } = this.sel;
+    if (id.includes("w")) { const nw = w - dxi; if (nw > MIN) { x += dxi; w = nw; } }
+    if (id.includes("e")) { w = Math.max(MIN, w + dxi); }
+    if (id.includes("n")) { const nh = h - dyi; if (nh > MIN) { y += dyi; h = nh; } }
+    if (id.includes("s")) { h = Math.max(MIN, h + dyi); }
     x = Math.max(0, Math.min(x, this.imgW - 1));
     y = Math.max(0, Math.min(y, this.imgH - 1));
     w = Math.min(w, this.imgW - x);
     h = Math.min(h, this.imgH - y);
-    r.sel = { x: Math.round(x), y: Math.round(y), w: Math.round(w), h: Math.round(h) };
+    this.sel = { x: Math.round(x), y: Math.round(y), w: Math.round(w), h: Math.round(h) };
   }
 
   _bindEvents() {
-    const canvas = this.canvas;
-    let lastX, lastY;
+    const cv = this.canvas;
+    let lastX = 0, lastY = 0;
 
-    const getPos = (e) => {
-      const rect = canvas.getBoundingClientRect();
-      const src = e.touches ? e.touches[0] : e;
-      return { x: src.clientX - rect.left, y: src.clientY - rect.top };
+    const pos = (e) => {
+      const r = cv.getBoundingClientRect();
+      const s = e.touches ? e.touches[0] : e;
+      return { x: s.clientX - r.left, y: s.clientY - r.top };
     };
 
-    canvas.addEventListener("mousedown", (e) => {
-      const { x, y } = getPos(e);
+    cv.addEventListener("mousedown", (e) => {
+      const { x, y } = pos(e);
       const hit = this._hitTest(x, y);
-      if (hit.type === "resize") {
-        this.activeIdx = hit.regionIdx;
-        this.drag = { ...hit, startX: x, startY: y, snapshot: { ...this.regions[hit.regionIdx].sel } };
-      } else if (hit.type === "move") {
-        this.activeIdx = hit.regionIdx;
-        this.drag = { ...hit, startX: x, startY: y, snapshot: { ...this.regions[hit.regionIdx].sel } };
-      } else {
-        this.drag = { type: "pan", startX: x, startY: y, startTx: this.tx, startTy: this.ty };
-      }
+      if (!hit) return;
+      e.preventDefault();
+      this.drag = { ...hit, sx: x, sy: y, snap: { ...this.sel } };
       lastX = x; lastY = y;
     });
 
     window.addEventListener("mousemove", (e) => {
-      if (!this.drag) return;
-      const { x, y } = getPos(e);
-      const dx = x - lastX; const dy = y - lastY;
-
-      if (this.drag.type === "pan") {
-        this.tx = this.drag.startTx + (x - this.drag.startX);
-        this.ty = this.drag.startTy + (y - this.drag.startY);
-      } else if (this.drag.type === "move") {
-        const r = this.regions[this.drag.regionIdx];
-        const snap = this.drag.snapshot;
-        const dxi = (x - this.drag.startX) / this.scale;
-        const dyi = (y - this.drag.startY) / this.scale;
-        r.sel.x = Math.round(Math.max(0, Math.min(snap.x + dxi, this.imgW - snap.w)));
-        r.sel.y = Math.round(Math.max(0, Math.min(snap.y + dyi, this.imgH - snap.h)));
-      } else if (this.drag.type === "resize") {
-        this._applyResize(this.drag.regionIdx, this.drag.handleId, dx, dy);
+      const { x, y } = pos(e);
+      if (!this.drag) {
+        cv.style.cursor = this._cursor(this._hitTest(x, y));
+        return;
       }
-
+      const ddx = x - lastX, ddy = y - lastY;
+      if (this.drag.type === "move") {
+        const dxi = (x - this.drag.sx) / this.cw * this.imgW;
+        const dyi = (y - this.drag.sy) / this.ch * this.imgH;
+        this.sel.x = Math.round(Math.max(0, Math.min(this.drag.snap.x + dxi, this.imgW - this.drag.snap.w)));
+        this.sel.y = Math.round(Math.max(0, Math.min(this.drag.snap.y + dyi, this.imgH - this.drag.snap.h)));
+      } else {
+        this._applyResize(this.drag.id, ddx, ddy);
+      }
       this.render();
-      if (this.drag.type !== "pan") {
-        this._syncToInputs(this.regions[this.drag.regionIdx]?.key);
-      }
+      this._syncFields();
       lastX = x; lastY = y;
     });
 
     window.addEventListener("mouseup", () => { this.drag = null; });
 
-    canvas.addEventListener("wheel", (e) => {
-      e.preventDefault();
-      const { x, y } = getPos(e);
-      const factor = e.deltaY < 0 ? 1.1 : 0.91;
-      const newScale = Math.max(0.1, Math.min(20, this.scale * factor));
-      this.tx = x - (x - this.tx) * (newScale / this.scale);
-      this.ty = y - (y - this.ty) * (newScale / this.scale);
-      this.scale = newScale;
-      this.render();
-    }, { passive: false });
-
-    // Sync from number inputs
-    for (const r of this.regions) {
-      for (const [k, id] of Object.entries(r.inputs)) {
-        const el = document.getElementById(id);
-        if (!el) continue;
-        el.addEventListener("input", () => {
-          if (!r.sel) r.sel = { x:0, y:0, w:100, h:100 };
-          r.sel[k] = Math.max(0, Number(el.value));
-          this.render();
-        });
-      }
-    }
-  }
-
-  _syncToInputs(key) {
-    const r = this.regions.find(r => r.key === key);
-    if (!r?.sel) return;
-    for (const [k, id] of Object.entries(r.inputs)) {
+    // Sync from number inputs → canvas
+    for (const [k, id] of Object.entries(this.inputs)) {
       const el = document.getElementById(id);
-      if (el) el.value = r.sel[k];
+      if (!el) continue;
+      el.addEventListener("input", () => {
+        if (!this.sel) this.sel = { x:0, y:0, w:100, h:100 };
+        this.sel[k] = Math.max(0, Number(el.value));
+        this.render();
+      });
     }
   }
 
+  _syncFields() {
+    if (!this.sel) return;
+    for (const [k, id] of Object.entries(this.inputs)) {
+      const el = document.getElementById(id);
+      if (el) el.value = this.sel[k];
+    }
+  }
+
+  // ── Render ─────────────────────────────────────────────────────────────────
   render() {
-    const { ctx, _cw: cw, _ch: ch } = this;
+    const { ctx, cw, ch } = this;
     ctx.clearRect(0, 0, cw, ch);
     ctx.fillStyle = "#111";
     ctx.fillRect(0, 0, cw, ch);
 
-    // Draw image
-    if (this.img?.complete) {
-      ctx.drawImage(this.img, this.tx, this.ty, this.imgW * this.scale, this.imgH * this.scale);
+    if (this.img?.complete && this.img.naturalWidth)
+      ctx.drawImage(this.img, 0, 0, cw, ch);
+
+    if (!this.sel) return;
+
+    const tl = this._iTD(this.sel.x, this.sel.y);
+    const dw = this.sel.w / this.imgW * cw;
+    const dh = this.sel.h / this.imgH * ch;
+
+    // Darken outside selection
+    ctx.fillStyle = "rgba(0,0,0,0.55)";
+    ctx.fillRect(0,       0,       cw,       tl.y);
+    ctx.fillRect(0,       tl.y+dh, cw,       ch-tl.y-dh);
+    ctx.fillRect(0,       tl.y,    tl.x,     dh);
+    ctx.fillRect(tl.x+dw, tl.y,    cw-tl.x-dw, dh);
+
+    // Border
+    ctx.strokeStyle = this.color;
+    ctx.lineWidth = 2;
+    ctx.setLineDash([]);
+    ctx.strokeRect(tl.x, tl.y, dw, dh);
+
+    // Rule-of-thirds guides inside selection
+    ctx.strokeStyle = "rgba(255,255,255,0.15)";
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 4]);
+    for (let i = 1; i <= 2; i++) {
+      const gx = tl.x + dw * i / 3, gy = tl.y + dh * i / 3;
+      ctx.beginPath(); ctx.moveTo(gx, tl.y); ctx.lineTo(gx, tl.y+dh); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(tl.x, gy); ctx.lineTo(tl.x+dw, gy); ctx.stroke();
     }
+    ctx.setLineDash([]);
 
-    // Draw each region
-    for (let i = 0; i < this.regions.length; i++) {
-      const r = this.regions[i];
-      if (!r.sel) continue;
-      const isActive = i === this.activeIdx;
-      const tl = this._iToS(r.sel.x, r.sel.y);
-      const sw = r.sel.w * this.scale;
-      const sh = r.sel.h * this.scale;
+    // Label
+    ctx.fillStyle = this.color;
+    ctx.font = "bold 12px sans-serif";
+    ctx.fillText(this.label, tl.x + 6, tl.y + 16);
 
-      // Darkening for single-region editors
-      if (this.regions.length === 1) {
-        ctx.save();
-        ctx.fillStyle = "rgba(0,0,0,0.5)";
-        ctx.fillRect(this.tx, this.ty, this.imgW * this.scale, this.imgH * this.scale);
-        ctx.clearRect(tl.x, tl.y, sw, sh);
-        ctx.restore();
-        // Re-draw the selection area from the image
-        if (this.img?.complete) {
-          ctx.drawImage(
-            this.img,
-            r.sel.x, r.sel.y, r.sel.w, r.sel.h,
-            tl.x, tl.y, sw, sh
-          );
-        }
-      }
-
-      // Selection border
-      ctx.strokeStyle = r.color;
-      ctx.lineWidth = isActive ? 2.5 : 1.5;
-      ctx.setLineDash(isActive ? [] : [6, 4]);
-      ctx.strokeRect(tl.x, tl.y, sw, sh);
-      ctx.setLineDash([]);
-
-      // Label
-      ctx.fillStyle = r.color;
-      ctx.font = "bold 12px sans-serif";
-      ctx.fillText(r.label, tl.x + 6, tl.y + 16);
-
-      // Handles (only active)
-      if (isActive) {
-        for (const h of this._handles(r)) {
-          ctx.fillStyle = "#fff";
-          ctx.fillRect(h.sx - this.HANDLE_R, h.sy - this.HANDLE_R, this.HANDLE_R*2, this.HANDLE_R*2);
-          ctx.strokeStyle = r.color;
-          ctx.lineWidth = 1.5;
-          ctx.strokeRect(h.sx - this.HANDLE_R, h.sy - this.HANDLE_R, this.HANDLE_R*2, this.HANDLE_R*2);
-        }
-      }
+    // Handles
+    const HR = this.HR;
+    for (const h of this._handles()) {
+      ctx.fillStyle = "#fff";
+      ctx.fillRect(h.dx - HR, h.dy - HR, HR*2, HR*2);
+      ctx.strokeStyle = this.color;
+      ctx.lineWidth = 2;
+      ctx.strokeRect(h.dx - HR, h.dy - HR, HR*2, HR*2);
     }
   }
 }
 
 // ════════════════════════════════════════════════════════════════════════════
-// Editor instances (criados quando os dados chegam)
-// ════════════════════════════════════════════════════════════════════════════
-let editorCrop   = null;
-let editorGame   = null;
-let editorLayout = null;
-
-function buildCropEditor(canvasId, xId, yId, wId, hId, imgUrl, vW, vH) {
-  const editor = new RegionEditor(canvasId, [
-    { key:"crop", label:"Crop", color:"#e8418c", sel:null, inputs:{x:xId,y:yId,w:wId,h:hId} }
-  ], { imgW: vW, imgH: vH, imageUrl: imgUrl });
-  return editor;
-}
-
-function buildLayoutEditor(imgUrl, vW, vH) {
-  return new RegionEditor("canvas-layout", [
-    { key:"game",  label:"Jogo",   color:"#3de89a", sel:null, inputs:{x:"game2-x",y:"game2-y",w:"game2-w",h:"game2-h"} },
-    { key:"webcam",label:"Webcam", color:"#a07fde", sel:null, inputs:{x:"wcam-x",  y:"wcam-y",  w:"wcam-w",  h:"wcam-h" } },
-  ], { imgW: vW, imgH: vH, imageUrl: imgUrl });
-}
-
-// ════════════════════════════════════════════════════════════════════════════
-// App state
+//  App state
 // ════════════════════════════════════════════════════════════════════════════
 let currentJobId = null, pollInterval = null, lastLogLen = 0;
+let editorCrop = null, editorGame = null, editorLayout = null;
+
+// Layout two-step state
+let layoutData = null, layoutWebcamCoords = null, layoutPhase = "webcam";
 
 // ── Tab switching
 document.querySelectorAll(".tab-btn").forEach(btn =>
@@ -666,10 +613,10 @@ document.querySelectorAll(".tab-btn").forEach(btn =>
 for (const id of ["drop-streamer","drop-mesa","drop-combined","drop-outro"]) {
   const el = document.getElementById(id);
   if (!el) continue;
-  const input = el.querySelector("input");
-  input?.addEventListener("change", () => {
-    el.classList.toggle("filled", input.files.length > 0);
-    if (input.files[0]) el.querySelector(".hint-inline").textContent = input.files[0].name;
+  const inp = el.querySelector("input");
+  inp?.addEventListener("change", () => {
+    el.classList.toggle("filled", inp.files.length > 0);
+    if (inp.files[0]) el.querySelector(".hint-inline").textContent = inp.files[0].name;
   });
 }
 
@@ -690,7 +637,7 @@ document.querySelectorAll(".preset-btn").forEach(btn =>
   })
 );
 
-// ── Log
+// ── Log helper
 const logEl = document.getElementById("log");
 function logLine(text, cls) {
   logEl.classList.add("show");
@@ -727,26 +674,25 @@ async function startJob() {
     fd.append("mode","files");
   }
 
-  // Duration: só envia pads quando no modo personalizado
+  // Duration: envia pads apenas no modo personalizado
   const isCustom = document.getElementById("presetDuration").value === "custom";
   fd.append("maxClipDurationSec", document.getElementById("maxClipDurationSec").value);
   if (isCustom) {
     fd.append("padBeforeSec", document.getElementById("padBeforeSec").value);
     fd.append("padAfterSec",  document.getElementById("padAfterSec").value);
   }
-  // pads NÃO são enviados em modo preset → selectHighlights.ts os deriva de maxClipDurationSec
 
-  fd.append("detectCrop",         document.getElementById("opt-crop").checked       ? "true" : "false");
-  fd.append("detectGameCrop",     document.getElementById("opt-game-crop").checked   ? "true" : "false");
-  fd.append("enableCaptions",     document.getElementById("opt-captions").checked    ? "true" : "false");
-  fd.append("generateCompilation",document.getElementById("opt-compilation").checked ? "true" : "false");
+  fd.append("detectCrop",          document.getElementById("opt-crop").checked       ? "true" : "false");
+  fd.append("detectGameCrop",      document.getElementById("opt-game-crop").checked   ? "true" : "false");
+  fd.append("enableCaptions",      document.getElementById("opt-captions").checked    ? "true" : "false");
+  fd.append("generateCompilation", document.getElementById("opt-compilation").checked ? "true" : "false");
 
   const profileId = document.getElementById("profileSelect").value;
   if (profileId) fd.append("profileId", profileId);
 
   logLine("Enviando...");
   try {
-    const res = await fetch("/api/jobs", { method:"POST", body:fd });
+    const res  = await fetch("/api/jobs", { method:"POST", body:fd });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "Falha ao criar job.");
     currentJobId = data.jobId;
@@ -762,101 +708,203 @@ async function startJob() {
 async function pollJob() {
   if (!currentJobId) return;
   try {
-    const res  = await fetch("/api/jobs/" + currentJobId);
-    const job  = await res.json();
+    const res = await fetch("/api/jobs/" + currentJobId);
+    const job = await res.json();
     for (let i = lastLogLen; i < job.log.length; i++) logLine(job.log[i]);
     lastLogLen = job.log.length;
 
-    if      (job.status === "waiting-crop-approval") { clearInterval(pollInterval); pollInterval=null; handleCropApproval(job.pendingApproval.data); }
-    else if (job.status === "waiting-layout-approval") { clearInterval(pollInterval); pollInterval=null; handleLayoutApproval(job.pendingApproval.data); }
-    else if (job.status === "waiting-captions-approval") { clearInterval(pollInterval); pollInterval=null; handleCaptionsApproval(job.pendingApproval.data); }
-    else if (job.status === "done")  { clearInterval(pollInterval); pollInterval=null; logLine(`Pronto! ${job.clips.length} clipe(s).`,"ok"); document.getElementById("form").querySelector("button.run").disabled=false; showResults(job); }
-    else if (job.status === "error") { clearInterval(pollInterval); pollInterval=null; logLine("Erro: "+job.error,"err"); document.getElementById("form").querySelector("button.run").disabled=false; }
-  } catch(e) { console.warn("poll err",e); }
+    if (job.status === "waiting-crop-approval") {
+      clearInterval(pollInterval); pollInterval = null;
+      handleCropApproval(job.pendingApproval.data);
+    } else if (job.status === "waiting-layout-approval") {
+      clearInterval(pollInterval); pollInterval = null;
+      handleLayoutApproval(job.pendingApproval.data);
+    } else if (job.status === "waiting-captions-approval") {
+      clearInterval(pollInterval); pollInterval = null;
+      handleCaptionsApproval(job.pendingApproval.data);
+    } else if (job.status === "done") {
+      clearInterval(pollInterval); pollInterval = null;
+      logLine(`Pronto! ${job.clips.length} clipe(s) gerado(s).`, "ok");
+      document.getElementById("form").querySelector("button.run").disabled = false;
+      showResults(job);
+    } else if (job.status === "error") {
+      clearInterval(pollInterval); pollInterval = null;
+      logLine("Erro: " + job.error, "err");
+      document.getElementById("form").querySelector("button.run").disabled = false;
+    }
+  } catch(e) { console.warn("poll err", e); }
 }
 
 function resumePolling() { if (!pollInterval) pollInterval = setInterval(pollJob, 1500); }
 function hideAllApprovals() {
-  for (const id of ["crop-approval","game-crop-approval","layout-approval","captions-approval"])
-    document.getElementById(id).classList.remove("visible");
+  ["crop-approval","game-crop-approval","layout-approval","captions-approval"]
+    .forEach(id => document.getElementById(id).classList.remove("visible"));
 }
 
-// ── Crop approval (streamer)
+// ════════════════════════════════════════════════════════════════════════════
+//  CROP — STREAMER
+// ════════════════════════════════════════════════════════════════════════════
 function handleCropApproval(data) {
-  // Check if this is for game (target field) or streamer
   if (data.target === "game") { handleGameCropApproval(data); return; }
 
   const panel = document.getElementById("crop-approval");
-  editorCrop = buildCropEditor("canvas-crop","crop-x","crop-y","crop-w","crop-h", data.previewUrl, data.videoW, data.videoH);
-  editorCrop.setDefault("crop", data.detected);
   panel.classList.add("visible");
   panel.scrollIntoView({ behavior:"smooth" });
-  logLine("Aguardando aprovação do crop...", "wait");
-}
 
-function handleGameCropApproval(data) {
-  const panel = document.getElementById("game-crop-approval");
-  editorGame = buildCropEditor("canvas-game","game-x","game-y","game-w","game-h", data.previewUrl, data.videoW, data.videoH);
-  editorGame.setDefault("crop", data.detected);
-  panel.classList.add("visible");
-  panel.scrollIntoView({ behavior:"smooth" });
-  logLine("Aguardando aprovação do crop do jogo...", "wait");
+  editorCrop = new RegionEditor(
+    "canvas-crop", "crop", "#e8418c", "Streamer",
+    { x:"crop-x", y:"crop-y", w:"crop-w", h:"crop-h" },
+    { imgW: data.videoW, imgH: data.videoH, imageUrl: data.previewUrl }
+  );
+  editorCrop.setDefault(data.detected);
+
+  document.getElementById("crop-reset-btn").onclick = () => editorCrop.resetToDefault();
+  logLine("Aguardando aprovação do enquadramento...", "wait");
 }
 
 document.getElementById("crop-approve").addEventListener("click", async () => {
-  const sel = editorCrop?.getRegion("crop");
+  const sel = editorCrop?.getRegion();
   document.getElementById("crop-approval").classList.remove("visible");
   await sendApproval("crop", true, sel);
-  logLine("Crop aprovado.", "ok");
+  logLine("Enquadramento do streamer salvo.", "ok");
   resumePolling();
 });
 document.getElementById("crop-skip").addEventListener("click", async () => {
   document.getElementById("crop-approval").classList.remove("visible");
-  await sendApproval("crop", true, null); // null → pipeline usa frame inteiro
-  logLine("Crop ignorado, usando frame inteiro.", "ok");
+  await sendApproval("crop", true, null);
+  logLine("Usando frame completo do streamer.", "ok");
   resumePolling();
 });
 
+// ════════════════════════════════════════════════════════════════════════════
+//  CROP — JOGO / MESA
+// ════════════════════════════════════════════════════════════════════════════
+function handleGameCropApproval(data) {
+  const panel = document.getElementById("game-crop-approval");
+  panel.classList.add("visible");
+  panel.scrollIntoView({ behavior:"smooth" });
+
+  editorGame = new RegionEditor(
+    "canvas-game", "game", "#3de89a", "Mesa / Jogo",
+    { x:"game-x", y:"game-y", w:"game-w", h:"game-h" },
+    { imgW: data.videoW, imgH: data.videoH, imageUrl: data.previewUrl }
+  );
+  editorGame.setDefault(data.detected);
+
+  document.getElementById("game-crop-reset-btn").onclick = () => editorGame.resetToDefault();
+  logLine("Aguardando aprovação do enquadramento do jogo...", "wait");
+}
+
 document.getElementById("game-crop-approve").addEventListener("click", async () => {
-  const sel = editorGame?.getRegion("crop");
+  const sel = editorGame?.getRegion();
   document.getElementById("game-crop-approval").classList.remove("visible");
   await sendApproval("crop", true, sel);
-  logLine("Crop do jogo aprovado.", "ok");
+  logLine("Enquadramento do jogo salvo.", "ok");
   resumePolling();
 });
 document.getElementById("game-crop-skip").addEventListener("click", async () => {
   document.getElementById("game-crop-approval").classList.remove("visible");
   await sendApproval("crop", true, null);
-  logLine("Crop do jogo ignorado.", "ok");
+  logLine("Usando frame completo do jogo.", "ok");
   resumePolling();
 });
 
-// ── Layout approval (single-combined)
+// ════════════════════════════════════════════════════════════════════════════
+//  LAYOUT — VÍDEO ÚNICO (dois passos: webcam → mesa)
+// ════════════════════════════════════════════════════════════════════════════
 function handleLayoutApproval(data) {
+  layoutData = data;
+  layoutWebcamCoords = null;
+  layoutPhase = "webcam";
+
   const panel = document.getElementById("layout-approval");
-  editorLayout = buildLayoutEditor(data.previewUrl, data.videoW, data.videoH);
-  editorLayout.setDefault("game",   data.game);
-  editorLayout.setDefault("webcam", data.webcam);
   panel.classList.add("visible");
   panel.scrollIntoView({ behavior:"smooth" });
-  logLine("Aguardando confirmação do layout...", "wait");
+
+  // Criar editor com a região da webcam (passo 1)
+  editorLayout = new RegionEditor(
+    "canvas-layout", "layout", "#a07fde", "Webcam",
+    { x:"layout-x", y:"layout-y", w:"layout-w", h:"layout-h" },
+    { imgW: data.videoW, imgH: data.videoH, imageUrl: data.previewUrl }
+  );
+  editorLayout.setDefault(data.webcam);
+
+  _updateLayoutUI("webcam");
+  logLine("Passo 1/2: selecione a área da webcam.", "wait");
 }
 
-document.getElementById("layout-approve").addEventListener("click", async () => {
-  const adj = { game: editorLayout?.getRegion("game"), webcam: editorLayout?.getRegion("webcam") };
-  document.getElementById("layout-approval").classList.remove("visible");
-  await sendApproval("layout", true, adj);
-  logLine("Layout aprovado.", "ok");
-  resumePolling();
+function _updateLayoutUI(phase) {
+  const pip1 = document.getElementById("layout-step-1");
+  const pip2 = document.getElementById("layout-step-2");
+  const nextBtn = document.getElementById("layout-next-btn");
+  const backBtn = document.getElementById("layout-back-btn");
+
+  if (phase === "webcam") {
+    document.getElementById("layout-title").textContent = "📷 Passo 1 de 2 — Webcam";
+    document.getElementById("layout-desc").textContent  = "Arraste a caixa para enquadrar exatamente a janela da webcam.";
+    pip1.className = "step-pip active"; pip2.className = "step-pip";
+    nextBtn.textContent = "Próximo: Mesa →";
+    backBtn.style.display = "none";
+  } else {
+    document.getElementById("layout-title").textContent = "🎮 Passo 2 de 2 — Mesa / Jogo";
+    document.getElementById("layout-desc").textContent  = "Agora enquadre a mesa, o dealer e as cartas.";
+    pip1.className = "step-pip done"; pip2.className = "step-pip active";
+    nextBtn.textContent = "Aprovar layout ✓";
+    backBtn.style.display = "";
+  }
+}
+
+document.getElementById("layout-reset-btn").addEventListener("click", () => {
+  if (!editorLayout || !layoutData) return;
+  editorLayout.resetToDefault();
 });
-document.getElementById("layout-cancel").addEventListener("click", async () => {
+
+document.getElementById("layout-next-btn").addEventListener("click", async () => {
+  if (layoutPhase === "webcam") {
+    // Salvar coords da webcam e ir para o passo 2
+    layoutWebcamCoords = editorLayout.getRegion();
+    layoutPhase = "mesa";
+    _updateLayoutUI("mesa");
+
+    // Reconfigurar o mesmo editor para a mesa/jogo
+    editorLayout.color   = "#3de89a";
+    editorLayout.label   = "Mesa / Jogo";
+    editorLayout.default = { ...layoutData.game };
+    editorLayout.setRegion(layoutData.game);
+
+    logLine("Passo 2/2: selecione a área do jogo/mesa.", "wait");
+  } else {
+    // Passo 2: aprovar tudo
+    const mesaCoords = editorLayout.getRegion();
+    document.getElementById("layout-approval").classList.remove("visible");
+    await sendApproval("layout", true, { webcam: layoutWebcamCoords, game: mesaCoords });
+    logLine("Layout aprovado. Webcam e mesa confirmadas.", "ok");
+    resumePolling();
+  }
+});
+
+document.getElementById("layout-back-btn").addEventListener("click", () => {
+  // Voltar ao passo 1 da webcam
+  layoutPhase = "webcam";
+  _updateLayoutUI("webcam");
+  editorLayout.color   = "#a07fde";
+  editorLayout.label   = "Webcam";
+  editorLayout.default = { ...layoutData.webcam };
+  // Restaurar coords que o usuário já tinha definido (se voltar, não perder o trabalho)
+  if (layoutWebcamCoords) editorLayout.setRegion(layoutWebcamCoords);
+  else editorLayout.resetToDefault();
+});
+
+document.getElementById("layout-cancel-btn").addEventListener("click", async () => {
   document.getElementById("layout-approval").classList.remove("visible");
   await sendApproval("layout", false, null);
   logLine("Processamento cancelado.", "err");
   document.getElementById("form").querySelector("button.run").disabled = false;
 });
 
-// ── Captions approval
+// ════════════════════════════════════════════════════════════════════════════
+//  CAPTIONS
+// ════════════════════════════════════════════════════════════════════════════
 function handleCaptionsApproval(data) {
   const container = document.getElementById("caption-clips-container");
   container.innerHTML = "";
@@ -873,7 +921,7 @@ function handleCaptionsApproval(data) {
       row.className = "caption-group";
       row.dataset.gid = g.id; row.dataset.start = g.startSec; row.dataset.end = g.endSec;
       row.innerHTML = `<span class="time-label">${g.startSec.toFixed(2)}→${g.endSec.toFixed(2)}</span>
-        <input type="text" value="${g.text.replace(/"/g,'&quot;')}" />`;
+        <input type="text" value="${g.text.replace(/"/g,"&quot;")}" />`;
       grpsEl.appendChild(row);
     }
     container.appendChild(div);
@@ -888,8 +936,8 @@ document.getElementById("captions-approve").addEventListener("click", async () =
   document.querySelectorAll(".caption-clip").forEach(clipEl => {
     const groups = [];
     clipEl.querySelectorAll(".caption-group").forEach(row =>
-      groups.push({ id:row.dataset.gid, text:row.querySelector("input").value, startSec:+row.dataset.start, endSec:+row.dataset.end })
-    );
+      groups.push({ id:row.dataset.gid, text:row.querySelector("input").value,
+                    startSec:+row.dataset.start, endSec:+row.dataset.end }));
     clips.push({ clipId:clipEl.dataset.clipId, groups });
   });
   document.getElementById("captions-approval").classList.remove("visible");
@@ -904,32 +952,32 @@ document.getElementById("captions-skip").addEventListener("click", async () => {
   resumePolling();
 });
 
-// ── sendApproval
+// ── Send approval to backend
 async function sendApproval(type, approved, adjustedData) {
   try {
     const res = await fetch(`/api/jobs/${currentJobId}/approve`, {
       method:"POST", headers:{"content-type":"application/json"},
       body: JSON.stringify({ type, approved, adjustedData }),
     });
-    if (!res.ok) { const d = await res.json(); logLine("Erro ao aprovar: "+(d.error||res.status),"err"); }
-  } catch(e) { logLine("Erro de rede: "+e.message,"err"); }
+    if (!res.ok) { const d = await res.json(); logLine("Erro ao aprovar: " + (d.error || res.status), "err"); }
+  } catch(e) { logLine("Erro de rede: " + e.message, "err"); }
 }
 
-// ── Feedback
-async function sendFeedback(jobId, clipIndex, rating, clipCard) {
+// ════════════════════════════════════════════════════════════════════════════
+//  RESULTS
+// ════════════════════════════════════════════════════════════════════════════
+async function sendFeedback(jobId, clipIndex, rating, card) {
   try {
     await fetch(`/api/jobs/${jobId}/feedback`, {
       method:"POST", headers:{"content-type":"application/json"},
       body: JSON.stringify({ clipIndex, rating }),
     });
-    // Update button UI
-    clipCard.querySelectorAll(".fb-btn").forEach(b => b.classList.remove("active-great","active-good","active-bad"));
-    const btn = clipCard.querySelector(`[data-rating="${rating}"]`);
+    card.querySelectorAll(".fb-btn").forEach(b => b.classList.remove("active-great","active-good","active-bad"));
+    const btn = card.querySelector(`[data-rating="${rating}"]`);
     if (btn) btn.classList.add(`active-${rating}`);
-  } catch(e) { console.warn("feedback err",e); }
+  } catch(e) { console.warn("feedback err", e); }
 }
 
-// ── Show results
 function showResults(job) {
   const resultsCard = document.getElementById("results-card");
   const clipsEl     = document.getElementById("clips");
@@ -942,45 +990,51 @@ function showResults(job) {
   }
 
   resultsCard.style.display = "block";
-  if (!job.clips.length) { clipsEl.innerHTML='<p style="color:var(--ink-dim)">Nenhum clipe gerado.</p>'; return; }
+  if (!job.clips.length) {
+    clipsEl.innerHTML = '<p style="color:var(--ink-dim)">Nenhum clipe gerado.</p>';
+    return;
+  }
 
   job.clips.forEach((clip, idx) => {
     const dur = (clip.endSec - clip.startSec).toFixed(1);
     const scoreTag = clip.score != null ? `<span class="clip-score">${clip.score}</span>` : "";
-    const sourceTag = clip.source === "ia" ? "IA" : "áudio";
+    const src = clip.source === "ia" ? "IA" : "áudio";
     const div = document.createElement("div");
     div.className = "clip";
     div.innerHTML = `
       <video src="${clip.url}" controls preload="metadata"></video>
       <div class="clip-meta">
         ${clip.startSec.toFixed(1)}s – ${clip.endSec.toFixed(1)}s &nbsp;·&nbsp; ${dur}s${scoreTag}<br/>
-        <span style="font-size:11px;color:var(--ink-dim);text-transform:uppercase;">${sourceTag}</span><br/>
+        <span style="font-size:11px;text-transform:uppercase;">${src}</span><br/>
         ${clip.reason}<br/>
         <a href="${clip.url}" download>baixar</a>
       </div>
       <div class="feedback-row">
-        <button class="fb-btn" data-rating="great" title="Muito bom" onclick="sendFeedback('${job.id}',${idx},'great',this.closest('.clip'))">👍 Ótimo</button>
-        <button class="fb-btn" data-rating="good"  title="Bom"      onclick="sendFeedback('${job.id}',${idx},'good', this.closest('.clip'))">👌 Bom</button>
-        <button class="fb-btn" data-rating="bad"   title="Ruim"     onclick="sendFeedback('${job.id}',${idx},'bad',  this.closest('.clip'))">👎 Ruim</button>
+        <button class="fb-btn" data-rating="great" onclick="sendFeedback('${job.id}',${idx},'great',this.closest('.clip'))">👍 Ótimo</button>
+        <button class="fb-btn" data-rating="good"  onclick="sendFeedback('${job.id}',${idx},'good', this.closest('.clip'))">👌 Bom</button>
+        <button class="fb-btn" data-rating="bad"   onclick="sendFeedback('${job.id}',${idx},'bad',  this.closest('.clip'))">👎 Ruim</button>
       </div>`;
     clipsEl.appendChild(div);
   });
 }
 
 // ════════════════════════════════════════════════════════════════════════════
-// Creator Profiles
+//  CREATOR PROFILES
 // ════════════════════════════════════════════════════════════════════════════
 async function loadProfiles() {
   try {
-    const res = await fetch("/api/profiles");
-    const profiles = await res.json();
+    const profiles = await fetch("/api/profiles").then(r => r.json());
     const sel = document.getElementById("profileSelect");
     sel.innerHTML = '<option value="">Nenhum</option>';
-    for (const p of profiles) sel.innerHTML += `<option value="${p.id}">${p.name} (${p.preferredGame}, ${p.clipDurationSec}s)</option>`;
+    for (const p of profiles)
+      sel.innerHTML += `<option value="${p.id}">${p.name} (${p.preferredGame}, ${p.clipDurationSec}s)</option>`;
 
     const list = document.getElementById("profiles-list");
     list.innerHTML = "";
-    if (!profiles.length) { list.innerHTML = '<p style="color:var(--ink-dim);font-size:13px;">Nenhum perfil criado.</p>'; return; }
+    if (!profiles.length) {
+      list.innerHTML = '<p style="color:var(--ink-dim);font-size:13px;">Nenhum perfil criado.</p>';
+      return;
+    }
     for (const p of profiles) {
       const row = document.createElement("div");
       row.style.cssText = "display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--surface-2);border-radius:8px;";
@@ -988,7 +1042,7 @@ async function loadProfiles() {
         <button onclick="deleteProfile('${p.id}')" style="background:none;border:1px solid var(--line);color:var(--ink-dim);border-radius:6px;padding:4px 10px;cursor:pointer;font-size:12px;">Excluir</button>`;
       list.appendChild(row);
     }
-  } catch(e) { console.warn("profiles err",e); }
+  } catch(e) { console.warn("profiles err", e); }
 }
 
 function openProfilesModal()  { loadProfiles(); document.getElementById("profiles-modal").classList.add("open"); }
@@ -997,7 +1051,7 @@ function openCreateProfile()  { closeProfilesModal(); document.getElementById("c
 function closeCreateProfile() { document.getElementById("create-profile-modal").classList.remove("open"); }
 
 async function saveProfile() {
-  const name  = document.getElementById("pf-name").value.trim();
+  const name = document.getElementById("pf-name").value.trim();
   if (!name) { alert("Informe o nome."); return; }
   try {
     await fetch("/api/profiles", {
@@ -1010,16 +1064,15 @@ async function saveProfile() {
     });
     closeCreateProfile();
     loadProfiles();
-  } catch(e) { alert("Erro ao salvar: "+e.message); }
+  } catch(e) { alert("Erro ao salvar: " + e.message); }
 }
 
 async function deleteProfile(id) {
   if (!confirm("Excluir este perfil?")) return;
-  await fetch("/api/profiles/"+id, { method:"DELETE" });
+  await fetch("/api/profiles/" + id, { method:"DELETE" });
   loadProfiles();
 }
 
-// Init
 loadProfiles();
 </script>
 </body>
