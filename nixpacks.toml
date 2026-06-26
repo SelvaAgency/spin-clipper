@@ -8,5 +8,8 @@ cmds = [
   "pip3 install --no-cache-dir numpy scipy"
 ]
 
+[phases.build]
+cmds = ["npm run build"]
+
 [start]
-cmd = "npm start"
+cmd = "node dist/src/server.js"

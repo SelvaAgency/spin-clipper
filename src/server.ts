@@ -14,7 +14,16 @@ import {
   createProfile, getProfile, listProfiles, updateProfile, deleteProfile,
 } from "./lib/creatorProfile.js";
 
-// ── Verifica dependências na inicialização ────────────────────────────────────
+// ── Helpers de verificação de dependências ────────────────────────────────────
+async function checkExists(cmd: string, args: string[]): Promise<boolean> {
+  try {
+    await run(cmd, args, 10_000);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 async function checkDependency(
   label: string,
   cmd: string,
@@ -60,6 +69,17 @@ const upload = multer({ dest: UPLOAD_DIR });
 app.use(express.json());
 app.use(express.static(path.resolve("public")));
 app.use("/clips", express.static(OUTPUT_DIR));
+
+// ─── GET /health ──────────────────────────────────────────────────────────────
+app.get("/health", async (_req, res) => {
+  const [ffmpeg, ffprobe, python, ytDlp] = await Promise.all([
+    checkExists("ffmpeg",  ["-version"]),
+    checkExists("ffprobe", ["-version"]),
+    checkExists("python3", ["--version"]),
+    checkExists("yt-dlp",  ["--version"]),
+  ]);
+  res.json({ status: "ok", ffmpeg, ffprobe, python, ytDlp });
+});
 
 // ─── POST /api/jobs ───────────────────────────────────────────────────────────
 app.post(
