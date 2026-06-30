@@ -12,7 +12,7 @@ export interface CaptionStyle {
 }
 
 const DEFAULT_STYLE: Required<CaptionStyle> = {
-  fontName: "Montserrat",
+  fontName: "Strenuous Black",
   fontSize: 64,
   primaryColor: "&H00FFFFFF&",
   outlineColor: "&H00662D87&",
@@ -99,6 +99,8 @@ Format: Layer, Start, End, Style, Text
   fs.writeFileSync(outputPath, header + lines + "\n");
 }
 
+const FONTS_DIR = path.resolve("assets/fonts");
+
 export async function burnCaptions(
   inputVideo: string,
   assPath: string,
@@ -109,12 +111,16 @@ export async function burnCaptions(
     .replace(/\\/g, "/")
     .replace(/:/g, "\\:");
 
+  const fixedFontsDir = FONTS_DIR
+    .replace(/\\/g, "/")
+    .replace(/:/g, "\\:");
+
   await run("ffmpeg", [
     "-y",
     "-i",
     inputVideo,
     "-vf",
-    `ass='${fixedAssPath}'`,
+    `ass='${fixedAssPath}':fontsdir='${fixedFontsDir}'`,
     "-c:v",
     "libx264",
     "-preset",
