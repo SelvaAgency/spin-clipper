@@ -356,7 +356,7 @@ export async function burnCaptions(
     await applyCensorshipConcat(tempCap, beepPath!, words, beepDuration, outputVideo);
   } catch (err: any) {
     console.warn(`[censor] AVISO: censura de áudio falhou — entregando vídeo sem beep`);
-    console.warn(`[censor]   ${err.message.split("\n")[0]}`);
+    console.warn(`[censor]   ${err.message}`);
     // Fallback: copia o temporário com legendas mas sem beep
     fs.copyFileSync(tempCap, outputVideo);
   } finally {
@@ -422,10 +422,11 @@ async function applyCensorshipConcat(
 
   const fp: string[] = [];   // filter parts
 
-  // Normalização de canal: concat exige que todos os segmentos tenham o mesmo
-  // número de canais. O beep pode ser mono enquanto o vídeo é estéreo.
-  // Forçamos tudo para estéreo antes do concat.
-  const CH = "aformat=channel_layouts=stereo";
+  // Normalização de áudio: concat exige sample rate, sample format e canais
+  // idênticos em todos os segmentos. O beep (WAV 44100 Hz mono) e o vídeo
+  // (AAC 48000 Hz estéreo) normalmente diferem — normalizamos tudo para
+  // 48000 Hz / stereo / fltp antes de concatenar.
+  const CH = "aresample=48000,aformat=sample_rates=48000:channel_layouts=stereo:sample_fmts=fltp";
 
   // Split [0:a] para cada segmento limpo
   if (cleanSegs.length === 1) {
