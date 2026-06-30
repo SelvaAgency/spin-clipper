@@ -57,9 +57,10 @@ async function printDependencies(): Promise<void> {
 const app = express();
 const PORT = process.env.PORT ?? 3000;
 
-const UPLOAD_DIR = path.resolve("data/uploads");
-const OUTPUT_DIR = path.resolve("data/output");
-const TMP_DIR    = path.resolve("data/tmp");
+const UPLOAD_DIR  = path.resolve("data/uploads");
+const OUTPUT_DIR  = path.resolve("data/output");
+const TMP_DIR     = path.resolve("data/tmp");
+const DEFAULT_BEEP = path.resolve("assets/sfx/beep.mp3");
 fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 fs.mkdirSync(OUTPUT_DIR, { recursive: true });
 fs.mkdirSync(TMP_DIR,    { recursive: true });
@@ -95,6 +96,7 @@ app.post(
     { name: "mesa",     maxCount: 1 },
     { name: "combined", maxCount: 1 },
     { name: "outro",    maxCount: 1 },
+    { name: "beep",     maxCount: 1 },
   ]),
   async (req, res) => {
     const files = req.files as Record<string, Express.Multer.File[]>;
@@ -102,6 +104,7 @@ app.post(
     const mesaFile     = files?.mesa?.[0];
     const combinedFile = files?.combined?.[0];
     const outroFile    = files?.outro?.[0];
+    const beepFile     = files?.beep?.[0];
 
     const moldura    = (req.body.moldura as "split" | "full") ?? "split";
     const maxClips   = Number(req.body.maxClips ?? 8);
@@ -120,9 +123,14 @@ app.post(
 
     const detectCropEnabled          = req.body.detectCrop         === "true";
     const enableCaptions             = req.body.enableCaptions     === "true";
+    const enableCensorship           = req.body.enableCensorship   === "true";
     const generateCompilationEnabled = req.body.generateCompilation === "true";
     const detectGameCropEnabled      = req.body.detectGameCrop     === "true";
     const useDefaultOutro            = req.body.useDefaultOutro    === "true";
+
+    // Beep: usa arquivo enviado ou padrão em assets/sfx/beep.mp3
+    const resolvedBeepPath = beepFile?.path
+      ?? (enableCensorship && fs.existsSync(DEFAULT_BEEP) ? DEFAULT_BEEP : undefined);
 
     // Lê preferências do perfil, se houver
     let preferredGame: PipelineInput["preferredGame"] = "all";
@@ -185,6 +193,8 @@ app.post(
       detectCropEnabled,
       detectGameCropEnabled,
       enableCaptions,
+      enableCensorship,
+      beepPath:    resolvedBeepPath,
       generateCompilationEnabled,
       preferredGame,
       workDir:  path.join(TMP_DIR, jobId),
@@ -343,7 +353,23 @@ app.delete("/api/profiles/:id", (req, res) => {
   res.json({ ok: true });
 });
 
+async function ensureDefaultBeep(): Promise<void> {
+  if (fs.existsSync(DEFAULT_BEEP)) return;
+  try {
+    await run("ffmpeg", [
+      "-y", "-f", "lavfi",
+      "-i", "sine=frequency=1000:duration=0.5",
+      "-ar", "44100", "-b:a", "128k",
+      DEFAULT_BEEP,
+    ], 10_000);
+    console.log("  ✓ beep.mp3 gerado em assets/sfx/");
+  } catch {
+    console.log("  ! beep.mp3 não encontrado — coloque assets/sfx/beep.mp3 para usar censura");
+  }
+}
+
 app.listen(PORT, async () => {
   console.log(`\nspin-clipper rodando em http://localhost:${PORT}`);
   await printDependencies();
+  await ensureDefaultBeep();
 });

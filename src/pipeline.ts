@@ -11,7 +11,8 @@ import {
 import { transcribe, type Transcript, type TranscriptWord } from "./lib/transcribe.js";
 import { syncAudio, isSyncReliable } from "./lib/sync.js";
 import { composeMoldura, generateDebugFrame, generateCompositionPreviewPng } from "./lib/compose.js";
-import { buildAssFile, burnCaptions, groupWords } from "./lib/captions.js";
+import { buildAssFile, burnCaptions, groupWordsSingleLine, detectProfanity, type CensoredWord } from "./lib/captions.js";
+import { getMoldura } from "./lib/molduras.js";
 import { appendOutro } from "./lib/outro.js";
 import { run, probe } from "./lib/ffmpegUtils.js";
 import { downloadVideo, type DownloadOptions } from "./lib/download.js";
@@ -44,6 +45,8 @@ export interface PipelineInput {
   detectCropEnabled?: boolean;
   detectGameCropEnabled?: boolean;
   enableCaptions?: boolean;
+  enableCensorship?: boolean;
+  beepPath?: string;
   generateCompilationEnabled?: boolean;
   preferredGame?: "baccarat" | "blackjack" | "roulette" | "all";
   workDir: string;
@@ -544,7 +547,9 @@ export async function runPipeline(input: PipelineInput): Promise<PipelineResult>
   }
 
   // ─── 9. Revisão e queima de legendas ─────────────────────────────────────────
-  let captionsByClipId = new Map<string, CaptionGroup[]>();
+  let captionsByClipId    = new Map<string, CaptionGroup[]>();
+  let censoredByClipId    = new Map<string, CensoredWord[]>();
+  const molduraConfig     = getMoldura(input.moldura);
 
   if (input.enableCaptions && composedClips.some((c) => c.words.length > 0)) {
     for (const c of composedClips) {
@@ -554,13 +559,18 @@ export async function runPipeline(input: PipelineInput): Promise<PipelineResult>
 
     const captionClips = composedClips.map((c) => {
       // Palavras já estão 0-indexed (relativas ao início do clipe).
-      // Não é mais necessário subtrair highlight.startSec.
-      const groups = groupWords(c.words).map((g, idx) => ({
+      // groupWordsSingleLine garante uma linha por bloco, sem quebra de texto.
+      const groups = groupWordsSingleLine(c.words).map((g, idx) => ({
         id:       `${c.clipId}_g${idx}`,
         text:     g.map((w) => w.text).join(" "),
         startSec: g[0].startSec,
         endSec:   g[g.length - 1].endSec,
       }));
+
+      // Detecta palavrões para censura de áudio (independe da revisão do usuário)
+      if (input.enableCensorship) {
+        censoredByClipId.set(c.clipId, detectProfanity(c.words));
+      }
 
       return {
         clipId:   c.clipId,
@@ -606,19 +616,16 @@ export async function runPipeline(input: PipelineInput): Promise<PipelineResult>
     if (input.enableCaptions && captionsByClipId.has(c.clipId)) {
       const groups = captionsByClipId.get(c.clipId)!;
       if (groups.length > 0) {
-        const assPath      = path.join(input.workDir, `${c.clipId}.ass`);
+        const assPath       = path.join(input.workDir, `${c.clipId}.ass`);
         const captionedPath = path.join(input.workDir, `${c.clipId}_legendado.mp4`);
 
-        const words = groups.flatMap((g) =>
-          g.text.split(" ").map((word, i, arr) => ({
-            text:     word,
-            startSec: g.startSec + ((g.endSec - g.startSec) / arr.length) * i,
-            endSec:   g.startSec + ((g.endSec - g.startSec) / arr.length) * (i + 1),
-          }))
-        );
-
-        buildAssFile(words, 0, assPath);
-        await burnCaptions(currentPath, assPath, captionedPath);
+        // Grupos passados diretamente — sem re-split nem interpolação linear de timestamps
+        const censoredWords = censoredByClipId.get(c.clipId) ?? [];
+        buildAssFile(groups, molduraConfig, assPath, censoredWords);
+        await burnCaptions(currentPath, assPath, captionedPath, {
+          censoredWords,
+          beepPath: input.beepPath,
+        });
         currentPath = captionedPath;
       }
     }

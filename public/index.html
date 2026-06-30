@@ -275,6 +275,16 @@ canvas.region-canvas{display:block;cursor:default;}
       <label class="check-row"><input type="checkbox" id="opt-crop" /><span><b>Recortar streamer</b> — remove bordas, barra de URL. A IA sugere, você confirma o enquadramento.</span></label>
       <label class="check-row"><input type="checkbox" id="opt-game-crop" /><span><b>Recortar mesa / jogo</b> — enquadra dealer e cartas. A IA sugere, você confirma.</span></label>
       <label class="check-row"><input type="checkbox" id="opt-captions" /><span><b>Legendas automáticas</b> — transcreve a fala e abre editor antes de queimar. Requer ASSEMBLYAI_API_KEY.</span></label>
+      <div id="caption-options" style="display:none;margin-left:26px;margin-top:4px;display:none;flex-direction:column;gap:8px;">
+        <label class="check-row"><input type="checkbox" id="opt-censor" /><span><b>Censura automática de palavrões</b> — detecta e aplica beep no áudio + C****** na legenda.</span></label>
+        <div id="beep-upload-row" style="display:none;gap:8px;align-items:center;font-size:12px;color:var(--ink-dim);">
+          <span>Beep customizado:</span>
+          <label class="drop" id="drop-beep" style="padding:6px 12px;font-size:12px;min-height:auto;cursor:pointer;">
+            <input type="file" name="beep" id="file-beep" accept="audio/*" style="display:none;" />
+            <span id="beep-label">Escolher arquivo (opcional)</span>
+          </label>
+        </div>
+      </div>
       <label class="check-row"><input type="checkbox" id="opt-compilation" /><span><b>Gerar compilação</b> — vídeo único com todos os melhores momentos em sequência.</span></label>
     </div>
 
@@ -798,8 +808,12 @@ async function startJob() {
   fd.append("detectCrop",          document.getElementById("opt-crop").checked              ? "true" : "false");
   fd.append("detectGameCrop",      document.getElementById("opt-game-crop").checked          ? "true" : "false");
   fd.append("enableCaptions",      document.getElementById("opt-captions").checked           ? "true" : "false");
+  fd.append("enableCensorship",    document.getElementById("opt-censor").checked             ? "true" : "false");
   fd.append("generateCompilation", document.getElementById("opt-compilation").checked        ? "true" : "false");
   fd.append("useDefaultOutro",     (document.getElementById("opt-use-default-outro")?.checked ?? false) ? "true" : "false");
+  // Beep customizado (opcional)
+  const beepFile = document.getElementById("file-beep").files?.[0];
+  if (beepFile) fd.append("beep", beepFile);
 
   const profileId = document.getElementById("profileSelect").value;
   if (profileId) fd.append("profileId", profileId);
@@ -1186,6 +1200,24 @@ loadDefaults();
 
 document.getElementById("opt-use-default-outro")?.addEventListener("change", function() {
   document.getElementById("outro-upload-wrap").style.display = this.checked ? "none" : "";
+});
+
+// Mostrar/esconder painel de opções de legenda
+document.getElementById("opt-captions").addEventListener("change", function() {
+  const panel = document.getElementById("caption-options");
+  panel.style.display = this.checked ? "flex" : "none";
+  if (!this.checked) document.getElementById("opt-censor").checked = false;
+});
+
+// Mostrar/esconder upload de beep
+document.getElementById("opt-censor").addEventListener("change", function() {
+  document.getElementById("beep-upload-row").style.display = this.checked ? "flex" : "none";
+});
+
+// Preview do nome do beep customizado
+document.getElementById("file-beep").addEventListener("change", function() {
+  const label = document.getElementById("beep-label");
+  label.textContent = this.files?.[0]?.name ?? "Escolher arquivo (opcional)";
 });
 
 // ════════════════════════════════════════════════════════════════════════════
