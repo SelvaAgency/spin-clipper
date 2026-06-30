@@ -186,9 +186,19 @@ export async function generateDebugFrame(
 }
 
 /**
- * Gera um PNG de pré-visualização da composição final (moldura + streamer + mesa),
- * usando exatamente o mesmo pipeline de crop/scale que o vídeo final.
- * Extrai um único frame estático — ideal para mostrar ao usuário antes de renderizar.
+ * Gera um PNG de pré-visualização da composição final (moldura + streamer + mesa).
+ *
+ * ARQUITETURA — two-step para evitar PTS mismatch:
+ *
+ *   Passo 1 — extrair frame de cada vídeo individualmente com `-ss N -frames:v 1`.
+ *             Sem filter_complex, sem conflito de timestamps.
+ *
+ *   Passo 2 — compositar usando os PNGs estáticos como input (todos PTS=0),
+ *             aplicando exatamente o mesmo crop/scale/overlay do vídeo final.
+ *
+ * O bug original: `-ss 5 -i video.mp4` preserva o PTS nativo do vídeo (~5s).
+ * O `color` no filter_complex começa em PTS=0. O `overlay` exige timestamps
+ * compatíveis — quando não casam, a área do vídeo sai preta no frame 0.
  */
 export async function generateCompositionPreviewPng(opts: {
   moldura: "split" | "full";
@@ -202,12 +212,61 @@ export async function generateCompositionPreviewPng(opts: {
   const moldura = getMoldura(opts.moldura);
   const molduraPath = path.resolve("assets/molduras", moldura.file);
   const t = Math.max(0, opts.previewTimeSec ?? 5);
-  fs.mkdirSync(path.dirname(opts.outputPath), { recursive: true });
+  const previewDir = path.dirname(opts.outputPath);
+  fs.mkdirSync(previewDir, { recursive: true });
+
+  // ── Verificar moldura ──────────────────────────────────────────────────────
+  if (!fs.existsSync(molduraPath)) {
+    throw new Error(`[preview] Moldura não encontrada: ${molduraPath}`);
+  }
+  console.log(`[compose-preview] moldura: ${molduraPath} | ${fs.statSync(molduraPath).size}B`);
+
+  // ── Passo 1: extrair frames estáticos de cada fonte ───────────────────────
+  // Ao extrair sem filter_complex, o FFmpeg apenas salva o frame decodificado
+  // sem nenhum problema de PTS — a imagem resultante começa sempre em t=0.
+
+  const frameS = path.join(previewDir, "preview-streamer-debug.png");
+  const frameM = path.join(previewDir, "preview-mesa-debug.png");
+
+  async function extractStaticFrame(srcPath: string, destPath: string, label: string): Promise<void> {
+    if (!fs.existsSync(srcPath)) {
+      throw new Error(`[preview] Arquivo ${label} não encontrado: ${srcPath}`);
+    }
+    const srcSize = fs.statSync(srcPath).size;
+    console.log(`[compose-preview] ${label} fonte: ${srcPath} | ${srcSize}B`);
+    if (srcSize === 0) throw new Error(`[preview] Arquivo ${label} está vazio: ${srcPath}`);
+
+    await run("ffmpeg", [
+      "-y",
+      "-ss", String(t),
+      "-i", srcPath,
+      "-frames:v", "1",
+      destPath,
+    ], 30_000);
+
+    if (!fs.existsSync(destPath) || fs.statSync(destPath).size === 0) {
+      throw new Error(`[preview] Frame ${label} não foi gerado: ${destPath}`);
+    }
+    console.log(`[compose-preview] ${label} frame: ${destPath} | ${fs.statSync(destPath).size}B ✓`);
+  }
+
+  // ── Passo 2: compositar com PNGs estáticos (todos PTS=0, sem conflito) ────
 
   if (moldura.windows.length === 2) {
     if (!opts.streamerPath || !opts.mesaPath) {
       throw new Error("Preview split requer streamerPath e mesaPath.");
     }
+
+    await extractStaticFrame(opts.streamerPath, frameS, "streamer");
+
+    if (opts.mesaPath === opts.streamerPath) {
+      // Split de fonte única — mesmo frame para as duas janelas
+      fs.copyFileSync(frameS, frameM);
+      console.log(`[compose-preview] mesa usa mesma fonte — reutilizando frame do streamer`);
+    } else {
+      await extractStaticFrame(opts.mesaPath, frameM, "mesa");
+    }
+
     const [top, bot] = moldura.windows;
     const sCrop = opts.streamerCrop
       ? `crop=${opts.streamerCrop.w}:${opts.streamerCrop.h}:${opts.streamerCrop.x}:${opts.streamerCrop.y},`
@@ -215,6 +274,9 @@ export async function generateCompositionPreviewPng(opts: {
     const mCrop = opts.mesaCrop
       ? `crop=${opts.mesaCrop.w}:${opts.mesaCrop.h}:${opts.mesaCrop.x}:${opts.mesaCrop.y},`
       : "";
+
+    console.log(`[compose-preview] split crop streamer=${sCrop || "(none)"} mesa=${mCrop || "(none)"}`);
+    console.log(`[compose-preview] windows top=${top.x},${top.y} ${top.width}x${top.height} | bot=${bot.x},${bot.y} ${bot.width}x${bot.height}`);
 
     const filter = [
       `[0:v]${sCrop}scale=${top.width}:${top.height}:force_original_aspect_ratio=increase,crop=${top.width}:${top.height}[cam]`,
@@ -225,24 +287,29 @@ export async function generateCompositionPreviewPng(opts: {
       `[tmp2][2:v]overlay=0:0,format=rgb24[out]`,
     ].join(";");
 
+    // Entradas estáticas: todos PTS=0 — sem conflito de timestamps no overlay
     await run("ffmpeg", [
       "-y",
-      "-ss", String(t), "-i", opts.streamerPath,
-      "-ss", String(t), "-i", opts.mesaPath,
+      "-loop", "1", "-i", frameS,
+      "-loop", "1", "-i", frameM,
       "-loop", "1", "-i", molduraPath,
       "-filter_complex", filter,
       "-map", "[out]",
       "-frames:v", "1",
       opts.outputPath,
     ], 60_000);
+
   } else {
     const sourcePath = opts.streamerPath ?? opts.mesaPath;
     if (!sourcePath) throw new Error("Preview full requer streamerPath ou mesaPath.");
     const [win] = moldura.windows;
     const crop = opts.streamerPath ? opts.streamerCrop : opts.mesaCrop;
-    const cropPart = crop
-      ? `crop=${crop.w}:${crop.h}:${crop.x}:${crop.y},`
-      : "";
+    const cropPart = crop ? `crop=${crop.w}:${crop.h}:${crop.x}:${crop.y},` : "";
+    const frameFile = opts.streamerPath ? frameS : frameM;
+
+    await extractStaticFrame(sourcePath, frameFile, opts.streamerPath ? "streamer" : "mesa/full");
+
+    console.log(`[compose-preview] full crop=${cropPart || "(none)"} window=${win.x},${win.y} ${win.width}x${win.height}`);
 
     const filter = [
       `[0:v]${cropPart}scale=${win.width}:${win.height}:force_original_aspect_ratio=increase,crop=${win.width}:${win.height}[src]`,
@@ -253,7 +320,7 @@ export async function generateCompositionPreviewPng(opts: {
 
     await run("ffmpeg", [
       "-y",
-      "-ss", String(t), "-i", sourcePath,
+      "-loop", "1", "-i", frameFile,
       "-loop", "1", "-i", molduraPath,
       "-filter_complex", filter,
       "-map", "[out]",
@@ -261,6 +328,23 @@ export async function generateCompositionPreviewPng(opts: {
       opts.outputPath,
     ], 60_000);
   }
+
+  // ── Verificação final ──────────────────────────────────────────────────────
+  if (!fs.existsSync(opts.outputPath)) {
+    throw new Error(`[preview] Arquivo de saída não foi criado: ${opts.outputPath}`);
+  }
+  const outSize = fs.statSync(opts.outputPath).size;
+  if (outSize === 0) {
+    throw new Error(`[preview] Arquivo de saída está vazio: ${opts.outputPath}`);
+  }
+  console.log(`[compose-preview] ✓ composição: ${opts.outputPath} | ${outSize}B`);
+  if (outSize < 20_000) {
+    console.warn(`[compose-preview] AVISO: preview muito pequeno (${outSize}B) — possível frame predominantemente preto`);
+  }
+
+  // Salvar cópia de debug da composição final
+  const debugComp = path.join(previewDir, "preview-composition-debug.png");
+  fs.copyFileSync(opts.outputPath, debugComp);
 }
 
 /**
