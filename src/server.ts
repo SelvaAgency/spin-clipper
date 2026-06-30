@@ -60,7 +60,7 @@ const PORT = process.env.PORT ?? 3000;
 const UPLOAD_DIR  = path.resolve("data/uploads");
 const OUTPUT_DIR  = path.resolve("data/output");
 const TMP_DIR     = path.resolve("data/tmp");
-const DEFAULT_BEEP = path.resolve("assets/sfx/beep.mp3");
+const DEFAULT_BEEP = path.resolve("assets/sfx/censura_spin.wav");
 fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 fs.mkdirSync(OUTPUT_DIR, { recursive: true });
 fs.mkdirSync(TMP_DIR,    { recursive: true });
@@ -353,23 +353,12 @@ app.delete("/api/profiles/:id", (req, res) => {
   res.json({ ok: true });
 });
 
-async function ensureDefaultBeep(): Promise<void> {
-  if (fs.existsSync(DEFAULT_BEEP)) return;
-  try {
-    await run("ffmpeg", [
-      "-y", "-f", "lavfi",
-      "-i", "sine=frequency=1000:duration=0.5",
-      "-ar", "44100", "-b:a", "128k",
-      DEFAULT_BEEP,
-    ], 10_000);
-    console.log("  ✓ beep.mp3 gerado em assets/sfx/");
-  } catch {
-    console.log("  ! beep.mp3 não encontrado — coloque assets/sfx/beep.mp3 para usar censura");
-  }
-}
-
 app.listen(PORT, async () => {
   console.log(`\nspin-clipper rodando em http://localhost:${PORT}`);
   await printDependencies();
-  await ensureDefaultBeep();
+  if (fs.existsSync(DEFAULT_BEEP)) {
+    console.log("  ✓ censura_spin.wav encontrado em assets/sfx/");
+  } else {
+    console.log("  ! censura_spin.wav não encontrado em assets/sfx/ — censura de áudio desativada");
+  }
 });
