@@ -11,7 +11,7 @@ import {
 import { transcribe, type Transcript, type TranscriptWord } from "./lib/transcribe.js";
 import { syncAudio, isSyncReliable } from "./lib/sync.js";
 import { composeMoldura, generateDebugFrame, generateCompositionPreviewPng } from "./lib/compose.js";
-import { buildAssFile, burnCaptions, groupWordsSingleLine, detectProfanity, type CensoredWord } from "./lib/captions.js";
+import { buildAssFile, burnCaptions, groupWordsSingleLine, detectProfanity, censorLine, type CensoredWord } from "./lib/captions.js";
 import { getMoldura } from "./lib/molduras.js";
 import { appendOutro } from "./lib/outro.js";
 import { run, probe } from "./lib/ffmpegUtils.js";
@@ -626,19 +626,27 @@ export async function runPipeline(input: PipelineInput): Promise<PipelineResult>
     }
 
     const captionClips = composedClips.map((c) => {
+      // Detecta palavrões ANTES de montar os grupos para que o editor
+      // já mostre o texto censurado (C******) na revisão.
+      const censoredWords = input.enableCensorship ? detectProfanity(c.words) : [];
+      if (input.enableCensorship) {
+        censoredByClipId.set(c.clipId, censoredWords);
+      }
+
       // Palavras já estão 0-indexed (relativas ao início do clipe).
       // groupWordsSingleLine garante uma linha por bloco, sem quebra de texto.
-      const groups = groupWordsSingleLine(c.words).map((g, idx) => ({
-        id:       `${c.clipId}_g${idx}`,
-        text:     g.map((w) => w.text).join(" "),
-        startSec: g[0].startSec,
-        endSec:   g[g.length - 1].endSec,
-      }));
-
-      // Detecta palavrões para censura de áudio (independe da revisão do usuário)
-      if (input.enableCensorship) {
-        censoredByClipId.set(c.clipId, detectProfanity(c.words));
-      }
+      const groups = groupWordsSingleLine(c.words).map((g, idx) => {
+        const rawText = g.map((w) => w.text).join(" ");
+        const text = censoredWords.length > 0
+          ? censorLine(rawText, censoredWords)
+          : rawText;
+        return {
+          id:       `${c.clipId}_g${idx}`,
+          text,
+          startSec: g[0].startSec,
+          endSec:   g[g.length - 1].endSec,
+        };
+      });
 
       return {
         clipId:   c.clipId,

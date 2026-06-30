@@ -195,7 +195,7 @@ function censorPhrase(text: string): string {
     .join(" ");
 }
 
-function censorLine(text: string, censoredWords: CensoredWord[]): string {
+export function censorLine(text: string, censoredWords: CensoredWord[]): string {
   // Ordenar por tamanho desc para substituir frases antes de palavras individuais
   const sorted = [...censoredWords].sort((a, b) => b.original.length - a.original.length);
   let result = text;

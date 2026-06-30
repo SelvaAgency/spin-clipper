@@ -89,12 +89,17 @@ export async function probe(filePath: string): Promise<ProbeInfo> {
     filePath,
   ]);
   const data = JSON.parse(stdout);
-  const vStream = data.streams.find((s: any) => s.codec_type === "video");
-  const aStream = data.streams.find((s: any) => s.codec_type === "audio");
+  const vStream = data.streams?.find((s: any) => s.codec_type === "video");
+  const aStream = data.streams?.find((s: any) => s.codec_type === "audio");
   const fpsRaw: string = vStream?.r_frame_rate ?? "30/1";
   const [num, den] = fpsRaw.split("/").map(Number);
+  // Para arquivos só de áudio (MP3/WAV) format.duration pode ser "N/A" → NaN.
+  // Adicionamos aStream.duration como fallback antes de cair em "0".
+  const rawDur = parseFloat(
+    data.format?.duration ?? aStream?.duration ?? vStream?.duration ?? "0"
+  );
   return {
-    durationSec: parseFloat(data.format.duration ?? vStream?.duration ?? "0"),
+    durationSec: isFinite(rawDur) ? rawDur : 0,
     width: vStream?.width ?? 0,
     height: vStream?.height ?? 0,
     hasAudio: !!aStream,
