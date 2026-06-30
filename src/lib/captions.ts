@@ -258,76 +258,110 @@ Format: Layer, Start, End, Style, Text
 
 const FONTS_DIR = path.resolve("assets/fonts");
 
+export interface BeepFile {
+  path: string;
+  durationSec: number;
+}
+
+/**
+ * Seleciona o beep mais adequado para cobrir a duração do palavrão.
+ *
+ * Critério: menor excesso (beep ligeiramente maior que o palavrão é ideal).
+ * Déficit é penalizado 2× para ser última opção.
+ * Entre candidatos igualmente bons, evita os últimos 3 usados para variar.
+ */
+function selectBeepForDuration(
+  beepFiles: BeepFile[],
+  targetDuration: number,
+  recentlyUsed: string[]
+): BeepFile {
+  if (beepFiles.length === 1) return beepFiles[0];
+
+  const scored = beepFiles
+    .map((b) => {
+      const diff = b.durationSec - targetDuration;
+      return { b, score: diff >= 0 ? diff : -diff * 2 };
+    })
+    .sort((a, b) => a.score - b.score);
+
+  const top = scored.slice(0, Math.min(4, scored.length)).map((s) => s.b);
+  const recent = new Set(recentlyUsed.slice(-3));
+  const fresh = top.filter((b) => !recent.has(b.path));
+  return fresh.length > 0 ? fresh[0] : top[0];
+}
+
 /**
  * Queima legendas ASS no vídeo.
  *
  * Fluxo quando censura está habilitada:
  *   Pass 1 — queima legendas, copia áudio → arquivo temporário
- *   Pass 2 — aplica beep via concat (split clean + beep + clean...) → saída final
+ *   Pass 2 — seleciona beep por duração de cada palavrão e aplica via concat
  *
- * Se o arquivo de beep estiver ausente ou inválido: avisa no log e entrega
+ * Se nenhum arquivo de beep estiver disponível ou válido: avisa e entrega
  * o vídeo SEM censura de áudio (não interrompe a geração).
  */
 export async function burnCaptions(
   inputVideo: string,
   assPath: string,
   outputVideo: string,
-  opts: { censoredWords?: CensoredWord[]; beepPath?: string } = {}
+  opts: { censoredWords?: CensoredWord[]; beepPaths?: string[] } = {}
 ) {
   const fixedAssPath  = path.resolve(assPath).replace(/\\/g, "/").replace(/:/g, "\\:");
   const fixedFontsDir = FONTS_DIR.replace(/\\/g, "/").replace(/:/g, "\\:");
 
-  // Filtra palavrões com intervalo válido
-  const words    = (opts.censoredWords ?? []).filter((w) => w.endSec > w.startSec);
-  const beepPath = opts.beepPath ? path.resolve(opts.beepPath) : undefined;
+  const words     = (opts.censoredWords ?? []).filter((w) => w.endSec > w.startSec);
+  const rawPaths  = (opts.beepPaths ?? []).map((p) => path.resolve(p));
 
-  // ── Validar arquivo de beep ──────────────────────────────────────────────
-  let beepDuration = 0;
-  let beepValid    = false;
+  // ── Validar e sondar todos os arquivos de beep ──────────────────────────
+  let beepFiles: BeepFile[] = [];
 
   if (words.length > 0) {
     console.log(`[censor] ${words.length} palavrão(ões) detectado(s):`);
     for (const w of words) {
       console.log(
-        `[censor]   texto="${w.original}"  inicio=${w.startSec.toFixed(3)}s  fim=${w.endSec.toFixed(3)}s  duração=${(w.endSec - w.startSec).toFixed(3)}s`
+        `[censor]   "${w.original}"  ${w.startSec.toFixed(3)}s → ${w.endSec.toFixed(3)}s  (${(w.endSec - w.startSec).toFixed(3)}s)`
       );
     }
 
-    if (!beepPath) {
-      console.warn(`[censor] AVISO: beepPath não fornecido — censura de áudio ignorada`);
-    } else if (!fs.existsSync(beepPath)) {
-      console.warn(`[censor] AVISO: arquivo beep NÃO ENCONTRADO: ${beepPath}`);
-      console.warn(`[censor]   Coloque um arquivo de áudio em assets/sfx/beep.mp3`);
+    if (rawPaths.length === 0) {
+      console.warn(`[censor] AVISO: nenhum beep configurado — censura de áudio ignorada`);
     } else {
-      const beepSize = fs.statSync(beepPath).size;
-      console.log(`[censor] Arquivo beep: ${beepPath} | ${beepSize}B`);
-
-      if (beepSize < 100) {
-        console.warn(`[censor] AVISO: arquivo beep muito pequeno (${beepSize}B) — provavelmente corrompido`);
-      } else {
+      for (const p of rawPaths) {
+        if (!fs.existsSync(p)) {
+          console.warn(`[censor]   beep não encontrado: ${p}`);
+          continue;
+        }
+        if (fs.statSync(p).size < 100) {
+          console.warn(`[censor]   beep muito pequeno: ${path.basename(p)}`);
+          continue;
+        }
         try {
-          const info = await probe(beepPath);
-          console.log(`[censor]   hasAudio=${info.hasAudio}  duração=${info.durationSec.toFixed(3)}s`);
-          if (!info.hasAudio) {
-            console.warn(`[censor] AVISO: beep não possui stream de áudio`);
-          } else if (info.durationSec <= 0) {
-            console.warn(`[censor] AVISO: beep com duração zero`);
+          const info = await probe(p);
+          if (!info.hasAudio || info.durationSec <= 0) {
+            console.warn(`[censor]   beep sem áudio válido: ${path.basename(p)}`);
           } else {
-            beepDuration = info.durationSec;
-            beepValid    = true;
+            beepFiles.push({ path: p, durationSec: info.durationSec });
           }
         } catch (err: any) {
-          console.warn(`[censor] AVISO: ffprobe falhou ao verificar beep: ${err.message.split("\n")[0]}`);
+          console.warn(`[censor]   probe falhou (${path.basename(p)}): ${err.message.split("\n")[0]}`);
         }
+      }
+      beepFiles.sort((a, b) => a.durationSec - b.durationSec);
+      if (beepFiles.length > 0) {
+        console.log(
+          `[censor] ${beepFiles.length} beep(s) válido(s): ` +
+          beepFiles.map((b) => `${path.basename(b.path)}(${b.durationSec.toFixed(2)}s)`).join(", ")
+        );
+      } else {
+        console.warn(`[censor] AVISO: nenhum beep válido — censura de áudio ignorada`);
       }
     }
   }
 
   // ── Pass 1 — queimar legendas ────────────────────────────────────────────
-  // (sempre feito — áudio copiado sem reencoding)
+  const hasCensorship = words.length > 0 && beepFiles.length > 0;
 
-  if (!beepValid) {
-    // Sem censura de áudio: caminho simples
+  if (!hasCensorship) {
     console.log(`[censor] Queimando legendas sem censura de áudio`);
     await run("ffmpeg", [
       "-y", "-i", inputVideo,
@@ -339,7 +373,6 @@ export async function burnCaptions(
     return;
   }
 
-  // Com censura: pass 1 → temp com legendas, pass 2 → censura de áudio
   const tempCap = outputVideo.replace(/\.mp4$/i, "_tmpcap.mp4");
 
   console.log(`[censor] Pass 1: queimando legendas → ${path.basename(tempCap)}`);
@@ -351,13 +384,12 @@ export async function burnCaptions(
     tempCap,
   ]);
 
-  // ── Pass 2 — censura de áudio via concat ─────────────────────────────────
+  // ── Pass 2 — censura de áudio via concat com beep selecionado por duração ─
   try {
-    await applyCensorshipConcat(tempCap, beepPath!, words, beepDuration, outputVideo);
+    await applyCensorshipConcat(tempCap, beepFiles, words, outputVideo);
   } catch (err: any) {
     console.warn(`[censor] AVISO: censura de áudio falhou — entregando vídeo sem beep`);
     console.warn(`[censor]   ${err.message}`);
-    // Fallback: copia o temporário com legendas mas sem beep
     fs.copyFileSync(tempCap, outputVideo);
   } finally {
     try { fs.unlinkSync(tempCap); } catch { /* noop */ }
@@ -367,18 +399,17 @@ export async function burnCaptions(
 /**
  * Aplica censura de áudio via concatenação de segmentos.
  *
- * Abordagem (mais robusta que volume+adelay):
- *   1. Divide o áudio original em segmentos "limpos" entre os palavrões
- *   2. Para cada palavrão: usa trecho do beep.mp3 com a duração exata
- *   3. Concatena: [limpo][beep][limpo][beep]...[limpo]
+ * Para cada palavrão detectado:
+ *   1. Seleciona o beep com duração mais próxima (preferindo cobertura total)
+ *   2. Evita repetir os últimos 3 beeps usados para garantir variedade
+ *   3. Cada beep é uma entrada FFmpeg separada — sem reutilizar o mesmo arquivo
  *
- * Vídeo é copiado sem reencoding.
+ * Vídeo é copiado sem reencoding (já foi reencoded no pass 1).
  */
 async function applyCensorshipConcat(
   inputVideo: string,
-  beepPath: string,
+  beepFiles: BeepFile[],
   words: CensoredWord[],
-  beepDuration: number,
   outputVideo: string
 ): Promise<void> {
   // Ordenar e mesclar intervalos sobrepostos
@@ -394,86 +425,96 @@ async function applyCensorshipConcat(
     }
   }
 
-  // Montar lista de segmentos: [limpo?][beep][limpo?][beep]...[limpo]
+  // Selecionar beep para cada palavrão (com variedade)
+  const usedPaths: string[] = [];
+  const assignedBeeps: Array<{ beepFile: BeepFile; duration: number }> = [];
+
+  for (const w of merged) {
+    const profDur  = w.endSec - w.startSec;
+    const selected = selectBeepForDuration(beepFiles, profDur, usedPaths);
+    const duration = Math.min(Math.max(0.05, profDur), selected.durationSec);
+    assignedBeeps.push({ beepFile: selected, duration });
+    usedPaths.push(selected.path);
+    console.log(
+      `[censor]   ${w.startSec.toFixed(3)}s→${w.endSec.toFixed(3)}s` +
+      ` (${profDur.toFixed(3)}s) → ${path.basename(selected.path)}` +
+      ` (${selected.durationSec.toFixed(2)}s disponível, usando ${duration.toFixed(3)}s)`
+    );
+  }
+
+  // Montar lista de segmentos na ordem temporal
   interface CleanSeg { kind: "clean"; start: number; end?: number }
-  interface BeepSeg  { kind: "beep";  duration: number }
+  interface BeepSeg  { kind: "beep";  idx: number;  duration: number }
   type Seg = CleanSeg | BeepSeg;
 
   const segs: Seg[] = [];
-  let cursor = 0;
+  let cursor  = 0;
+  let beepIdx = 0;
 
   for (const w of merged) {
-    console.log(`[censor]   Aplicando beep: ${w.startSec.toFixed(3)}s → ${w.endSec.toFixed(3)}s`);
     if (w.startSec - cursor > 0.001) {
       segs.push({ kind: "clean", start: cursor, end: w.startSec });
     }
-    segs.push({
-      kind:     "beep",
-      // Beep não pode ser mais longo que o arquivo de beep disponível
-      duration: Math.min(Math.max(0.05, w.endSec - w.startSec), beepDuration),
-    });
+    segs.push({ kind: "beep", idx: beepIdx, duration: assignedBeeps[beepIdx].duration });
+    beepIdx++;
     cursor = w.endSec;
   }
-  // Segmento limpo final (até o fim do vídeo)
   segs.push({ kind: "clean", start: cursor });
 
   const cleanSegs = segs.filter((s): s is CleanSeg => s.kind === "clean");
-  const beepSegs  = segs.filter((s): s is BeepSeg  => s.kind === "beep");
 
-  const fp: string[] = [];   // filter parts
-
-  // Normalização de áudio: concat exige sample rate, sample format e canais
-  // idênticos em todos os segmentos. O beep (WAV 44100 Hz mono) e o vídeo
-  // (AAC 48000 Hz estéreo) normalmente diferem — normalizamos tudo para
-  // 48000 Hz / stereo / fltp antes de concatenar.
+  // Normalização de áudio: concat exige sample rate, sample format e canais idênticos.
+  // Cada beep é uma entrada FFmpeg separada ([1:a], [2:a], ...) evitando asplit no beep.
   const CH = "aresample=48000,aformat=sample_rates=48000:channel_layouts=stereo:sample_fmts=fltp";
 
-  // Split [0:a] para cada segmento limpo
+  const fp: string[] = [];
+
+  // Segmentos limpos — todos vêm de [0:a] via asplit
   if (cleanSegs.length === 1) {
     const s = cleanSegs[0];
-    const trimOpts = s.end !== undefined
+    const trim = s.end !== undefined
       ? `start=${s.start.toFixed(3)}:end=${s.end.toFixed(3)}`
       : `start=${s.start.toFixed(3)}`;
-    fp.push(`[0:a]atrim=${trimOpts},asetpts=PTS-STARTPTS,${CH}[clean0]`);
+    fp.push(`[0:a]atrim=${trim},asetpts=PTS-STARTPTS,${CH}[clean0]`);
   } else {
     fp.push(`[0:a]asplit=${cleanSegs.length}${cleanSegs.map((_, i) => `[csrc${i}]`).join("")}`);
     cleanSegs.forEach((s, i) => {
-      const trimOpts = s.end !== undefined
+      const trim = s.end !== undefined
         ? `start=${s.start.toFixed(3)}:end=${s.end.toFixed(3)}`
         : `start=${s.start.toFixed(3)}`;
-      fp.push(`[csrc${i}]atrim=${trimOpts},asetpts=PTS-STARTPTS,${CH}[clean${i}]`);
+      fp.push(`[csrc${i}]atrim=${trim},asetpts=PTS-STARTPTS,${CH}[clean${i}]`);
     });
   }
 
-  // Split [1:a] para cada segmento de beep
-  if (beepSegs.length === 1) {
-    fp.push(`[1:a]atrim=start=0:end=${beepSegs[0].duration.toFixed(3)},asetpts=PTS-STARTPTS,${CH}[beep0]`);
-  } else {
-    fp.push(`[1:a]asplit=${beepSegs.length}${beepSegs.map((_, i) => `[bsrc${i}]`).join("")}`);
-    beepSegs.forEach((s, i) => {
-      fp.push(`[bsrc${i}]atrim=start=0:end=${s.duration.toFixed(3)},asetpts=PTS-STARTPTS,${CH}[beep${i}]`);
-    });
-  }
+  // Segmentos de beep — cada um vem de sua própria entrada ([1:a], [2:a], ...)
+  assignedBeeps.forEach((ab, i) => {
+    fp.push(
+      `[${i + 1}:a]atrim=start=0:end=${ab.duration.toFixed(3)},asetpts=PTS-STARTPTS,${CH}[beep${i}]`
+    );
+  });
 
-  // Concat: intercalar na ordem original [clean0][beep0][clean1][beep1]...[cleanN]
+  // Concat final na ordem temporal
   let ci = 0;
   let bi = 0;
-  const concatLabels = segs.map((s) =>
-    s.kind === "clean" ? `[clean${ci++}]` : `[beep${bi++}]`
-  ).join("");
-  fp.push(`${concatLabels}concat=n=${segs.length}:v=0:a=1[aout]`);
+  const labels = segs
+    .map((s) => (s.kind === "clean" ? `[clean${ci++}]` : `[beep${bi++}]`))
+    .join("");
+  fp.push(`${labels}concat=n=${segs.length}:v=0:a=1[aout]`);
 
   const filterStr = fp.join(";");
-  console.log(`[censor] Pass 2: filter_complex=${filterStr}`);
+  console.log(`[censor] Pass 2: ${assignedBeeps.length} beep(s) | filter=${filterStr}`);
+
+  // Cada beep é um -i separado (inputs 1..N)
+  const beepInputArgs = assignedBeeps.flatMap((ab) => ["-i", ab.beepFile.path]);
 
   await run("ffmpeg", [
     "-y",
     "-i", inputVideo,
-    "-i", beepPath,
+    ...beepInputArgs,
     "-filter_complex", filterStr,
     "-map", "0:v",
     "-map", "[aout]",
-    "-c:v", "copy",           // vídeo já foi reencoded no pass 1
+    "-c:v", "copy",
     "-c:a", "aac", "-b:a", "192k",
     outputVideo,
   ]);

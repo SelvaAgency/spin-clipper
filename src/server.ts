@@ -60,7 +60,7 @@ const PORT = process.env.PORT ?? 3000;
 const UPLOAD_DIR  = path.resolve("data/uploads");
 const OUTPUT_DIR  = path.resolve("data/output");
 const TMP_DIR     = path.resolve("data/tmp");
-const DEFAULT_BEEP = path.resolve("assets/sfx/censura_spin.wav");
+const BEEP_DIR = path.resolve("assets/sfx");
 fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 fs.mkdirSync(OUTPUT_DIR, { recursive: true });
 fs.mkdirSync(TMP_DIR,    { recursive: true });
@@ -128,9 +128,17 @@ app.post(
     const detectGameCropEnabled      = req.body.detectGameCrop     === "true";
     const useDefaultOutro            = req.body.useDefaultOutro    === "true";
 
-    // Beep: usa arquivo enviado ou padrão em assets/sfx/beep.mp3
-    const resolvedBeepPath = beepFile?.path
-      ?? (enableCensorship && fs.existsSync(DEFAULT_BEEP) ? DEFAULT_BEEP : undefined);
+    // Beep: usa arquivo enviado ou escaneia assets/sfx/ por censura_spin*.{mp3,wav}
+    let resolvedBeepPaths: string[] | undefined;
+    if (beepFile?.path) {
+      resolvedBeepPaths = [beepFile.path];
+    } else if (enableCensorship && fs.existsSync(BEEP_DIR)) {
+      const found = fs.readdirSync(BEEP_DIR)
+        .filter((f) => /^censura_spin.*\.(mp3|wav|ogg|aac)$/i.test(f))
+        .map((f) => path.join(BEEP_DIR, f))
+        .sort();
+      if (found.length > 0) resolvedBeepPaths = found;
+    }
 
     // Lê preferências do perfil, se houver
     let preferredGame: PipelineInput["preferredGame"] = "all";
@@ -194,7 +202,7 @@ app.post(
       detectGameCropEnabled,
       enableCaptions,
       enableCensorship,
-      beepPath:    resolvedBeepPath,
+      beepPaths:   resolvedBeepPaths,
       generateCompilationEnabled,
       preferredGame,
       workDir:  path.join(TMP_DIR, jobId),
@@ -356,9 +364,12 @@ app.delete("/api/profiles/:id", (req, res) => {
 app.listen(PORT, async () => {
   console.log(`\nspin-clipper rodando em http://localhost:${PORT}`);
   await printDependencies();
-  if (fs.existsSync(DEFAULT_BEEP)) {
-    console.log("  ✓ censura_spin.wav encontrado em assets/sfx/");
+  const beepCount = fs.existsSync(BEEP_DIR)
+    ? fs.readdirSync(BEEP_DIR).filter((f) => /^censura_spin.*\.(mp3|wav|ogg|aac)$/i.test(f)).length
+    : 0;
+  if (beepCount > 0) {
+    console.log(`  ✓ ${beepCount} arquivo(s) de beep em assets/sfx/`);
   } else {
-    console.log("  ! censura_spin.wav não encontrado em assets/sfx/ — censura de áudio desativada");
+    console.log("  ! nenhum censura_spin*.mp3/wav em assets/sfx/ — censura de áudio desativada");
   }
 });

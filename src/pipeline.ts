@@ -46,7 +46,7 @@ export interface PipelineInput {
   detectGameCropEnabled?: boolean;
   enableCaptions?: boolean;
   enableCensorship?: boolean;
-  beepPath?: string;
+  beepPaths?: string[];
   generateCompilationEnabled?: boolean;
   preferredGame?: "baccarat" | "blackjack" | "roulette" | "all";
   workDir: string;
@@ -692,7 +692,7 @@ export async function runPipeline(input: PipelineInput): Promise<PipelineResult>
         buildAssFile(groups, molduraConfig, assPath, censoredWords);
         await burnCaptions(currentPath, assPath, captionedPath, {
           censoredWords,
-          beepPath: input.beepPath,
+          beepPaths: input.beepPaths,
         });
         currentPath = captionedPath;
       }
