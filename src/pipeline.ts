@@ -59,6 +59,13 @@ export interface PipelineResult {
   compilationPath?: string;
 }
 
+function formatAssTimeLog(sec: number): string {
+  const h = Math.floor(sec / 3600);
+  const m = Math.floor((sec % 3600) / 60);
+  const s = (sec % 60).toFixed(2).padStart(5, "0");
+  return `${h}:${m.toString().padStart(2, "0")}:${s}`;
+}
+
 export async function runPipeline(input: PipelineInput): Promise<PipelineResult> {
   const log = input.onProgress ?? (() => {});
   fs.mkdirSync(input.workDir, { recursive: true });
@@ -537,13 +544,74 @@ export async function runPipeline(input: PipelineInput): Promise<PipelineResult>
     const compSz = fs.existsSync(composedPath) ? Math.round(fs.statSync(composedPath).size / 1024) : 0;
     log(`  ✓ Composição concluída (${compSz} KB)`);
 
-    // Transcrição já 0-indexed relativa ao início do candidato ≈ início do clipe.
-    // Filtro para não incluir palavras além da duração real do clipe.
-    const words: TranscriptWord[] = highlight.transcript
-      ? highlight.transcript.words.filter((w) => w.startSec <= duration + 1)
-      : [];
+    // ── Realinhamento de legendas ────────────────────────────────────────────────
+    //
+    // PROBLEMA ORIGINAL: segStart = centerSec - padBefore - 5s (margem extra).
+    // O transcript retornava palavras com PTS relativo a segStart, mas o clipe
+    // começa em startSec = segStart + 5s → LAG DE ~5 SEGUNDOS nas legendas.
+    //
+    // SOLUÇÃO: re-transcrever o áudio do clipe já cortado (começa em t=0s).
+    // AssemblyAI devolve timestamps 0..duration, garantindo sincronismo quadro-a-quadro.
+    // Fallback: transcript original com offset corrigido aproximadamente.
+    //
+    let captionWords: TranscriptWord[] = [];
 
-    composedClips.push({ clipId, composedPath, finalPath: "", highlight, words });
+    if (input.enableCaptions && hasAssemblyAI) {
+      // Fonte de áudio para realinhamento: streamer (voz mais clara) ou composto
+      const audioSource = streamerCut ?? composedPath;
+      const captionAudioPath = path.join(input.workDir, `${clipId}_legenda_audio.mp3`);
+
+      log(`  → Realinhamento de legendas (t=0..${duration.toFixed(1)}s)...`);
+      try {
+        await extractAudioSegment(audioSource, 0, duration, captionAudioPath);
+        const freshTranscript = await transcribe(captionAudioPath);
+        captionWords = freshTranscript.words.filter(
+          (w) => w.startSec >= 0 && w.startSec <= duration + 0.5
+        );
+
+        // ── Diagnóstico de timestamps ────────────────────────────────────────
+        log(`  [legendas] ${captionWords.length} palavras realinhadas para clipe ${i + 1}`);
+        const sample = captionWords.slice(0, 5);
+        sample.forEach((w) =>
+          log(`  [legendas]   "${w.text}" → ${w.startSec.toFixed(3)}s – ${w.endSec.toFixed(3)}s (ASS: ${formatAssTimeLog(w.startSec)})`)
+        );
+
+        if (highlight.transcript?.words?.length) {
+          // Offset aproximado que causava o atraso antes da correção
+          const approxOffset = Math.min(5, highlight.startSec);
+          log(`  [legendas] comparação (offset original era ~${approxOffset.toFixed(1)}s):`);
+          highlight.transcript.words.slice(0, 3).forEach((orig) => {
+            const realigned = captionWords.find(
+              (cw) => cw.text.toLowerCase() === orig.text.toLowerCase()
+            );
+            log(
+              `  [legendas]   "${orig.text}"` +
+              ` | antigo: ${orig.startSec.toFixed(3)}s (lag: +${approxOffset.toFixed(1)}s)` +
+              ` | realinhado: ${(realigned?.startSec ?? NaN).toFixed(3)}s`
+            );
+          });
+        }
+      } catch (err: any) {
+        log(`  [legendas] Realinhamento falhou: ${err.message.split("\n")[0]}`);
+        // Fallback: transcript original com correção do offset de 5s
+        const approxOffset = Math.min(5, highlight.startSec);
+        captionWords = (highlight.transcript?.words ?? [])
+          .map((w) => ({
+            ...w,
+            startSec: w.startSec - approxOffset,
+            endSec:   w.endSec   - approxOffset,
+          }))
+          .filter((w) => w.startSec >= 0 && w.startSec <= duration + 0.5);
+        log(`  [legendas] Fallback: ${captionWords.length} palavras com offset −${approxOffset.toFixed(1)}s`);
+        captionWords.slice(0, 3).forEach((w) =>
+          log(`  [legendas]   "${w.text}" → ${w.startSec.toFixed(3)}s (ASS: ${formatAssTimeLog(w.startSec)})`)
+        );
+      } finally {
+        try { if (fs.existsSync(captionAudioPath)) fs.unlinkSync(captionAudioPath); } catch { /* noop */ }
+      }
+    }
+
+    composedClips.push({ clipId, composedPath, finalPath: "", highlight, words: captionWords });
   }
 
   // ─── 9. Revisão e queima de legendas ─────────────────────────────────────────

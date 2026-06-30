@@ -6,43 +6,112 @@ import type { MolduraConfig } from "./molduras.js";
 
 // ── Profanity ──────────────────────────────────────────────────────────────────
 
-// Palavrões PT-BR — adicione ou remova palavras conforme necessário
-const PROFANITY_LIST: string[] = [
-  "caralho", "porra", "merda", "foda", "fode", "fodase",
-  "puta", "putamerda", "viado", "vsf", "vtf", "vtnc", "vsfp",
-  "cu", "cuzao", "cuzão", "bundao", "bundão",
-  "buceta", "boceta",
-  "fdp", "fdputa", "filhadaputa", "filhodaputa",
-  "desgraca", "desgraça", "arrombado", "arrombada",
-  "babaca", "idiota", "imbecil", "cretino", "cretina",
+const PROFANITY_CONFIG = path.resolve("assets/config/profanity-ptbr.json");
+
+/** Lista embutida usada como fallback se o arquivo de config não existir */
+const PROFANITY_FALLBACK: string[] = [
+  "caralho", "porra", "merda", "cacete",
+  "foda", "foda-se", "fodase", "foder", "fodendo",
+  "puta", "putaria", "puta merda",
+  "filho da puta", "filha da puta",
+  "vai se foder", "vai tomar no cu", "tomar no cu",
+  "cu", "cuzão", "cuzao", "buceta", "boceta",
+  "arrombado", "arrombada",
+  "vsf", "vtf", "vtnc", "fdp",
+  "viado", "babaca", "desgraça", "desgraca",
 ];
+
+function loadProfanityList(): string[] {
+  try {
+    if (fs.existsSync(PROFANITY_CONFIG)) {
+      const json = JSON.parse(fs.readFileSync(PROFANITY_CONFIG, "utf-8"));
+      if (Array.isArray(json.words)) {
+        return (json.words as unknown[]).filter((w): w is string => typeof w === "string");
+      }
+    }
+  } catch { /* fall through */ }
+  return PROFANITY_FALLBACK;
+}
 
 function normalizeForMatch(s: string): string {
   return s
     .toLowerCase()
     .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")   // remove diacritics
-    .replace(/[^a-z0-9]/g, "");        // keep only alphanumeric
+    .replace(/[̀-ͯ]/g, "") // remove diacritics
+    .replace(/[-_]/g, "")            // remove hyphens/underscores (foda-se → fodase)
+    .replace(/[^a-z0-9 ]/g, "")     // keep only alphanumeric + space
+    .trim();
+}
+
+function escapeRegex(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 export interface CensoredWord {
+  /** Texto original detectado (pode ser frase de múltiplas palavras) */
   original: string;
   startSec: number;
   endSec: number;
 }
 
+/**
+ * Detecta palavrões em uma lista de palavras transcritas.
+ * Suporta palavras únicas e frases de múltiplas palavras.
+ * Frases têm prioridade — se "filho da puta" for detectado, "puta" isolado não é.
+ */
 export function detectProfanity(words: TranscriptWord[]): CensoredWord[] {
-  const profSet = new Set(PROFANITY_LIST.map(normalizeForMatch));
-  return words
-    .filter((w) => profSet.has(normalizeForMatch(w.text)))
-    .map((w) => ({ original: w.text, startSec: w.startSec, endSec: w.endSec }));
+  const profList = loadProfanityList();
+  const singles  = profList.filter((p) => !p.includes(" "));
+  const phrases  = profList
+    .filter((p) => p.includes(" "))
+    .map((p) => normalizeForMatch(p).split(" ").filter(Boolean));
+
+  const singleSet = new Set(singles.map((p) => normalizeForMatch(p)));
+  const result: CensoredWord[] = [];
+  const covered = new Set<number>(); // índices já cobertos por uma frase
+
+  // 1. Detectar frases multi-palavra (maior prioridade)
+  for (const phraseNorm of phrases) {
+    const n = phraseNorm.length;
+    for (let i = 0; i <= words.length - n; i++) {
+      const window = words.slice(i, i + n);
+      const match  = window.every((w, j) => {
+        const norm = normalizeForMatch(w.text);
+        // Tolerância: a palavra normalizada começa com o token da frase
+        // (lida com variações de sufixo como "caralhos", "fodendo")
+        return norm === phraseNorm[j] || norm.startsWith(phraseNorm[j]);
+      });
+      if (match) {
+        result.push({
+          original: window.map((w) => w.text).join(" "),
+          startSec: window[0].startSec,
+          endSec:   window[n - 1].endSec,
+        });
+        for (let j = i; j < i + n; j++) covered.add(j);
+      }
+    }
+  }
+
+  // 2. Detectar palavras únicas não cobertas por frases
+  words.forEach((w, i) => {
+    if (covered.has(i)) return;
+    const norm = normalizeForMatch(w.text);
+    // Verificação exata + variações de sufixo simples (plurais, flexões)
+    const matched = [...singleSet].some(
+      (p) => norm === p || (p.length >= 4 && norm.startsWith(p) && norm.length <= p.length + 3)
+    );
+    if (matched) {
+      result.push({ original: w.text, startSec: w.startSec, endSec: w.endSec });
+    }
+  });
+
+  return result;
 }
 
 // ── Caption positioning ────────────────────────────────────────────────────────
 
 function getCaptionLayout(moldura: MolduraConfig): { cx: number; cy: number; maxWidth: number } {
   if (moldura.windows.length >= 2) {
-    // Split: center of gap between top (cam) and bottom (mesa) windows
     const [top, bot] = moldura.windows;
     return {
       cx:       Math.round(moldura.canvasWidth / 2),
@@ -50,7 +119,6 @@ function getCaptionLayout(moldura: MolduraConfig): { cx: number; cy: number; max
       maxWidth: Math.round(moldura.canvasWidth * 0.87),
     };
   }
-  // Full: below the single window, in the bottom safe zone
   const [win] = moldura.windows;
   return {
     cx:       Math.round(moldura.canvasWidth / 2),
@@ -61,10 +129,7 @@ function getCaptionLayout(moldura: MolduraConfig): { cx: number; cy: number; max
 
 // ── Typography ─────────────────────────────────────────────────────────────────
 
-// Estimated width of one uppercase char in Strenuous Black, relative to font size
 const CHAR_WIDTH_RATIO = 0.62;
-
-// Font size steps — try each until text fits on one line
 const FONT_SIZES = [52, 46, 40, 36, 32] as const;
 
 function fontSizeForLine(charCount: number, maxWidth: number): number {
@@ -77,9 +142,8 @@ function fontSizeForLine(charCount: number, maxWidth: number): number {
 // ── Grouping ───────────────────────────────────────────────────────────────────
 
 /**
- * Groups words into single-line caption blocks.
- * Each block fits on one line at the default font size.
- * When adding a word would overflow the line, a new block is started (temporal split).
+ * Agrupa palavras em blocos de uma única linha.
+ * Divide temporalmente quando adicionar outra palavra estouraria a largura.
  */
 export function groupWordsSingleLine(
   words: TranscriptWord[],
@@ -92,7 +156,7 @@ export function groupWordsSingleLine(
   let currentChars = 0;
 
   for (const w of words) {
-    const addLen = w.text.length + (current.length > 0 ? 1 : 0); // +1 for space
+    const addLen = w.text.length + (current.length > 0 ? 1 : 0);
     const endsSentence = /[.!?]$/.test(w.text);
 
     if (current.length > 0 && currentChars + addLen > maxChars) {
@@ -115,7 +179,7 @@ export function groupWordsSingleLine(
   return groups;
 }
 
-// ── ASS file builder ───────────────────────────────────────────────────────────
+// ── ASS builder ────────────────────────────────────────────────────────────────
 
 function formatAssTime(sec: number): string {
   const h = Math.floor(sec / 3600);
@@ -124,12 +188,34 @@ function formatAssTime(sec: number): string {
   return `${h}:${m.toString().padStart(2, "0")}:${s.toFixed(2).padStart(5, "0")}`;
 }
 
+function censorPhrase(text: string): string {
+  return text
+    .split(" ")
+    .map((w) => (w.length <= 1 ? w : w[0] + "*".repeat(w.length - 1)))
+    .join(" ");
+}
+
+function censorLine(text: string, censoredWords: CensoredWord[]): string {
+  // Ordenar por tamanho desc para substituir frases antes de palavras individuais
+  const sorted = [...censoredWords].sort((a, b) => b.original.length - a.original.length);
+  let result = text;
+  for (const cw of sorted) {
+    const pattern = new RegExp(
+      cw.original.split(" ").map(escapeRegex).join("\\s+"),
+      "gi"
+    );
+    result = result.replace(pattern, censorPhrase(cw.original));
+  }
+  return result;
+}
+
 /**
- * Builds an ASS subtitle file positioned in the gap between cam and mesa windows.
+ * Gera arquivo ASS posicionado no gap entre cam e mesa (moldura split),
+ * ou na zona inferior (moldura full).
  *
- * Style: Strenuous Black, white, no outline, no shadow, uppercase, single line.
- * Font size is auto-reduced per line to prevent overflow (never wraps).
- * Profanity in censoredWords is replaced with "C***" form in the captions.
+ * Estilo: Strenuous Black, branco, sem contorno, sem sombra, caixa alta.
+ * Uma única linha por bloco — fonte reduzida automaticamente se necessário.
+ * Palavrões censurados com primeira letra + asteriscos.
  */
 export function buildAssFile(
   groups: Array<{ text: string; startSec: number; endSec: number }>,
@@ -138,21 +224,6 @@ export function buildAssFile(
   censoredWords: CensoredWord[] = []
 ) {
   const { cx, cy, maxWidth } = getCaptionLayout(moldura);
-
-  // Build censorship lookup: normalized original → "C***" form
-  const censorMap = new Map<string, string>(
-    censoredWords.map((cw) => [
-      normalizeForMatch(cw.original),
-      cw.original[0].toUpperCase() + "*".repeat(Math.max(0, cw.original.length - 1)),
-    ])
-  );
-
-  function censorLine(text: string): string {
-    return text.split(" ").map((w) => {
-      const key = normalizeForMatch(w);
-      return censorMap.has(key) ? censorMap.get(key)! : w;
-    }).join(" ");
-  }
 
   const header = `[Script Info]
 ScriptType: v4.00+
@@ -171,12 +242,11 @@ Format: Layer, Start, End, Style, Text
   const lines = groups
     .filter((g) => g.text.trim().length > 0)
     .map((g) => {
-      const start  = formatAssTime(Math.max(0, g.startSec));
-      const end    = formatAssTime(Math.max(0, g.endSec));
-      const text   = censorLine(g.text).toUpperCase();
-      const size   = fontSizeForLine(text.length, maxWidth);
-      // \an5 = middle-center alignment, \pos absolute, \fs font size, \bord0 no border, \shad0 no shadow
-      const tags   = `{\\an5\\pos(${cx},${cy})\\fs${size}\\bord0\\shad0}`;
+      const start = formatAssTime(Math.max(0, g.startSec));
+      const end   = formatAssTime(Math.max(0, g.endSec));
+      const text  = censorLine(g.text, censoredWords).toUpperCase();
+      const size  = fontSizeForLine(text.length, maxWidth);
+      const tags  = `{\\an5\\pos(${cx},${cy})\\fs${size}\\bord0\\shad0}`;
       return `Dialogue: 0,${start},${end},Default,${tags}${text}`;
     })
     .join("\n");
@@ -189,9 +259,8 @@ Format: Layer, Start, End, Style, Text
 const FONTS_DIR = path.resolve("assets/fonts");
 
 /**
- * Burns ASS captions into the video.
- * When censoredWords + beepPath are provided, also mutes the profanity windows
- * in the audio track and overlays a beep sound at each word's exact timestamp.
+ * Queima legendas ASS no vídeo.
+ * Com censoredWords + beepPath: muta os intervalos dos palavrões e sobrepõe beep.
  */
 export async function burnCaptions(
   inputVideo: string,
@@ -217,42 +286,29 @@ export async function burnCaptions(
     return;
   }
 
-  // Mute profanity in audio + overlay beep at each word's timestamp
   const enableExpr = words
     .map((w) => `between(t,${w.startSec.toFixed(3)},${w.endSec.toFixed(3)})`)
     .join("+");
 
   const filterParts: string[] = [];
-
-  // Video: burn ASS captions
-  filterParts.push(
-    `[0:v]ass=filename='${fixedAssPath}':fontsdir='${fixedFontsDir}'[vout]`
-  );
-
-  // Audio: mute the censored windows
+  filterParts.push(`[0:v]ass=filename='${fixedAssPath}':fontsdir='${fixedFontsDir}'[vout]`);
   filterParts.push(`[0:a]volume=enable='${enableExpr}':volume=0[muted]`);
 
-  // Beep audio: split + delay for each censored word
   if (words.length === 1) {
     const w   = words[0];
     const dur = Math.max(0.05, w.endSec - w.startSec).toFixed(3);
     const ms  = Math.round(w.startSec * 1000);
-    filterParts.push(
-      `[1:a]atrim=0:${dur},asetpts=PTS-STARTPTS,adelay=${ms}|${ms}[b0]`
-    );
+    filterParts.push(`[1:a]atrim=0:${dur},asetpts=PTS-STARTPTS,adelay=${ms}|${ms}[b0]`);
   } else {
     const splitOuts = words.map((_, i) => `[bs${i}]`).join("");
     filterParts.push(`[1:a]asplit=${words.length}${splitOuts}`);
     words.forEach((w, i) => {
       const dur = Math.max(0.05, w.endSec - w.startSec).toFixed(3);
       const ms  = Math.round(w.startSec * 1000);
-      filterParts.push(
-        `[bs${i}]atrim=0:${dur},asetpts=PTS-STARTPTS,adelay=${ms}|${ms}[b${i}]`
-      );
+      filterParts.push(`[bs${i}]atrim=0:${dur},asetpts=PTS-STARTPTS,adelay=${ms}|${ms}[b${i}]`);
     });
   }
 
-  // Mix: muted original + all beeps
   const mixIn = `[muted]` + words.map((_, i) => `[b${i}]`).join("");
   filterParts.push(`${mixIn}amix=inputs=${words.length + 1}:normalize=0[aout]`);
 
