@@ -6,6 +6,7 @@ export type JobStatus =
   | "running"
   | "waiting-crop-approval"
   | "waiting-layout-approval"
+  | "waiting-composition-preview"
   | "waiting-captions-approval"
   | "done"
   | "error"
@@ -47,17 +48,25 @@ export interface CaptionsApprovalData {
   clips: ClipCaptionData[];
 }
 
-export type ApprovalData = CropApprovalData | LayoutApprovalData | CaptionsApprovalData;
+export interface CompositionPreviewData {
+  previewUrl: string;
+  /** true se o vídeo do streamer existe e teve crop pedido */
+  hasStreamer: boolean;
+  /** true se o vídeo da mesa existe e teve crop pedido */
+  hasMesa: boolean;
+}
+
+export type ApprovalData = CropApprovalData | LayoutApprovalData | CaptionsApprovalData | CompositionPreviewData;
 
 export interface ApprovalRequest {
-  type: "crop" | "layout" | "captions";
+  type: "crop" | "layout" | "captions" | "composition-preview";
   data: ApprovalData;
 }
 
 export interface ApprovalResponse {
-  type: "crop" | "layout" | "captions";
+  type: "crop" | "layout" | "captions" | "composition-preview";
   approved: boolean;
-  /** For crop: { x, y, w, h }. For layout: { webcam, game }. For captions: { clips: [{ clipId, groups }] } */
+  /** For crop: { x, y, w, h }. For layout: { webcam, game }. For captions: { clips: [...] }. For composition-preview: { action: "adjust-streamer" | "adjust-mesa" } */
   adjustedData?: any;
 }
 

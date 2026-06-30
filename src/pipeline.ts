@@ -10,7 +10,7 @@ import {
 } from "./lib/selectHighlights.js";
 import { transcribe, type Transcript, type TranscriptWord } from "./lib/transcribe.js";
 import { syncAudio, isSyncReliable } from "./lib/sync.js";
-import { composeMoldura } from "./lib/compose.js";
+import { composeMoldura, generateDebugFrame, generateCompositionPreviewPng } from "./lib/compose.js";
 import { buildAssFile, burnCaptions, groupWords } from "./lib/captions.js";
 import { appendOutro } from "./lib/outro.js";
 import { run, probe } from "./lib/ffmpegUtils.js";
@@ -130,114 +130,197 @@ export async function runPipeline(input: PipelineInput): Promise<PipelineResult>
   }
 
   // ─── Variáveis de crop aprovadas ──────────────────────────────────────────────
-  // Congeladas após aprovação; nunca recalculadas.
+  // IMUTÁVEIS após o loop de aprovação. Object.freeze() é aplicado ao sair.
+  // Nenhum estágio posterior deve recalcular, substituir ou reinterpretar estes valores.
   let approvedStreamerCrop: CropInfo | undefined;
   let approvedMesaCrop:     CropInfo | undefined;
 
-  // ─── 3. Crop do streamer/webcam ───────────────────────────────────────────────
-  if (input.detectCropEnabled) {
-    const targetPath = input.streamerPath ?? input.mesaPath;
-    if (targetPath) {
-      log("Detectando área útil do vídeo...");
-      const cropInfo  = await detectCrop(targetPath);
-      const videoInfo = await probe(targetPath);
-
-      const previewFramePath = path.join(previewDir, "crop_preview.jpg");
-      await extractPreviewFrame(targetPath, previewFramePath);
-
-      updateJob(input.jobId, {
-        status: "waiting-crop-approval",
-        pendingApproval: {
-          type: "crop",
-          data: {
-            previewUrl: `/clips/${input.jobId}/previews/crop_preview.jpg`,
-            detected: cropInfo,
-            videoW: videoInfo.width,
-            videoH: videoInfo.height,
-          },
-        },
-      });
-      log("Aguardando confirmação do enquadramento do streamer...");
-
-      const cropResponse: ApprovalResponse = await waitForApproval(input.jobId);
-      updateJob(input.jobId, { status: "running", pendingApproval: undefined });
-
-      if (cropResponse.adjustedData) {
-        if (input.streamerPath) {
-          approvedStreamerCrop = cropResponse.adjustedData as CropInfo;
-          log(`Enquadramento do streamer salvo: ${approvedStreamerCrop.w}×${approvedStreamerCrop.h} em (${approvedStreamerCrop.x},${approvedStreamerCrop.y})`);
-        } else {
-          approvedMesaCrop = cropResponse.adjustedData as CropInfo;
-          log(`Enquadramento salvo: ${approvedMesaCrop.w}×${approvedMesaCrop.h} em (${approvedMesaCrop.x},${approvedMesaCrop.y})`);
-        }
-      } else {
-        log("Usando frame completo do vídeo.");
-      }
-    }
-  }
-
-  // ─── 4a. Crop da mesa/jogo ────────────────────────────────────────────────────
+  // ─── 3. Determinar fontes de crop ─────────────────────────────────────────────
   //
   // BUG FIX: A condição original era `detectGameCropEnabled && mesaPath`.
   // Isso ignorava completamente a mesa quando o usuário usava uma fonte única
   // com moldura 'split' (URL ou arquivo único com webcam+jogo na mesma imagem).
   //
-  // Nova lógica — roda em dois casos:
+  // Nova lógica — gameCropSource é não-nulo em dois casos:
   //   (A) Modo dual explícito: detectGameCropEnabled=true E mesaPath definido
   //   (B) Split de fonte única: moldura=split E streamerPath definido E mesaPath ausente
-  //       → pede ao usuário para selecionar a região da mesa no mesmo vídeo
   //
   const gameCropSource: string | null =
     (input.detectGameCropEnabled && input.mesaPath)
       ? input.mesaPath
       : (input.moldura === "split" && !!input.streamerPath && !input.mesaPath)
-        ? input.streamerPath   // mesma fonte, região diferente
+        ? input.streamerPath
         : null;
 
-  if (gameCropSource) {
-    log("Detectando área útil do vídeo de mesa/jogo...");
-    const gameCropInfo  = await detectCrop(gameCropSource);
-    const gameVideoInfo = await probe(gameCropSource);
-
-    const gamePreviewPath = path.join(previewDir, "game_crop_preview.jpg");
-    await extractPreviewFrame(gameCropSource, gamePreviewPath);
-
-    updateJob(input.jobId, {
-      status: "waiting-crop-approval",
-      pendingApproval: {
-        type: "crop",
-        data: {
-          previewUrl: `/clips/${input.jobId}/previews/game_crop_preview.jpg`,
-          detected: gameCropInfo,
-          videoW: gameVideoInfo.width,
-          videoH: gameVideoInfo.height,
-          target: "game",
-        },
-      },
-    });
-    log("Aguardando confirmação do enquadramento da mesa/jogo...");
-
-    const gameCropResponse: ApprovalResponse = await waitForApproval(input.jobId);
-    updateJob(input.jobId, { status: "running", pendingApproval: undefined });
-
-    if (gameCropResponse.adjustedData) {
-      approvedMesaCrop = gameCropResponse.adjustedData as CropInfo;
-      log(`Enquadramento da mesa salvo: ${approvedMesaCrop.w}×${approvedMesaCrop.h} em (${approvedMesaCrop.x},${approvedMesaCrop.y})`);
-    } else {
-      log("Usando frame completo da mesa.");
-    }
-
-    // Caso B: fonte única para split → usar o mesmo vídeo do streamer como mesa
-    if (!input.mesaPath) {
-      (input as any).mesaPath = gameCropSource;
-      log("Split de fonte única: mesmo vídeo usado para ambas as regiões (crop diferente).");
-    }
+  // Caso B: definir mesaPath ANTES das detecções — simplifica todo o restante
+  if (gameCropSource && !input.mesaPath) {
+    (input as any).mesaPath = gameCropSource;
+    log("Split de fonte única: mesmo vídeo usado para ambas as regiões (crop diferente).");
   }
 
   // Guarda de segurança: se split ainda não tiver mesaPath, forçar 'full'
   if (input.moldura === "split" && !input.mesaPath) {
     log("⚠️  Moldura 'split' sem vídeo de mesa — alternando para 'full' automaticamente.");
     (input as any).moldura = "full";
+  }
+
+  const wantsStreamerCrop = !!(input.detectCropEnabled && (input.streamerPath ?? input.mesaPath));
+  const wantsGameCrop     = !!gameCropSource;
+
+  // ─── 3a. Pré-detectar crops uma única vez (o loop de aprovação reutiliza) ─────
+  type CropDetected = { cropInfo: CropInfo; videoW: number; videoH: number };
+  let streamerCropData: CropDetected | null = null;
+  let mesaCropData:     CropDetected | null = null;
+
+  if (wantsStreamerCrop) {
+    const t = input.streamerPath ?? input.mesaPath!;
+    log("Detectando área útil do vídeo do streamer...");
+    const [cropInfo, info] = await Promise.all([detectCrop(t), probe(t)]);
+    streamerCropData = { cropInfo, videoW: info.width, videoH: info.height };
+    await extractPreviewFrame(t, path.join(previewDir, "crop_preview.jpg"));
+  }
+
+  if (wantsGameCrop) {
+    log("Detectando área útil do vídeo de mesa/jogo...");
+    const [cropInfo, info] = await Promise.all([detectCrop(gameCropSource!), probe(gameCropSource!)]);
+    mesaCropData = { cropInfo, videoW: info.width, videoH: info.height };
+    await extractPreviewFrame(gameCropSource!, path.join(previewDir, "game_crop_preview.jpg"));
+  }
+
+  // ─── 3b. Loop de aprovação de crops + preview de composição ──────────────────
+  //
+  // Fluxo:
+  //   1) Pede crop do streamer (se necessário)
+  //   2) Pede crop da mesa (se necessário)
+  //   3) Gera preview PNG da composição completa e aguarda aprovação
+  //   4) Se "Ajustar Streamer" → volta ao passo 1; se "Ajustar Mesa" → volta ao 2
+  //   5) Aprovado → Object.freeze() nos valores; pipeline continua
+  //
+  if (wantsStreamerCrop || wantsGameCrop) {
+    let needStreamer = wantsStreamerCrop;
+    let needMesa     = wantsGameCrop;
+
+    while (true) {
+      // — Crop do streamer —
+      if (needStreamer && streamerCropData) {
+        updateJob(input.jobId, {
+          status: "waiting-crop-approval",
+          pendingApproval: {
+            type: "crop",
+            data: {
+              previewUrl: `/clips/${input.jobId}/previews/crop_preview.jpg`,
+              detected: streamerCropData.cropInfo,
+              videoW: streamerCropData.videoW,
+              videoH: streamerCropData.videoH,
+            },
+          },
+        });
+        log("Aguardando confirmação do enquadramento do streamer...");
+        const resp: ApprovalResponse = await waitForApproval(input.jobId);
+        updateJob(input.jobId, { status: "running", pendingApproval: undefined });
+
+        // Salvar no slot correto: se só existe mesa (modo single-mesa), vai para mesaCrop
+        if (input.streamerPath) {
+          approvedStreamerCrop = resp.adjustedData ? (resp.adjustedData as CropInfo) : undefined;
+        } else {
+          approvedMesaCrop = resp.adjustedData ? (resp.adjustedData as CropInfo) : undefined;
+        }
+        log("===== CROP APROVADO =====");
+        if (approvedStreamerCrop) {
+          log(`streamer  x:${approvedStreamerCrop.x} y:${approvedStreamerCrop.y} w:${approvedStreamerCrop.w} h:${approvedStreamerCrop.h}`);
+        } else if (approvedMesaCrop && !input.streamerPath) {
+          log(`mesa(single) x:${approvedMesaCrop.x} y:${approvedMesaCrop.y} w:${approvedMesaCrop.w} h:${approvedMesaCrop.h}`);
+        } else {
+          log("streamer  (frame completo — sem crop aplicado)");
+        }
+        needStreamer = false;
+      }
+
+      // — Crop da mesa/jogo —
+      if (needMesa && mesaCropData) {
+        updateJob(input.jobId, {
+          status: "waiting-crop-approval",
+          pendingApproval: {
+            type: "crop",
+            data: {
+              previewUrl: `/clips/${input.jobId}/previews/game_crop_preview.jpg`,
+              detected: mesaCropData.cropInfo,
+              videoW: mesaCropData.videoW,
+              videoH: mesaCropData.videoH,
+              target: "game",
+            },
+          },
+        });
+        log("Aguardando confirmação do enquadramento da mesa/jogo...");
+        const resp: ApprovalResponse = await waitForApproval(input.jobId);
+        updateJob(input.jobId, { status: "running", pendingApproval: undefined });
+
+        approvedMesaCrop = resp.adjustedData ? (resp.adjustedData as CropInfo) : undefined;
+        log("===== CROP APROVADO =====");
+        log(approvedMesaCrop
+          ? `mesa      x:${approvedMesaCrop.x} y:${approvedMesaCrop.y} w:${approvedMesaCrop.w} h:${approvedMesaCrop.h}`
+          : "mesa      (frame completo — sem crop aplicado)");
+        needMesa = false;
+      }
+
+      // — Preview de composição: gera PNG e aguarda decisão do usuário —
+      const currentMoldura = (input as any).moldura as PipelineInput["moldura"];
+      const previewPngPath = path.join(previewDir, "composition_preview.png");
+
+      try {
+        log("Gerando pré-visualização da composição...");
+        await generateCompositionPreviewPng({
+          moldura:      currentMoldura,
+          streamerPath: input.streamerPath,
+          mesaPath:     input.mesaPath,
+          streamerCrop: approvedStreamerCrop,
+          mesaCrop:     approvedMesaCrop,
+          previewTimeSec: 5,
+          outputPath:   previewPngPath,
+        });
+      } catch (err: any) {
+        log(`Aviso: preview de composição falhou — ${(err.message ?? "").split("\n")[0]}. Prosseguindo.`);
+        break; // skip preview, continue pipeline
+      }
+
+      updateJob(input.jobId, {
+        status: "waiting-composition-preview",
+        pendingApproval: {
+          type: "composition-preview",
+          data: {
+            previewUrl: `/clips/${input.jobId}/previews/composition_preview.png`,
+            hasStreamer: !!input.streamerPath && wantsStreamerCrop,
+            hasMesa:     !!input.mesaPath && wantsGameCrop,
+          },
+        },
+      });
+      log("Aguardando aprovação da pré-visualização...");
+      const previewResp: ApprovalResponse = await waitForApproval(input.jobId);
+      updateJob(input.jobId, { status: "running", pendingApproval: undefined });
+
+      if (previewResp.approved) {
+        log("Composição aprovada. Valores de crop congelados — iniciando renderização.");
+        break;
+      }
+
+      const action = previewResp.adjustedData?.action as string | undefined;
+      if (action === "adjust-streamer" && wantsStreamerCrop) {
+        log("Ajustando enquadramento do streamer...");
+        needStreamer = true;
+      } else if (action === "adjust-mesa" && wantsGameCrop) {
+        log("Ajustando enquadramento da mesa...");
+        needMesa = true;
+      } else {
+        // Ação desconhecida → aprovar automaticamente
+        log("Ação desconhecida no preview — aprovando automaticamente.");
+        break;
+      }
+    }
+
+    // GARANTIA DE IMUTABILIDADE: qualquer tentativa de modificar após este ponto
+    // vai lançar TypeError (strict mode) ou falhar silenciosamente.
+    if (approvedStreamerCrop) Object.freeze(approvedStreamerCrop);
+    if (approvedMesaCrop)     Object.freeze(approvedMesaCrop);
   }
 
   // ─── 4. Sincronização (modo dual) ────────────────────────────────────────────
@@ -380,6 +463,8 @@ export async function runPipeline(input: PipelineInput): Promise<PipelineResult>
   }> = [];
 
   const finalMoldura = (input as any).moldura as PipelineInput["moldura"];
+  const debugDir = path.join(input.outDir, "debug");
+  fs.mkdirSync(debugDir, { recursive: true });
 
   for (const [i, highlight] of highlights.entries()) {
     log(`Montando clipe ${i + 1}/${highlights.length} (${highlight.startSec.toFixed(1)}s – ${highlight.endSec.toFixed(1)}s)...`);
@@ -415,6 +500,23 @@ export async function runPipeline(input: PipelineInput): Promise<PipelineResult>
         `streamerCut=${!!streamerCut} mesaCut=${!!mesaCut}. ` +
         `Verifique se streamerPath e mesaPath estão definidos antes da composição.`
       );
+    }
+
+    // ── Frames de debug: original com retângulo vermelho sobre a área de crop ──
+    const clipNum = String(i + 1).padStart(2, "0");
+    if (approvedStreamerCrop && streamerCut) {
+      const dbgPath = path.join(debugDir, `clip_${clipNum}_streamer.png`);
+      try {
+        await generateDebugFrame(streamerCut, duration / 2, approvedStreamerCrop, dbgPath);
+        log(`  → Debug: debug/clip_${clipNum}_streamer.png`);
+      } catch { /* non-blocking */ }
+    }
+    if (approvedMesaCrop && mesaCut) {
+      const dbgPath = path.join(debugDir, `clip_${clipNum}_mesa.png`);
+      try {
+        await generateDebugFrame(mesaCut, duration / 2, approvedMesaCrop, dbgPath);
+        log(`  → Debug: debug/clip_${clipNum}_mesa.png`);
+      } catch { /* non-blocking */ }
     }
 
     log(`  → Compondo moldura '${finalMoldura}'...`);

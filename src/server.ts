@@ -70,6 +70,12 @@ app.use(express.json());
 app.use(express.static(path.resolve("public")));
 app.use("/clips", express.static(OUTPUT_DIR));
 
+// ─── GET /api/defaults ────────────────────────────────────────────────────────
+app.get("/api/defaults", (_req, res) => {
+  const spinFinalPath = path.resolve("assets/defaults/spin_final.mp4");
+  res.json({ spinFinal: fs.existsSync(spinFinalPath) });
+});
+
 // ─── GET /health ──────────────────────────────────────────────────────────────
 app.get("/health", async (_req, res) => {
   const [ffmpeg, ffprobe, python, ytDlp] = await Promise.all([
@@ -116,6 +122,7 @@ app.post(
     const enableCaptions             = req.body.enableCaptions     === "true";
     const generateCompilationEnabled = req.body.generateCompilation === "true";
     const detectGameCropEnabled      = req.body.detectGameCrop     === "true";
+    const useDefaultOutro            = req.body.useDefaultOutro    === "true";
 
     // Lê preferências do perfil, se houver
     let preferredGame: PipelineInput["preferredGame"] = "all";
@@ -155,12 +162,18 @@ app.post(
 
     updateJob(jobId, { status: "running" });
 
+    // Outro: usa o arquivo enviado; se ausente e toggle "usar padrão" ativo,
+    // tenta assets/defaults/spin_final.mp4.
+    const defaultOutroPath = path.resolve("assets/defaults/spin_final.mp4");
+    const resolvedOutroPath = outroFile?.path
+      ?? (useDefaultOutro && fs.existsSync(defaultOutroPath) ? defaultOutroPath : undefined);
+
     const pipelineInput: PipelineInput = {
       jobId, mode,
       streamerPath: streamerFile?.path,
       mesaPath:     mesaFile?.path,
       combinedPath: combinedFile?.path,
-      outroPath:    outroFile?.path,
+      outroPath:    resolvedOutroPath,
       urlLink,
       urlStartSec,
       urlEndSec,

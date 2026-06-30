@@ -230,8 +230,14 @@ canvas.region-canvas{display:block;cursor:default;}
 
     <div class="divider"></div>
     <h2>Vinheta final (opcional)</h2>
-    <div class="drop-grid single">
-      <label class="drop" id="drop-outro"><input type="file" name="outro" accept="video/*" /><span class="label">Outro / spin final.mp4</span><span class="hint-inline">opcional</span></label>
+    <div class="check-group" id="outro-default-row" style="display:none;margin-bottom:10px;">
+      <label class="check-row">
+        <input type="checkbox" id="opt-use-default-outro" checked />
+        <span><b>Utilizar vídeo final padrão</b> (spin_final.mp4)</span>
+      </label>
+    </div>
+    <div id="outro-upload-wrap" class="drop-grid single">
+      <label class="drop" id="drop-outro"><input type="file" name="outro" accept="video/*" /><span class="label">Outro / spin final.mp4</span><span class="hint-inline">opcional — arraste ou clique</span></label>
     </div>
 
     <div class="divider"></div>
@@ -327,6 +333,22 @@ canvas.region-canvas{display:block;cursor:default;}
     <div class="approval-actions">
       <button type="button" class="btn btn-approve" id="game-crop-approve">Salvar enquadramento do jogo</button>
       <button type="button" class="btn btn-cancel" id="game-crop-skip">Usar frame inteiro</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════
+       COMPOSITION PREVIEW
+  ══════════════════════════════════════════════════════ -->
+  <div id="composition-preview" class="approval-panel">
+    <h3>🎬 Pré-visualização da composição</h3>
+    <p class="desc">Exatamente como o vídeo final vai ficar. Aprovando aqui, os enquadramentos ficam congelados — nenhuma modificação posterior.</p>
+    <div style="display:flex;justify-content:center;margin-bottom:16px;background:#000;border-radius:8px;overflow:hidden;">
+      <img id="comp-preview-img" src="" alt="Preview da composição" style="max-height:600px;max-width:100%;object-fit:contain;display:block;" />
+    </div>
+    <div class="approval-actions">
+      <button type="button" class="btn btn-approve" id="comp-approve">✓ Aprovar composição</button>
+      <button type="button" class="btn btn-secondary" id="comp-adjust-streamer">↩ Ajustar Streamer</button>
+      <button type="button" class="btn btn-secondary" id="comp-adjust-mesa">↩ Ajustar Mesa</button>
     </div>
   </div>
 
@@ -773,10 +795,11 @@ async function startJob() {
     fd.append("padAfterSec",  document.getElementById("padAfterSec").value);
   }
 
-  fd.append("detectCrop",          document.getElementById("opt-crop").checked       ? "true" : "false");
-  fd.append("detectGameCrop",      document.getElementById("opt-game-crop").checked   ? "true" : "false");
-  fd.append("enableCaptions",      document.getElementById("opt-captions").checked    ? "true" : "false");
-  fd.append("generateCompilation", document.getElementById("opt-compilation").checked ? "true" : "false");
+  fd.append("detectCrop",          document.getElementById("opt-crop").checked              ? "true" : "false");
+  fd.append("detectGameCrop",      document.getElementById("opt-game-crop").checked          ? "true" : "false");
+  fd.append("enableCaptions",      document.getElementById("opt-captions").checked           ? "true" : "false");
+  fd.append("generateCompilation", document.getElementById("opt-compilation").checked        ? "true" : "false");
+  fd.append("useDefaultOutro",     (document.getElementById("opt-use-default-outro")?.checked ?? false) ? "true" : "false");
 
   const profileId = document.getElementById("profileSelect").value;
   if (profileId) fd.append("profileId", profileId);
@@ -838,6 +861,9 @@ async function pollJob() {
     if (job.status === "waiting-crop-approval") {
       clearInterval(pollInterval); pollInterval = null;
       handleCropApproval(job.pendingApproval.data);
+    } else if (job.status === "waiting-composition-preview") {
+      clearInterval(pollInterval); pollInterval = null;
+      handleCompositionPreview(job.pendingApproval.data);
     } else if (job.status === "waiting-layout-approval") {
       clearInterval(pollInterval); pollInterval = null;
       handleLayoutApproval(job.pendingApproval.data);
@@ -879,7 +905,7 @@ async function cancelCurrentJob() {
   }
 }
 function hideAllApprovals() {
-  ["crop-approval","game-crop-approval","layout-approval","captions-approval"]
+  ["crop-approval","game-crop-approval","composition-preview","layout-approval","captions-approval"]
     .forEach(id => document.getElementById(id).classList.remove("visible"));
 }
 
@@ -1104,6 +1130,63 @@ async function sendApproval(type, approved, adjustedData) {
     if (!res.ok) { const d = await res.json(); logLine("Erro ao aprovar: " + (d.error || res.status), "err"); }
   } catch(e) { logLine("Erro de rede: " + e.message, "err"); }
 }
+
+// ════════════════════════════════════════════════════════════════════════════
+//  COMPOSITION PREVIEW
+// ════════════════════════════════════════════════════════════════════════════
+function handleCompositionPreview(data) {
+  const panel = document.getElementById("composition-preview");
+  panel.classList.add("visible");
+  panel.scrollIntoView({ behavior: "smooth" });
+  document.getElementById("comp-preview-img").src = data.previewUrl + "?t=" + Date.now();
+  document.getElementById("comp-adjust-streamer").style.display = data.hasStreamer ? "" : "none";
+  document.getElementById("comp-adjust-mesa").style.display     = data.hasMesa     ? "" : "none";
+  logLine("Pré-visualização pronta — aguardando aprovação...", "wait");
+}
+
+document.getElementById("comp-approve").addEventListener("click", async () => {
+  document.getElementById("composition-preview").classList.remove("visible");
+  await sendApproval("composition-preview", true, null);
+  logLine("Composição aprovada. Renderizando...", "ok");
+  resumePolling();
+});
+
+document.getElementById("comp-adjust-streamer").addEventListener("click", async () => {
+  document.getElementById("composition-preview").classList.remove("visible");
+  await sendApproval("composition-preview", false, { action: "adjust-streamer" });
+  logLine("Ajustando enquadramento do streamer...", "wait");
+  resumePolling();
+});
+
+document.getElementById("comp-adjust-mesa").addEventListener("click", async () => {
+  document.getElementById("composition-preview").classList.remove("visible");
+  await sendApproval("composition-preview", false, { action: "adjust-mesa" });
+  logLine("Ajustando enquadramento da mesa...", "wait");
+  resumePolling();
+});
+
+// ════════════════════════════════════════════════════════════════════════════
+//  DEFAULT OUTRO TOGGLE
+// ════════════════════════════════════════════════════════════════════════════
+async function loadDefaults() {
+  try {
+    const res  = await fetch("/api/defaults");
+    const data = await res.json();
+    if (data.spinFinal) {
+      document.getElementById("outro-default-row").style.display = "";
+      // Default checked → esconde upload
+      document.getElementById("outro-upload-wrap").style.display = "none";
+    }
+    // Se spinFinal=false, upload já aparece (display padrão é "")
+  } catch (e) {
+    // Server offline ou rota não existe — upload visível como fallback
+  }
+}
+loadDefaults();
+
+document.getElementById("opt-use-default-outro")?.addEventListener("change", function() {
+  document.getElementById("outro-upload-wrap").style.display = this.checked ? "none" : "";
+});
 
 // ════════════════════════════════════════════════════════════════════════════
 //  RESULTS + FEEDBACK DETALHADO

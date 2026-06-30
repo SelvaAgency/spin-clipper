@@ -1,4 +1,5 @@
 import path from "node:path";
+import fs from "node:fs";
 import { run, probe } from "./ffmpegUtils.js";
 import { getMoldura, VideoWindow } from "./molduras.js";
 
@@ -69,6 +70,10 @@ async function composeSplit(
     `${mesaInfo.durationSec.toFixed(1)}s audio=${mesaInfo.hasAudio}`
   );
 
+  console.log("[compose] ===== CROP UTILIZADO PELO FFMPEG =====");
+  console.log(`[compose] streamer  x:${input.streamerCrop?.x ?? "—"} y:${input.streamerCrop?.y ?? "—"} w:${input.streamerCrop?.w ?? "—"} h:${input.streamerCrop?.h ?? "—"}`);
+  console.log(`[compose] mesa      x:${input.mesaCrop?.x    ?? "—"} y:${input.mesaCrop?.y    ?? "—"} w:${input.mesaCrop?.w    ?? "—"} h:${input.mesaCrop?.h    ?? "—"}`);
+
   // ─── FIX: filter_complex com `color` cria fonte infinita.
   // Sem eof_action=endall no primeiro overlay, o grafo nunca emite EOS e
   // o ffmpeg trava esperando o filtro terminar — a Promise nunca resolve.
@@ -129,8 +134,11 @@ async function composeFull(
     `${srcInfo.durationSec.toFixed(1)}s audio=${srcInfo.hasAudio}`
   );
 
-  // Mesmo fix: eof_action=endall em todos os overlays + -stream_loop -1 no PNG.
   const sourceCrop = input.fullSource === "mesa" ? input.mesaCrop : input.streamerCrop;
+  console.log("[compose] ===== CROP UTILIZADO PELO FFMPEG =====");
+  console.log(`[compose] full (${input.fullSource ?? "streamer"})  x:${sourceCrop?.x ?? "—"} y:${sourceCrop?.y ?? "—"} w:${sourceCrop?.w ?? "—"} h:${sourceCrop?.h ?? "—"}`);
+
+  // Mesmo fix: eof_action=endall em todos os overlays + -stream_loop -1 no PNG.
   const filter = [
     buildVideoFilter(window, "0:v", "src", sourceCrop),
     `color=c=black:s=${moldura.canvasWidth}x${moldura.canvasHeight}[bg]`,
@@ -154,6 +162,105 @@ async function composeFull(
 
   console.log(`[compose] ffmpeg full args: ${args.join(" ")}`);
   await run("ffmpeg", args);
+}
+
+/**
+ * Gera um PNG de debug com o frame original e um retângulo vermelho indicando
+ * exatamente a área de crop que o FFmpeg usará. Salvo em debug/clip_NN_{streamer|mesa}.png
+ */
+export async function generateDebugFrame(
+  sourcePath: string,
+  timeSec: number,
+  crop: { x: number; y: number; w: number; h: number },
+  outputPath: string
+): Promise<void> {
+  fs.mkdirSync(path.dirname(outputPath), { recursive: true });
+  await run("ffmpeg", [
+    "-y",
+    "-ss", String(Math.max(0, timeSec)),
+    "-i", sourcePath,
+    "-frames:v", "1",
+    "-vf", `drawbox=x=${crop.x}:y=${crop.y}:w=${crop.w}:h=${crop.h}:color=red@0.8:t=4,scale=1280:-2`,
+    outputPath,
+  ], 30_000);
+}
+
+/**
+ * Gera um PNG de pré-visualização da composição final (moldura + streamer + mesa),
+ * usando exatamente o mesmo pipeline de crop/scale que o vídeo final.
+ * Extrai um único frame estático — ideal para mostrar ao usuário antes de renderizar.
+ */
+export async function generateCompositionPreviewPng(opts: {
+  moldura: "split" | "full";
+  streamerPath?: string;
+  mesaPath?: string;
+  streamerCrop?: { x: number; y: number; w: number; h: number };
+  mesaCrop?: { x: number; y: number; w: number; h: number };
+  previewTimeSec?: number;
+  outputPath: string;
+}): Promise<void> {
+  const moldura = getMoldura(opts.moldura);
+  const molduraPath = path.resolve("assets/molduras", moldura.file);
+  const t = Math.max(0, opts.previewTimeSec ?? 5);
+  fs.mkdirSync(path.dirname(opts.outputPath), { recursive: true });
+
+  if (moldura.windows.length === 2) {
+    if (!opts.streamerPath || !opts.mesaPath) {
+      throw new Error("Preview split requer streamerPath e mesaPath.");
+    }
+    const [top, bot] = moldura.windows;
+    const sCrop = opts.streamerCrop
+      ? `crop=${opts.streamerCrop.w}:${opts.streamerCrop.h}:${opts.streamerCrop.x}:${opts.streamerCrop.y},`
+      : "";
+    const mCrop = opts.mesaCrop
+      ? `crop=${opts.mesaCrop.w}:${opts.mesaCrop.h}:${opts.mesaCrop.x}:${opts.mesaCrop.y},`
+      : "";
+
+    const filter = [
+      `[0:v]${sCrop}scale=${top.width}:${top.height}:force_original_aspect_ratio=increase,crop=${top.width}:${top.height}[cam]`,
+      `[1:v]${mCrop}scale=${bot.width}:${bot.height}:force_original_aspect_ratio=increase,crop=${bot.width}:${bot.height}[mesa]`,
+      `color=c=black:s=${moldura.canvasWidth}x${moldura.canvasHeight}[bg]`,
+      `[bg][cam]overlay=${top.x}:${top.y}[tmp1]`,
+      `[tmp1][mesa]overlay=${bot.x}:${bot.y}[tmp2]`,
+      `[tmp2][2:v]overlay=0:0,format=rgb24[out]`,
+    ].join(";");
+
+    await run("ffmpeg", [
+      "-y",
+      "-ss", String(t), "-i", opts.streamerPath,
+      "-ss", String(t), "-i", opts.mesaPath,
+      "-loop", "1", "-i", molduraPath,
+      "-filter_complex", filter,
+      "-map", "[out]",
+      "-frames:v", "1",
+      opts.outputPath,
+    ], 60_000);
+  } else {
+    const sourcePath = opts.streamerPath ?? opts.mesaPath;
+    if (!sourcePath) throw new Error("Preview full requer streamerPath ou mesaPath.");
+    const [win] = moldura.windows;
+    const crop = opts.streamerPath ? opts.streamerCrop : opts.mesaCrop;
+    const cropPart = crop
+      ? `crop=${crop.w}:${crop.h}:${crop.x}:${crop.y},`
+      : "";
+
+    const filter = [
+      `[0:v]${cropPart}scale=${win.width}:${win.height}:force_original_aspect_ratio=increase,crop=${win.width}:${win.height}[src]`,
+      `color=c=black:s=${moldura.canvasWidth}x${moldura.canvasHeight}[bg]`,
+      `[bg][src]overlay=${win.x}:${win.y}[tmp1]`,
+      `[tmp1][1:v]overlay=0:0,format=rgb24[out]`,
+    ].join(";");
+
+    await run("ffmpeg", [
+      "-y",
+      "-ss", String(t), "-i", sourcePath,
+      "-loop", "1", "-i", molduraPath,
+      "-filter_complex", filter,
+      "-map", "[out]",
+      "-frames:v", "1",
+      opts.outputPath,
+    ], 60_000);
+  }
 }
 
 /**
