@@ -171,21 +171,57 @@ canvas.region-canvas{display:block;cursor:default;}
 .back-btn{display:inline-flex;align-items:center;gap:7px;padding:8px 16px;border:1px solid var(--line);border-radius:8px;background:none;color:var(--ink-dim);font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans);margin-bottom:24px;transition:all .15s;}
 .back-btn:hover{border-color:var(--violet);color:var(--ink);}
 /* Baesh */
-.baesh-summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-top:12px;}
+.baesh-video-wrap{background:#000;border-radius:12px;overflow:hidden;margin-bottom:16px;}
+.baesh-video-wrap video{width:100%;display:block;max-height:480px;object-fit:contain;}
+/* Timeline */
+.baesh-timeline-wrap{position:relative;margin:16px 0 4px;}
+.baesh-timeline-bar{position:relative;height:36px;background:rgba(255,255,255,.06);border-radius:8px;overflow:hidden;border:1px solid var(--line);}
+.baesh-tl-seg{position:absolute;top:5px;bottom:5px;border-radius:4px;cursor:pointer;transition:opacity .15s,box-shadow .15s;}
+.baesh-tl-seg:hover{box-shadow:0 0 0 2px #fff4;}
+.baesh-tl-seg.tl-selected{opacity:1;}
+.baesh-tl-seg.tl-deselected{opacity:.22;}
+.baesh-timeline-ticks{display:flex;justify-content:space-between;margin-top:4px;font-size:11px;color:var(--ink-dim);font-family:var(--mono);}
+/* Segment cards */
+.baesh-segs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;margin-top:16px;}
+.baesh-seg-card{background:var(--surface-2);border:1.5px solid var(--line);border-radius:12px;padding:14px 16px;transition:border-color .15s;}
+.baesh-seg-card.seg-included{border-color:rgba(0,184,148,.5);}
+.baesh-seg-card.seg-excluded{opacity:.55;}
+.baesh-seg-header{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:10px;}
+.baesh-seg-time{font-family:var(--mono);font-size:13px;color:var(--ink);font-weight:600;}
+.baesh-seg-score{font-size:22px;font-weight:800;line-height:1;}
+.baesh-seg-motives{list-style:none;margin:0 0 10px;padding:0;display:flex;flex-direction:column;gap:3px;}
+.baesh-seg-motives li{font-size:12px;color:var(--ink-dim);}
+.baesh-seg-motives li.motive-pos::before{content:"✓ ";color:#00b894;}
+.baesh-seg-motives li.motive-neg::before{content:"✗ ";color:#e84040;}
+.baesh-seg-actions{display:flex;gap:7px;flex-wrap:wrap;}
+.baesh-seg-actions button{flex:1;padding:6px 10px;border-radius:7px;border:1px solid var(--line);background:none;color:var(--ink-dim);font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans);transition:all .12s;}
+.baesh-seg-actions .btn-include{border-color:rgba(0,184,148,.5);color:#00b894;}
+.baesh-seg-actions .btn-include.active{background:rgba(0,184,148,.18);border-color:#00b894;color:#00b894;}
+.baesh-seg-actions .btn-exclude.active{background:rgba(232,64,64,.12);border-color:#e84040;color:#e84040;}
+/* Feedback row */
+.baesh-fb-row{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px;padding-top:8px;border-top:1px solid var(--line);}
+.baesh-fb-btn{padding:3px 8px;border:1px solid var(--line);border-radius:20px;background:none;color:var(--ink-dim);font-size:11px;cursor:pointer;font-family:var(--sans);transition:all .1s;}
+.baesh-fb-btn:hover{border-color:var(--violet);color:var(--ink);}
+.baesh-fb-btn.fb-active-pos{background:rgba(61,232,154,.12);border-color:var(--green);color:var(--green);}
+.baesh-fb-btn.fb-active-neg{background:rgba(232,64,64,.1);border-color:#e84040;color:#e84040;}
+/* Approval panel */
+.baesh-approval-panel{margin-top:24px;}
+.baesh-approval-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px;}
+.baesh-approval-header h2{margin:0;}
+.baesh-approval-stat{font-size:13px;color:var(--ink-dim);}
+.baesh-approval-stat b{color:var(--ink);}
+.baesh-render-btn{padding:13px 28px;background:linear-gradient(135deg,#00b894,#00cec9);border:none;border-radius:10px;color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:var(--sans);transition:opacity .15s;}
+.baesh-render-btn:disabled{opacity:.4;cursor:not-allowed;}
+/* Duration presets (Baesh) */
+.baesh-dur-presets{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;}
+.baesh-dur-btn{padding:7px 14px;border:1.5px solid var(--line);border-radius:8px;background:none;color:var(--ink-dim);font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans);transition:all .13s;}
+.baesh-dur-btn:hover{border-color:#00b894;color:var(--ink);}
+.baesh-dur-btn.active{border-color:#00b894;background:rgba(0,184,148,.15);color:#00b894;}
+/* Results */
+.baesh-result-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:20px;}
 .baesh-stat{background:var(--surface-3);border-radius:8px;padding:12px 14px;}
 .baesh-stat .stat-label{font-size:11px;color:var(--ink-dim);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;}
 .baesh-stat .stat-value{font-size:20px;font-weight:700;color:var(--ink);}
-.baesh-segments-table{width:100%;border-collapse:collapse;font-size:13px;margin-top:12px;}
-.baesh-segments-table th{text-align:left;color:var(--ink-dim);font-size:11px;text-transform:uppercase;letter-spacing:.06em;padding:6px 10px;border-bottom:1px solid var(--line);}
-.baesh-segments-table td{padding:8px 10px;border-bottom:1px solid var(--line);color:var(--ink);}
-.baesh-segments-table tr:last-child td{border-bottom:none;}
-.baesh-video-wrap{background:#000;border-radius:12px;overflow:hidden;margin-bottom:16px;}
-.baesh-video-wrap video{width:100%;display:block;max-height:480px;object-fit:contain;}
-input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:3px;background:var(--line);outline:none;cursor:pointer;}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:18px;height:18px;border-radius:50%;background:var(--violet);cursor:pointer;border:2px solid var(--bg);}
-input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--violet);cursor:pointer;border:2px solid var(--bg);}
-.slider-row{display:flex;align-items:center;gap:12px;}
-.slider-row span{font-size:13px;color:var(--ink);min-width:36px;text-align:right;font-family:var(--mono);}
 </style>
 </head>
 <body>
@@ -463,80 +499,96 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;bac
   <header>
     <div class="brand">selva agency <b>/</b> baesh</div>
   </header>
-  <h1>Remove desfoque automaticamente.</h1>
-  <p class="sub">Detecta e remove trechos desfocados entregando um v&iacute;deo limpo e cont&iacute;nuo.</p>
+  <h1>Editor autom&aacute;tico de produto.</h1>
+  <p class="sub">A IA analisa o v&iacute;deo inteiro, pontua cada trecho e seleciona os melhores momentos. Voc&ecirc; revisa e aprova antes de renderizar.</p>
 
+  <!-- ── Formulário ─────────────────────────────────────────────────── -->
   <form id="baesh-form" class="card">
-    <h2>V&iacute;deo</h2>
+    <h2>V&iacute;deo do produto</h2>
     <div class="drop-grid single">
-      <label class="drop" id="baesh-drop-video"><input type="file" name="video" accept="video/*" id="baesh-video-input" /><span class="label">V&iacute;deo para processar</span><span class="hint-inline" id="baesh-drop-hint">arraste ou clique</span></label>
+      <label class="drop" id="baesh-drop-video">
+        <input type="file" name="video" accept="video/*" id="baesh-video-input" />
+        <span class="label">V&iacute;deo para editar</span>
+        <span class="hint-inline" id="baesh-drop-hint">arraste ou clique &mdash; .mp4, .mov, .avi&hellip;</span>
+      </label>
     </div>
 
     <div class="divider"></div>
-    <h2>Configura&ccedil;&otilde;es de detec&ccedil;&atilde;o</h2>
-
-    <div class="field">
-      <label>Sensibilidade (<span id="sensitivity-label">50</span>)</label>
-      <div class="slider-row">
-        <span style="font-size:12px;color:var(--ink-dim);min-width:60px;">Menos</span>
-        <input type="range" id="baesh-sensitivity" name="sensitivity" min="0" max="100" value="50" />
-        <span style="font-size:12px;color:var(--ink-dim);min-width:40px;">Mais</span>
-        <span id="sensitivity-val">50</span>
-      </div>
-      <p class="hint">Sensibilidade maior = mais trechos identificados como desfocados.</p>
+    <h2>Dura&ccedil;&atilde;o do v&iacute;deo final</h2>
+    <div class="baesh-dur-presets">
+      <button type="button" class="baesh-dur-btn" data-sec="15">15s</button>
+      <button type="button" class="baesh-dur-btn" data-sec="30">30s</button>
+      <button type="button" class="baesh-dur-btn active" data-sec="45">45s</button>
+      <button type="button" class="baesh-dur-btn" data-sec="60">60s</button>
+      <button type="button" class="baesh-dur-btn" data-sec="90">90s</button>
+      <button type="button" class="baesh-dur-btn" data-sec="120">2 min</button>
     </div>
+    <input type="hidden" id="baesh-target-sec" value="45" />
 
-    <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:16px;">
+    <div class="divider"></div>
+    <h2>Op&ccedil;&otilde;es avan&ccedil;adas</h2>
+    <div style="display:flex;gap:14px;flex-wrap:wrap;">
       <div class="field" style="margin-top:0;">
-        <label>Dura&ccedil;&atilde;o m&iacute;nima do desfoque (s)</label>
-        <input type="number" id="baesh-min-blur" name="minBlurSec" value="0.5" min="0.1" max="10" step="0.1" style="width:110px;" />
+        <label>Dura&ccedil;&atilde;o m&iacute;nima por trecho (s)</label>
+        <input type="number" id="baesh-min-seg" value="1.5" min="0.5" max="10" step="0.5" style="width:100px;" />
       </div>
       <div class="field" style="margin-top:0;">
-        <label>Amostras por segundo</label>
-        <select id="baesh-sample-fps" name="sampleFps" style="width:120px;">
-          <option value="1">1 fps</option>
-          <option value="2" selected>2 fps</option>
-          <option value="4">4 fps</option>
+        <label>Dura&ccedil;&atilde;o m&aacute;xima por trecho (s)</label>
+        <input type="number" id="baesh-max-seg" value="8" min="2" max="30" step="1" style="width:100px;" />
+      </div>
+      <div class="field" style="margin-top:0;">
+        <label>Amostragem de an&aacute;lise</label>
+        <select id="baesh-sample-fps" style="width:120px;">
+          <option value="2">2 fps (r&aacute;pido)</option>
+          <option value="4" selected>4 fps (padr&atilde;o)</option>
+          <option value="6">6 fps (detalhado)</option>
         </select>
       </div>
     </div>
 
-    <button class="run" type="submit" style="background:linear-gradient(135deg,#00b894,#00cec9);">Processar v&iacute;deo</button>
+    <button class="run" type="submit" style="background:linear-gradient(135deg,#00b894,#00cec9);">Analisar v&iacute;deo</button>
     <div class="log" id="baesh-log"></div>
   </form>
 
-  <div id="baesh-results" style="display:none;">
-    <div class="card">
-      <h2>V&iacute;deo processado</h2>
-      <div class="baesh-video-wrap">
-        <video id="baesh-output-video" controls preload="metadata"></video>
+  <!-- ── Painel de aprovação ────────────────────────────────────────── -->
+  <div id="baesh-approval" style="display:none;">
+    <div class="card baesh-approval-panel">
+      <div class="baesh-approval-header">
+        <h2>Trechos selecionados pela IA</h2>
+        <div class="baesh-approval-stat">
+          <b id="baesh-sel-count">0</b> trechos &middot; <b id="baesh-sel-dur">0.0</b>s selecionados de <b id="baesh-target-label">45</b>s desejados
+        </div>
       </div>
-      <a id="baesh-download-btn" href="#" download style="display:inline-block;padding:10px 22px;background:#00b894;color:#fff;border-radius:8px;font-weight:700;font-size:14px;text-decoration:none;">Baixar v&iacute;deo</a>
-    </div>
 
-    <div class="card">
-      <h2>Resumo</h2>
-      <div class="baesh-summary-grid" id="baesh-summary-grid"></div>
-    </div>
+      <!-- Timeline visual -->
+      <div class="baesh-timeline-wrap">
+        <div class="baesh-timeline-bar" id="baesh-timeline-bar"></div>
+        <div class="baesh-timeline-ticks" id="baesh-timeline-ticks"></div>
+      </div>
 
-    <div class="card" id="baesh-segments-card" style="display:none;">
-      <h2>Trechos removidos</h2>
-      <div style="overflow-x:auto;">
-        <table class="baesh-segments-table" id="baesh-segments-table">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>In&iacute;cio</th>
-              <th>Fim</th>
-              <th>Dura&ccedil;&atilde;o</th>
-              <th>Score m&eacute;dio</th>
-            </tr>
-          </thead>
-          <tbody id="baesh-segments-tbody"></tbody>
-        </table>
+      <!-- Cards de trechos -->
+      <div class="baesh-segs-grid" id="baesh-segs-grid"></div>
+
+      <!-- Ação -->
+      <div style="margin-top:24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+        <button class="baesh-render-btn" id="baesh-render-btn" onclick="startBaeshRender()">Renderizar v&iacute;deo</button>
+        <div class="log" id="baesh-render-log" style="flex:1;min-width:200px;"></div>
       </div>
     </div>
   </div>
+
+  <!-- ── Resultado final ────────────────────────────────────────────── -->
+  <div id="baesh-result" style="display:none;">
+    <div class="card">
+      <h2>V&iacute;deo editado</h2>
+      <div class="baesh-video-wrap">
+        <video id="baesh-output-video" controls preload="metadata"></video>
+      </div>
+      <div class="baesh-result-stats" id="baesh-result-stats"></div>
+      <a id="baesh-download-btn" href="#" download style="display:inline-block;padding:10px 22px;background:#00b894;color:#fff;border-radius:8px;font-weight:700;font-size:14px;text-decoration:none;margin-top:4px;">Baixar v&iacute;deo</a>
+    </div>
+  </div>
+
 </div>
 </div>
 
@@ -1234,93 +1286,283 @@ async function deleteProfile(id) {
 loadProfiles();
 
 // BAESH
-let baeshJobId = null, baeshPollInterval = null, baeshLastLogLen = 0;
-const baeshLogEl = document.getElementById("baesh-log");
+// \u2500\u2500 Baesh: estado \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+let baeshJobId = null, baeshPoll = null, baeshLogLen = 0;
+let baeshAllSegs = [], baeshJobData = null;
+const baeshLogEl     = document.getElementById("baesh-log");
+const baeshRenderLog = document.getElementById("baesh-render-log");
 
-function baeshLogLine(text, cls) {
-  baeshLogEl.classList.add("show");
-  const span = document.createElement("div");
-  if (cls) span.className = cls;
-  span.textContent = text;
-  baeshLogEl.appendChild(span); baeshLogEl.scrollTop = baeshLogEl.scrollHeight;
+function baeshLog(el, text, cls) {
+  el.classList.add("show");
+  const d = document.createElement("div");
+  if (cls) d.className = cls;
+  d.textContent = text;
+  el.appendChild(d); el.scrollTop = el.scrollHeight;
 }
 
+// \u2500\u2500 Presets de dura\u00e7\u00e3o \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+document.querySelectorAll(".baesh-dur-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".baesh-dur-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById("baesh-target-sec").value = btn.dataset.sec;
+  });
+});
+
+// \u2500\u2500 Drop zone \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+document.getElementById("baesh-video-input").addEventListener("change", function() {
+  const el = document.getElementById("baesh-drop-video");
+  el.classList.toggle("filled", this.files.length > 0);
+  if (this.files[0]) document.getElementById("baesh-drop-hint").textContent = this.files[0].name;
+});
+
+// \u2500\u2500 Submit: fase 1 \u2014 an\u00e1lise \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 document.getElementById("baesh-form").addEventListener("submit", async (e) => {
   e.preventDefault();
-  const form = e.currentTarget;
   const videoFile = document.getElementById("baesh-video-input").files[0];
   if (!videoFile) { alert("Selecione um arquivo de v\u00eddeo."); return; }
   baeshLogEl.innerHTML = "";
-  document.getElementById("baesh-results").style.display = "none";
-  form.querySelector("button.run").disabled = true;
+  document.getElementById("baesh-approval").style.display = "none";
+  document.getElementById("baesh-result").style.display   = "none";
+  e.currentTarget.querySelector("button.run").disabled = true;
   const fd = new FormData();
-  fd.append("video",       videoFile);
-  fd.append("sensitivity", document.getElementById("baesh-sensitivity").value);
-  fd.append("minBlurSec",  document.getElementById("baesh-min-blur").value);
-  fd.append("sampleFps",   document.getElementById("baesh-sample-fps").value);
-  baeshLogLine("Enviando v\u00eddeo...");
+  fd.append("video",     videoFile);
+  fd.append("targetSec", document.getElementById("baesh-target-sec").value);
+  fd.append("minSegSec", document.getElementById("baesh-min-seg").value);
+  fd.append("maxSegSec", document.getElementById("baesh-max-seg").value);
+  fd.append("sampleFps", document.getElementById("baesh-sample-fps").value);
+  baeshLog(baeshLogEl, "Enviando v\u00eddeo para an\u00e1lise...");
   try {
-    const res  = await fetch("/api/clients/baesh/jobs", { method:"POST", body:fd });
+    const res  = await fetch("/api/clients/baesh/jobs", { method: "POST", body: fd });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "Falha ao criar job.");
-    baeshJobId = data.jobId; baeshLastLogLen = 0;
-    baeshPollInterval = setInterval(pollBaeshJob, 1500);
+    baeshJobId = data.jobId; baeshLogLen = 0;
+    baeshPoll = setInterval(pollBaeshJob, 1500);
   } catch (err) {
-    baeshLogLine("Erro: " + err.message, "err");
-    form.querySelector("button.run").disabled = false;
+    baeshLog(baeshLogEl, "Erro: " + err.message, "err");
+    e.currentTarget.querySelector("button.run").disabled = false;
   }
 });
 
+// \u2500\u2500 Polling \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 async function pollBaeshJob() {
   if (!baeshJobId) return;
   try {
-    const res = await fetch("/api/jobs/" + baeshJobId);
-    const job = await res.json();
-    for (let i = baeshLastLogLen; i < job.log.length; i++) baeshLogLine(job.log[i]);
-    baeshLastLogLen = job.log.length;
-    if (job.status === "done") {
-      clearInterval(baeshPollInterval); baeshPollInterval = null;
-      baeshLogLine("Concluu\u00eddo!", "ok");
+    const job = await fetch("/api/jobs/" + baeshJobId).then(r => r.json());
+    const activeLog = (job.status === "rendering") ? baeshRenderLog : baeshLogEl;
+    for (let i = baeshLogLen; i < job.log.length; i++) baeshLog(activeLog, job.log[i]);
+    baeshLogLen = job.log.length;
+
+    if (job.status === "waiting-segment-approval") {
+      clearInterval(baeshPoll); baeshPoll = null;
       document.getElementById("baesh-form").querySelector("button.run").disabled = false;
-      renderBaeshResults(job);
+      baeshLog(baeshLogEl, "An\u00e1lise conclu\u00edda! Revise os trechos abaixo.", "ok");
+      showBaeshApproval(job);
+    } else if (job.status === "done") {
+      clearInterval(baeshPoll); baeshPoll = null;
+      showBaeshResult(job);
     } else if (job.status === "error") {
-      clearInterval(baeshPollInterval); baeshPollInterval = null;
-      baeshLogLine("Erro: " + job.error, "err");
+      clearInterval(baeshPoll); baeshPoll = null;
+      const el = (job.clientResult || !baeshLogEl.children.length) ? baeshRenderLog : baeshLogEl;
+      baeshLog(el, "Erro: " + job.error, "err");
       document.getElementById("baesh-form").querySelector("button.run").disabled = false;
+      document.getElementById("baesh-render-btn").disabled = false;
     }
   } catch(e) { console.warn("baesh poll err", e); }
 }
 
-function renderBaeshResults(job) {
-  const clip = job.clips[0]; if (!clip) return;
-  document.getElementById("baesh-output-video").src = clip.url;
-  const dlBtn = document.getElementById("baesh-download-btn");
-  dlBtn.href = clip.url; dlBtn.download = "baesh_output.mp4";
-  const cr = job.clientResult || {};
-  const orig = cr.originalDurationSec ?? 0, out = cr.outputDurationSec ?? 0;
-  const removed = cr.totalRemovedSec ?? 0, segs = (cr.removedSegments ?? []).length;
-  document.getElementById("baesh-summary-grid").innerHTML =
-    "<div class=\"baesh-stat\"><div class=\"stat-label\">Dura\u00e7\u00e3o original</div><div class=\"stat-value\">" + orig.toFixed(1) + "s</div></div>" +
-    "<div class=\"baesh-stat\"><div class=\"stat-label\">Dura\u00e7\u00e3o final</div><div class=\"stat-value\">" + out.toFixed(1) + "s</div></div>" +
-    "<div class=\"baesh-stat\"><div class=\"stat-label\">Tempo removido</div><div class=\"stat-value\">" + removed.toFixed(1) + "s</div></div>" +
-    "<div class=\"baesh-stat\"><div class=\"stat-label\">Trechos removidos</div><div class=\"stat-value\">" + segs + "</div></div>";
-  const removedSegs = cr.removedSegments ?? [];
-  if (removedSegs.length > 0) {
-    document.getElementById("baesh-segments-tbody").innerHTML = removedSegs.map((seg, i) =>
-      "<tr><td>" + (i+1) + "</td><td>" + seg.startSec.toFixed(2) + "s</td><td>" + seg.endSec.toFixed(2) + "s</td><td>" + seg.durationSec.toFixed(2) + "s</td><td>" + seg.avgScore.toFixed(1) + "</td></tr>"
-    ).join("");
-    document.getElementById("baesh-segments-card").style.display = "block";
-  } else {
-    document.getElementById("baesh-segments-card").style.display = "none";
-  }
-  document.getElementById("baesh-results").style.display = "block";
-  document.getElementById("baesh-results").scrollIntoView({ behavior:"smooth" });
+// \u2500\u2500 Mostrar painel de aprova\u00e7\u00e3o \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+function showBaeshApproval(job) {
+  const ap = job.pendingApproval?.data;
+  if (!ap) return;
+  baeshAllSegs  = ap.allSegments.map(s => ({ ...s }));
+  baeshJobData  = ap;
+
+  // Atualiza contador
+  updateBaeshSelCount();
+
+  // Timeline
+  renderBaeshTimeline(ap.allSegments, ap.durationSec);
+
+  // Cards de trechos
+  const grid = document.getElementById("baesh-segs-grid");
+  grid.innerHTML = "";
+  ap.allSegments.forEach(seg => grid.appendChild(makeBaeshSegCard(seg)));
+
+  document.getElementById("baesh-target-label").textContent = ap.targetSec;
+  document.getElementById("baesh-approval").style.display = "block";
+  document.getElementById("baesh-approval").scrollIntoView({ behavior: "smooth" });
 }
 
-document.getElementById("baesh-sensitivity").addEventListener("input", function() {
-  document.getElementById("sensitivity-label").textContent = this.value;
-  document.getElementById("sensitivity-val").textContent   = this.value;
-});
+// \u2500\u2500 Renderizar timeline \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+function renderBaeshTimeline(segs, totalSec) {
+  const bar = document.getElementById("baesh-timeline-bar");
+  bar.innerHTML = "";
+  segs.forEach(seg => {
+    const div = document.createElement("div");
+    div.className = "baesh-tl-seg " + (seg.selected ? "tl-selected" : "tl-deselected");
+    div.title = fmtSec(seg.startSec) + " \u2192 " + fmtSec(seg.endSec) + " | score " + seg.score;
+    div.style.left  = (seg.startSec / totalSec * 100).toFixed(2) + "%";
+    div.style.width = Math.max(0.5, (seg.duration  / totalSec * 100)).toFixed(2) + "%";
+    const sc = seg.score;
+    div.style.background = sc >= 75 ? "#00b894" : sc >= 55 ? "#f0a500" : "#e84040";
+    div.dataset.id = seg.id;
+    div.addEventListener("click", () => toggleBaeshSeg(seg.id));
+    bar.appendChild(div);
+  });
+  // Ticks
+  const ticks = document.getElementById("baesh-timeline-ticks");
+  ticks.innerHTML = "";
+  const steps = Math.min(8, Math.floor(totalSec / 15));
+  for (let i = 0; i <= steps; i++) {
+    const s = Math.round(totalSec * i / steps);
+    const span = document.createElement("span");
+    span.textContent = fmtSec(s);
+    ticks.appendChild(span);
+  }
+}
+
+// \u2500\u2500 Card de trecho \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+const FEEDBACK_LABELS = {
+  "excellent":      "\ud83d\udc4d Excelente",
+  "good":           "\ud83d\udc4d Bom",
+  "bad":            "\ud83d\udc4e Ruim",
+  "repetitive":     "\ud83d\udc4e Repetitivo",
+  "cut-early":      "\u23ed Cortou cedo",
+  "cut-late":       "\u23ea Cortou tarde",
+  "bad-motion":     "\ud83d\udcf9 Movimento feio",
+  "product-hidden": "\ud83d\udd34 Produto sumiu",
+};
+
+function makeBaeshSegCard(seg) {
+  const card = document.createElement("div");
+  card.className = "baesh-seg-card " + (seg.selected ? "seg-included" : "seg-excluded");
+  card.id = "seg-card-" + seg.id;
+
+  const scoreColor = seg.score >= 75 ? "#00b894" : seg.score >= 55 ? "#f0a500" : "#e84040";
+
+  const motiveItems = [
+    ...seg.motives.map(m => `<li class="motive-pos">${m}</li>`),
+    ...seg.penalties.map(p => `<li class="motive-neg">${p}</li>`),
+  ].join("");
+
+  const fbBtns = Object.entries(FEEDBACK_LABELS).map(([r, lbl]) =>
+    `<button class="baesh-fb-btn" data-rating="${r}" onclick="sendBaeshFb('${seg.id}','${r}',this)">${lbl}</button>`
+  ).join("");
+
+  card.innerHTML = `
+    <div class="baesh-seg-header">
+      <div>
+        <div class="baesh-seg-time">${fmtSec(seg.startSec)} \u2192 ${fmtSec(seg.endSec)}</div>
+        <div style="font-size:11px;color:var(--ink-dim);margin-top:2px;">${seg.duration.toFixed(1)}s</div>
+      </div>
+      <div class="baesh-seg-score" style="color:${scoreColor}">${Math.round(seg.score)}</div>
+    </div>
+    <ul class="baesh-seg-motives">${motiveItems}</ul>
+    <div class="baesh-seg-actions">
+      <button class="btn-include ${seg.selected ? "active" : ""}" onclick="toggleBaeshSeg('${seg.id}')">&#10003; Incluir</button>
+      <button class="btn-exclude ${!seg.selected ? "active" : ""}" onclick="toggleBaeshSeg('${seg.id}')">&#10005; Excluir</button>
+    </div>
+    <div class="baesh-fb-row">${fbBtns}</div>`;
+  return card;
+}
+
+// \u2500\u2500 Alternar sele\u00e7\u00e3o de trecho \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+function toggleBaeshSeg(id) {
+  const seg = baeshAllSegs.find(s => s.id === id);
+  if (!seg) return;
+  seg.selected = !seg.selected;
+
+  // Card
+  const card = document.getElementById("seg-card-" + id);
+  if (card) {
+    card.className = "baesh-seg-card " + (seg.selected ? "seg-included" : "seg-excluded");
+    const inc = card.querySelector(".btn-include");
+    const exc = card.querySelector(".btn-exclude");
+    if (inc) inc.classList.toggle("active", seg.selected);
+    if (exc) exc.classList.toggle("active", !seg.selected);
+  }
+
+  // Timeline
+  const tl = document.querySelector(`.baesh-tl-seg[data-id="${id}"]`);
+  if (tl) {
+    tl.className = "baesh-tl-seg " + (seg.selected ? "tl-selected" : "tl-deselected");
+  }
+
+  updateBaeshSelCount();
+}
+
+function updateBaeshSelCount() {
+  const sel = baeshAllSegs.filter(s => s.selected);
+  const dur = sel.reduce((s, x) => s + x.duration, 0);
+  document.getElementById("baesh-sel-count").textContent = sel.length;
+  document.getElementById("baesh-sel-dur").textContent   = dur.toFixed(1);
+  document.getElementById("baesh-render-btn").disabled   = sel.length === 0;
+}
+
+// \u2500\u2500 Fase 2: renderizar \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+async function startBaeshRender() {
+  const selected = baeshAllSegs.filter(s => s.selected);
+  if (!selected.length) { alert("Selecione pelo menos um trecho."); return; }
+  document.getElementById("baesh-render-btn").disabled = true;
+  baeshRenderLog.innerHTML = "";
+  baeshLog(baeshRenderLog, "Iniciando renderiza\u00e7\u00e3o...");
+  baeshLogLen = (baeshJobData?.log?.length) || 0;
+  try {
+    const res = await fetch(`/api/clients/baesh/jobs/${baeshJobId}/render`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ selectedSegments: selected }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Falha ao iniciar render.");
+    baeshPoll = setInterval(pollBaeshJob, 1500);
+  } catch (err) {
+    baeshLog(baeshRenderLog, "Erro: " + err.message, "err");
+    document.getElementById("baesh-render-btn").disabled = false;
+  }
+}
+
+// \u2500\u2500 Resultado final \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+function showBaeshResult(job) {
+  const clip = job.clips?.[0]; if (!clip) return;
+  document.getElementById("baesh-output-video").src = clip.url;
+  const dl = document.getElementById("baesh-download-btn");
+  dl.href = clip.url; dl.download = "baesh_editado.mp4";
+  const cr = job.clientResult || {};
+  document.getElementById("baesh-result-stats").innerHTML =
+    stat("Trechos", (cr.segmentCount ?? 0) + " trechos") +
+    stat("Dura\u00e7\u00e3o", (cr.outputDurationSec ?? 0).toFixed(1) + "s");
+  document.getElementById("baesh-result").style.display = "block";
+  document.getElementById("baesh-result").scrollIntoView({ behavior: "smooth" });
+}
+
+function stat(label, val) {
+  return `<div class="baesh-stat"><div class="stat-label">${label}</div><div class="stat-value">${val}</div></div>`;
+}
+
+// \u2500\u2500 Feedback por trecho \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+async function sendBaeshFb(segmentId, rating, btn) {
+  try {
+    await fetch(`/api/clients/baesh/jobs/${baeshJobId}/segment-feedback`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ segmentId, rating }),
+    });
+    const row = btn.closest(".baesh-fb-row");
+    row.querySelectorAll(".baesh-fb-btn").forEach(b => {
+      const isPos = ["excellent","good"].includes(b.dataset.rating);
+      b.classList.remove("fb-active-pos", "fb-active-neg");
+      if (b === btn) b.classList.add(isPos ? "fb-active-pos" : "fb-active-neg");
+    });
+  } catch(e) { console.warn("fb err", e); }
+}
+
+// \u2500\u2500 Utilit\u00e1rios \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+function fmtSec(s) {
+  const m = Math.floor(s / 60), sec = Math.floor(s % 60);
+  return String(m).padStart(2,"0") + ":" + String(sec).padStart(2,"0");
+}
 </script>
 </body>
 </html>

@@ -3,105 +3,129 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { run, probe } from "../../lib/ffmpegUtils.js";
 
-export interface BaeshInput {
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const SCRIPT = path.resolve(__dirname, "ai/analyze_product.py");
+
+// ── Tipos públicos ─────────────────────────────────────────────────────────
+
+export interface ScoredSegment {
+  id: string;
+  startSec: number;
+  endSec: number;
+  duration: number;
+  score: number;
+  motives: string[];
+  penalties: string[];
+  selected: boolean;
+  metrics: {
+    focus: number;
+    stability: number;
+    lighting: number;
+    composition: number;
+    interest: number;
+  };
+}
+
+export interface BaeshAnalysisInput {
   jobId: string;
   videoPath: string;
   workDir: string;
   outDir: string;
   onProgress?: (msg: string) => void;
-  sensitivity?: number;   // 0–100, default 50
-  minBlurSec?: number;    // default 0.5
-  sampleFps?: number;     // default 2
+  targetSec?: number;   // duração desejada do vídeo final (default 45)
+  minSegSec?: number;   // mínimo por trecho (default 1.5)
+  maxSegSec?: number;   // máximo por trecho (default 8)
+  sampleFps?: number;   // frames por segundo para análise (default 4)
 }
 
-export interface BlurSegment {
-  startSec: number;
-  endSec: number;
-  avgScore: number;
-  durationSec: number;
+export interface BaeshAnalysisResult {
+  allSegments:        ScoredSegment[];
+  selectedSegments:   ScoredSegment[];
+  durationSec:        number;
+  totalSelectedSec:   number;
+  targetSec:          number;
 }
 
-export interface BaeshResult {
-  outputPath: string;
-  removedSegments: BlurSegment[];
-  keptSegments: Array<{ startSec: number; endSec: number }>;
-  totalRemovedSec: number;
-  originalDurationSec: number;
+export interface BaeshRenderInput {
+  jobId: string;
+  videoPath: string;
+  selectedSegments: ScoredSegment[];
+  workDir: string;
+  outDir: string;
+  onProgress?: (msg: string) => void;
+}
+
+export interface BaeshRenderResult {
+  outputPath:      string;
   outputDurationSec: number;
+  segmentCount:    number;
 }
 
-export async function runBaeshPipeline(input: BaeshInput): Promise<BaeshResult> {
+// ── Fase 1: Análise ────────────────────────────────────────────────────────
+
+export async function runBaeshAnalysis(
+  input: BaeshAnalysisInput
+): Promise<BaeshAnalysisResult> {
   const log = input.onProgress ?? (() => {});
   fs.mkdirSync(input.workDir, { recursive: true });
-  fs.mkdirSync(input.outDir, { recursive: true });
+  fs.mkdirSync(input.outDir,  { recursive: true });
 
-  // sensitivity 0..100 → threshold: high sensitivity = low threshold
-  const sensitivity  = Math.max(0, Math.min(100, input.sensitivity ?? 50));
-  const threshold    = Math.round(200 - (sensitivity / 100) * 180);
-  const sampleFps    = input.sampleFps  ?? 2;
-  const minBlurSec   = input.minBlurSec ?? 0.5;
-  const scriptPath   = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "ai/blur_detect.py");
+  const targetSec = input.targetSec ?? 45;
+  const minSegSec = input.minSegSec ?? 1.5;
+  const maxSegSec = input.maxSegSec ?? 8.0;
+  const sampleFps = input.sampleFps ?? 4;
 
-  log(`Analisando desfoque (sensibilidade=${sensitivity}, limiar=${threshold}, amostragem=${sampleFps}fps)...`);
+  log(`Iniciando análise (duração alvo: ${targetSec}s, amostragem: ${sampleFps}fps)...`);
 
   const { stdout } = await run("python3", [
-    scriptPath,
+    SCRIPT,
     input.videoPath,
-    "--fps",          String(sampleFps),
-    "--threshold",    String(threshold),
-    "--min-blur-sec", String(minBlurSec),
-    "--window",       "5",
-  ], 20 * 60_000);
+    "--fps",         String(sampleFps),
+    "--target-sec",  String(targetSec),
+    "--min-seg-sec", String(minSegSec),
+    "--max-seg-sec", String(maxSegSec),
+  ], 30 * 60_000);
 
-  const detected: { blurry_segments: any[]; all_scores: any[] } = JSON.parse(stdout);
-  const removedSegments: BlurSegment[] = detected.blurry_segments.map((s: any) => ({
-    startSec:   s.start_sec,
-    endSec:     s.end_sec,
-    avgScore:   s.avg_score ?? 0,
-    durationSec: s.duration_sec ?? (s.end_sec - s.start_sec),
-  }));
+  const raw = JSON.parse(stdout) as {
+    segments:           ScoredSegment[];
+    selected_segments:  ScoredSegment[];
+    duration_sec:       number;
+    total_selected_sec: number;
+    target_sec:         number;
+  };
 
-  log(`Detecção concluída: ${removedSegments.length} trecho(s) desfocado(s)`);
+  log(`Análise concluída: ${raw.segments.length} trechos avaliados, ${raw.selected_segments.length} selecionados (${raw.total_selected_sec.toFixed(1)}s)`);
 
-  const videoInfo = await probe(input.videoPath);
-  const totalDuration = videoInfo.durationSec;
+  return {
+    allSegments:      raw.segments,
+    selectedSegments: raw.selected_segments,
+    durationSec:      raw.duration_sec,
+    totalSelectedSec: raw.total_selected_sec,
+    targetSec:        raw.target_sec,
+  };
+}
 
-  if (removedSegments.length === 0) {
-    log("Nenhum desfoque encontrado. Copiando vídeo original...");
-    const outputPath = path.join(input.outDir, "baesh_output.mp4");
-    fs.copyFileSync(input.videoPath, outputPath);
-    return { outputPath, removedSegments: [], keptSegments: [{ startSec: 0, endSec: totalDuration }], totalRemovedSec: 0, originalDurationSec: totalDuration, outputDurationSec: totalDuration };
+// ── Fase 2: Renderização ───────────────────────────────────────────────────
+
+export async function runBaeshRender(
+  input: BaeshRenderInput
+): Promise<BaeshRenderResult> {
+  const log = input.onProgress ?? (() => {});
+  fs.mkdirSync(input.workDir, { recursive: true });
+  fs.mkdirSync(input.outDir,  { recursive: true });
+
+  if (input.selectedSegments.length === 0) {
+    throw new Error("Nenhum trecho selecionado para renderizar.");
   }
 
-  for (const seg of removedSegments) {
-    log(`  Desfocado: ${seg.startSec.toFixed(2)}s → ${seg.endSec.toFixed(2)}s (${seg.durationSec.toFixed(2)}s, score=${seg.avgScore.toFixed(1)})`);
-  }
+  const segs = [...input.selectedSegments].sort((a, b) => a.startSec - b.startSec);
+  log(`Renderizando ${segs.length} trecho(s)...`);
 
-  // Build clean segments
-  const keptSegments: Array<{ startSec: number; endSec: number }> = [];
-  let cursor = 0;
-  for (const blur of removedSegments) {
-    const blurStart = Math.max(0, blur.startSec - 0.05);
-    const blurEnd   = Math.min(totalDuration, blur.endSec + 0.05);
-    if (blurStart - cursor > 0.25) {
-      keptSegments.push({ startSec: cursor, endSec: blurStart });
-    }
-    cursor = blurEnd;
-  }
-  if (totalDuration - cursor > 0.25) {
-    keptSegments.push({ startSec: cursor, endSec: totalDuration });
-  }
-
-  if (keptSegments.length === 0) throw new Error("Vídeo inteiro desfocado — sem segmento limpo para exportar.");
-
-  log(`Extraindo ${keptSegments.length} segmento(s) limpo(s)...`);
-
-  // Extract each clean segment (re-encode for frame-accurate cuts)
   const segPaths: string[] = [];
-  for (let i = 0; i < keptSegments.length; i++) {
-    const seg = keptSegments[i];
+  for (let i = 0; i < segs.length; i++) {
+    const seg = segs[i];
     const segPath = path.join(input.workDir, `seg_${String(i).padStart(4, "0")}.mp4`);
-    log(`  Segmento ${i + 1}/${keptSegments.length}: ${seg.startSec.toFixed(2)}s – ${seg.endSec.toFixed(2)}s`);
+    log(`  [${i + 1}/${segs.length}] ${fmtSec(seg.startSec)} → ${fmtSec(seg.endSec)}  score ${seg.score}`);
     await run("ffmpeg", [
       "-y",
       "-ss", String(seg.startSec),
@@ -114,17 +138,23 @@ export async function runBaeshPipeline(input: BaeshInput): Promise<BaeshResult> 
     segPaths.push(segPath);
   }
 
-  // Concat
   const listPath = path.join(input.workDir, "concat.txt");
   fs.writeFileSync(listPath, segPaths.map(p => `file '${p.replace(/'/g, "'\\''")}'`).join("\n"));
 
   const outputPath = path.join(input.outDir, "baesh_output.mp4");
-  log("Unindo segmentos...");
+  log("Unindo trechos...");
   await run("ffmpeg", ["-y", "-f", "concat", "-safe", "0", "-i", listPath, "-c", "copy", outputPath]);
 
-  const outInfo = await probe(outputPath);
-  const totalRemovedSec = removedSegments.reduce((s, r) => s + r.durationSec, 0);
-  log(`Concluído! Removido ${totalRemovedSec.toFixed(1)}s. Duração final: ${outInfo.durationSec.toFixed(1)}s`);
+  const info = await probe(outputPath);
+  log(`Concluído! Vídeo final: ${info.durationSec.toFixed(1)}s`);
 
-  return { outputPath, removedSegments, keptSegments, totalRemovedSec, originalDurationSec: totalDuration, outputDurationSec: outInfo.durationSec };
+  return { outputPath, outputDurationSec: info.durationSec, segmentCount: segs.length };
+}
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+
+function fmtSec(s: number): string {
+  const m = Math.floor(s / 60);
+  const sec = Math.floor(s % 60);
+  return `${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
 }

@@ -13,7 +13,11 @@ import { saveFeedback, getAllFeedback, getFeedbackByJob, getFeedbackStats } from
 import {
   createProfile, getProfile, listProfiles, updateProfile, deleteProfile,
 } from "./lib/creatorProfile.js";
-import { runBaeshPipeline, type BaeshInput } from "./clients/baesh/pipeline.js";
+import {
+  runBaeshAnalysis, runBaeshRender,
+  type BaeshAnalysisInput, type ScoredSegment,
+} from "./clients/baesh/pipeline.js";
+import { saveBaeshFeedback } from "./lib/baeshFeedback.js";
 
 // ── Helpers de verificação de dependências ────────────────────────────────────
 async function checkExists(cmd: string, args: string[]): Promise<boolean> {
@@ -245,7 +249,7 @@ app.post(
   }
 );
 
-// ─── POST /api/clients/baesh/jobs ────────────────────────────────────────────
+// ─── POST /api/clients/baesh/jobs — Fase 1: análise ─────────────────────────
 app.post(
   "/api/clients/baesh/jobs",
   baeshUpload.single("video"),
@@ -253,43 +257,45 @@ app.post(
     const videoFile = req.file;
     if (!videoFile) return res.status(400).json({ error: "Envie um arquivo de vídeo." });
 
-    const sensitivity  = req.body.sensitivity  ? Number(req.body.sensitivity)  : 50;
-    const minBlurSec   = req.body.minBlurSec   ? Number(req.body.minBlurSec)   : 0.5;
-    const sampleFps    = req.body.sampleFps    ? Number(req.body.sampleFps)    : 2;
+    const targetSec = req.body.targetSec  ? Number(req.body.targetSec)  : 45;
+    const minSegSec = req.body.minSegSec  ? Number(req.body.minSegSec)  : 1.5;
+    const maxSegSec = req.body.maxSegSec  ? Number(req.body.maxSegSec)  : 8.0;
+    const sampleFps = req.body.sampleFps  ? Number(req.body.sampleFps)  : 4;
 
     const jobId = uuid();
     createJob(jobId);
     updateJob(jobId, { status: "running", clientId: "baesh" });
     res.json({ jobId });
 
-    const baeshInput: BaeshInput = {
+    // Copia o vídeo original para o outDir com nome fixo (necessário na fase de render)
+    const outDir = path.join(OUTPUT_DIR, jobId);
+    fs.mkdirSync(outDir, { recursive: true });
+    const originalVideoPath = path.join(outDir, "original.mp4");
+    fs.copyFileSync(videoFile.path, originalVideoPath);
+
+    const analysisInput: BaeshAnalysisInput = {
       jobId,
-      videoPath:  videoFile.path,
+      videoPath:  originalVideoPath,
       workDir:    path.join(TMP_DIR, jobId),
-      outDir:     path.join(OUTPUT_DIR, jobId),
+      outDir,
       onProgress: (msg) => appendLog(jobId, msg),
-      sensitivity,
-      minBlurSec,
-      sampleFps,
+      targetSec, minSegSec, maxSegSec, sampleFps,
     };
 
     try {
-      const result = await runBaeshPipeline(baeshInput);
+      const result = await runBaeshAnalysis(analysisInput);
       updateJob(jobId, {
-        status: "done",
-        clips: [{
-          url:      `/clips/${jobId}/${path.basename(result.outputPath)}`,
-          reason:   `${result.removedSegments.length} trecho(s) desfocado(s) removido(s) — ${result.totalRemovedSec.toFixed(1)}s removidos`,
-          score:    100,
-          startSec: 0,
-          endSec:   result.outputDurationSec,
-        }],
-        clientResult: {
-          removedSegments:    result.removedSegments,
-          keptSegments:       result.keptSegments,
-          totalRemovedSec:    result.totalRemovedSec,
-          originalDurationSec: result.originalDurationSec,
-          outputDurationSec:  result.outputDurationSec,
+        status: "waiting-segment-approval",
+        pendingApproval: {
+          type: "segments",
+          data: {
+            originalVideoUrl: `/clips/${jobId}/original.mp4`,
+            durationSec:      result.durationSec,
+            allSegments:      result.allSegments,
+            selectedSegments: result.selectedSegments,
+            totalSelectedSec: result.totalSelectedSec,
+            targetSec:        result.targetSec,
+          },
         },
       });
     } catch (err: any) {
@@ -298,6 +304,66 @@ app.post(
     }
   }
 );
+
+// ─── POST /api/clients/baesh/jobs/:id/render — Fase 2: renderização ──────────
+app.post("/api/clients/baesh/jobs/:id/render", express.json(), async (req, res) => {
+  const job = getJob(req.params.id);
+  if (!job) return res.status(404).json({ error: "Job não encontrado." });
+  if (job.status !== "waiting-segment-approval") {
+    return res.status(409).json({ error: "Job não está aguardando aprovação de trechos." });
+  }
+
+  const selectedSegments: ScoredSegment[] = req.body.selectedSegments;
+  if (!Array.isArray(selectedSegments) || selectedSegments.length === 0) {
+    return res.status(400).json({ error: "Selecione pelo menos um trecho." });
+  }
+
+  updateJob(req.params.id, { status: "rendering", pendingApproval: undefined });
+  res.json({ ok: true });
+
+  const jobId = req.params.id;
+  const videoPath = path.join(OUTPUT_DIR, jobId, "original.mp4");
+
+  try {
+    const result = await runBaeshRender({
+      jobId,
+      videoPath,
+      selectedSegments,
+      workDir:    path.join(TMP_DIR, jobId, "render"),
+      outDir:     path.join(OUTPUT_DIR, jobId),
+      onProgress: (msg) => appendLog(jobId, msg),
+    });
+
+    updateJob(jobId, {
+      status: "done",
+      clips: [{
+        url:      `/clips/${jobId}/${path.basename(result.outputPath)}`,
+        reason:   `${result.segmentCount} trechos selecionados · ${result.outputDurationSec.toFixed(1)}s`,
+        score:    100,
+        startSec: 0,
+        endSec:   result.outputDurationSec,
+      }],
+      clientResult: {
+        outputDurationSec: result.outputDurationSec,
+        segmentCount:      result.segmentCount,
+        selectedSegments,
+      },
+    });
+  } catch (err: any) {
+    console.error(err);
+    updateJob(jobId, { status: "error", error: err.message ?? String(err) });
+  }
+});
+
+// ─── POST /api/clients/baesh/jobs/:id/segment-feedback ───────────────────────
+app.post("/api/clients/baesh/jobs/:id/segment-feedback", express.json(), (req, res) => {
+  const { segmentId, rating } = req.body;
+  if (!segmentId || !rating) {
+    return res.status(400).json({ error: "segmentId e rating são obrigatórios." });
+  }
+  saveBaeshFeedback({ jobId: req.params.id, segmentId, rating });
+  res.json({ ok: true });
+});
 
 // ─── GET /api/video-info?url=... ─────────────────────────────────────────────
 app.get("/api/video-info", async (req, res) => {
@@ -420,7 +486,7 @@ app.delete("/api/profiles/:id", (req, res) => {
 app.get("/api/clients", (_req, res) => {
   res.json([
     { id: "spin",  name: "Spin",  description: "Highlights de streaming", colors: { primary: "#7b4fd6", accent: "#e8418c" } },
-    { id: "baesh", name: "Baesh", description: "Remoção de desfoque",     colors: { primary: "#00b894", accent: "#00cec9" } },
+    { id: "baesh", name: "Baesh", description: "Editor automático de vídeos de produto", colors: { primary: "#00b894", accent: "#00cec9" } },
   ]);
 });
 

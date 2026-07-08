@@ -8,6 +8,8 @@ export type JobStatus =
   | "waiting-layout-approval"
   | "waiting-composition-preview"
   | "waiting-captions-approval"
+  | "waiting-segment-approval"
+  | "rendering"
   | "done"
   | "error"
   | "cancelled";
@@ -56,17 +58,38 @@ export interface CompositionPreviewData {
   hasMesa: boolean;
 }
 
-export type ApprovalData = CropApprovalData | LayoutApprovalData | CaptionsApprovalData | CompositionPreviewData;
+export interface ScoredSegment {
+  id: string;
+  startSec: number;
+  endSec: number;
+  duration: number;
+  score: number;
+  motives: string[];
+  penalties: string[];
+  selected: boolean;
+  metrics: { focus: number; stability: number; lighting: number; composition: number; interest: number };
+}
+
+export interface SegmentApprovalData {
+  originalVideoUrl: string;
+  durationSec: number;
+  allSegments: ScoredSegment[];
+  selectedSegments: ScoredSegment[];
+  totalSelectedSec: number;
+  targetSec: number;
+}
+
+export type ApprovalData = CropApprovalData | LayoutApprovalData | CaptionsApprovalData | CompositionPreviewData | SegmentApprovalData;
 
 export interface ApprovalRequest {
-  type: "crop" | "layout" | "captions" | "composition-preview";
+  type: "crop" | "layout" | "captions" | "composition-preview" | "segments";
   data: ApprovalData;
 }
 
 export interface ApprovalResponse {
-  type: "crop" | "layout" | "captions" | "composition-preview";
+  type: "crop" | "layout" | "captions" | "composition-preview" | "segments";
   approved: boolean;
-  /** For crop: { x, y, w, h }. For layout: { webcam, game }. For captions: { clips: [...] }. For composition-preview: { action: "adjust-streamer" | "adjust-mesa" } */
+  /** For crop: { x, y, w, h }. For layout: { webcam, game }. For captions: { clips: [...] }. For composition-preview: { action: "adjust-streamer" | "adjust-mesa" }. For segments: { selectedSegments: ScoredSegment[] } */
   adjustedData?: any;
 }
 
