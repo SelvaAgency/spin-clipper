@@ -13,6 +13,7 @@ import { saveFeedback, getAllFeedback, getFeedbackByJob, getFeedbackStats } from
 import {
   createProfile, getProfile, listProfiles, updateProfile, deleteProfile,
 } from "./lib/creatorProfile.js";
+import { runBaeshPipeline, type BaeshInput } from "../clients/baesh/pipeline.js";
 
 // ── Helpers de verificação de dependências ────────────────────────────────────
 async function checkExists(cmd: string, args: string[]): Promise<boolean> {
@@ -66,6 +67,7 @@ fs.mkdirSync(OUTPUT_DIR, { recursive: true });
 fs.mkdirSync(TMP_DIR,    { recursive: true });
 
 const upload = multer({ dest: UPLOAD_DIR });
+const baeshUpload = multer({ dest: UPLOAD_DIR });
 
 app.use(express.json());
 app.use(express.static(path.resolve("public")));
@@ -243,6 +245,60 @@ app.post(
   }
 );
 
+// ─── POST /api/clients/baesh/jobs ────────────────────────────────────────────
+app.post(
+  "/api/clients/baesh/jobs",
+  baeshUpload.single("video"),
+  async (req, res) => {
+    const videoFile = req.file;
+    if (!videoFile) return res.status(400).json({ error: "Envie um arquivo de vídeo." });
+
+    const sensitivity  = req.body.sensitivity  ? Number(req.body.sensitivity)  : 50;
+    const minBlurSec   = req.body.minBlurSec   ? Number(req.body.minBlurSec)   : 0.5;
+    const sampleFps    = req.body.sampleFps    ? Number(req.body.sampleFps)    : 2;
+
+    const jobId = uuid();
+    createJob(jobId);
+    updateJob(jobId, { status: "running", clientId: "baesh" });
+    res.json({ jobId });
+
+    const baeshInput: BaeshInput = {
+      jobId,
+      videoPath:  videoFile.path,
+      workDir:    path.join(TMP_DIR, jobId),
+      outDir:     path.join(OUTPUT_DIR, jobId),
+      onProgress: (msg) => appendLog(jobId, msg),
+      sensitivity,
+      minBlurSec,
+      sampleFps,
+    };
+
+    try {
+      const result = await runBaeshPipeline(baeshInput);
+      updateJob(jobId, {
+        status: "done",
+        clips: [{
+          url:      `/clips/${jobId}/${path.basename(result.outputPath)}`,
+          reason:   `${result.removedSegments.length} trecho(s) desfocado(s) removido(s) — ${result.totalRemovedSec.toFixed(1)}s removidos`,
+          score:    100,
+          startSec: 0,
+          endSec:   result.outputDurationSec,
+        }],
+        clientResult: {
+          removedSegments:    result.removedSegments,
+          keptSegments:       result.keptSegments,
+          totalRemovedSec:    result.totalRemovedSec,
+          originalDurationSec: result.originalDurationSec,
+          outputDurationSec:  result.outputDurationSec,
+        },
+      });
+    } catch (err: any) {
+      console.error(err);
+      updateJob(jobId, { status: "error", error: err.message ?? String(err) });
+    }
+  }
+);
+
 // ─── GET /api/video-info?url=... ─────────────────────────────────────────────
 app.get("/api/video-info", async (req, res) => {
   const url = (req.query.url as string)?.trim();
@@ -361,8 +417,15 @@ app.delete("/api/profiles/:id", (req, res) => {
   res.json({ ok: true });
 });
 
+app.get("/api/clients", (_req, res) => {
+  res.json([
+    { id: "spin",  name: "Spin",  description: "Highlights de streaming", colors: { primary: "#7b4fd6", accent: "#e8418c" } },
+    { id: "baesh", name: "Baesh", description: "Remoção de desfoque",     colors: { primary: "#00b894", accent: "#00cec9" } },
+  ]);
+});
+
 app.listen(PORT, async () => {
-  console.log(`\nspin-clipper rodando em http://localhost:${PORT}`);
+  console.log(`\nclipper rodando em http://localhost:${PORT}`);
   await printDependencies();
   const beepCount = fs.existsSync(BEEP_DIR)
     ? fs.readdirSync(BEEP_DIR).filter((f) => /^censura_spin.*\.(mp3|wav|ogg|aac)$/i.test(f)).length

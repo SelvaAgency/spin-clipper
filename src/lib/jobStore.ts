@@ -90,6 +90,10 @@ export interface Job {
   /** profileId do streamer associado a este job */
   profileId?: string;
   error?: string;
+  /** which client created this job */
+  clientId?: string;
+  /** client-specific result payload */
+  clientResult?: unknown;
 }
 
 const STORE_PATH = path.resolve("data/jobs.json");

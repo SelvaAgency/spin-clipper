@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>spin-clipper</title>
+<title>Clipper</title>
 <style>
 :root {
   --bg:#110a1c; --surface:#1b1130; --surface-2:#241941; --surface-3:#2e2050;
@@ -65,8 +65,6 @@ button.run:disabled{opacity:.5;cursor:not-allowed;}
 .log{font-family:var(--mono);font-size:12.5px;color:#b9aee0;background:#0c0716;border-radius:10px;padding:16px;max-height:200px;overflow-y:auto;white-space:pre-wrap;line-height:1.6;display:none;}
 .log.show{display:block;margin-top:18px;}
 .log .ok{color:var(--green);}.log .err{color:var(--magenta);}.log .wait{color:var(--orange);}
-
-/* ── Approval panels ── */
 .approval-panel{border:2px solid var(--orange);border-radius:14px;background:rgba(245,166,35,.06);padding:24px;margin-bottom:20px;display:none;}
 .approval-panel.visible{display:block;}
 .approval-panel h3{margin:0 0 4px;font-size:16px;color:var(--orange);}
@@ -81,8 +79,6 @@ button.run:disabled{opacity:.5;cursor:not-allowed;}
 .btn-approve{background:var(--green);color:#0a1a12;}
 .btn-secondary{background:var(--surface-2);color:var(--ink);border:1px solid var(--line);}
 .btn-cancel{background:var(--surface-2);color:var(--ink-dim);border:1px solid var(--line);}
-
-/* ── Region editor ── */
 .region-editor-wrap{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#000;}
 .editor-toolbar{display:flex;gap:6px;padding:8px 10px;background:var(--surface-2);border-bottom:1px solid var(--line);align-items:center;flex-wrap:wrap;}
 .tool-btn{padding:5px 10px;border:1px solid var(--line);border-radius:6px;background:none;color:var(--ink-dim);font-size:12px;cursor:pointer;font-family:var(--sans);transition:all .15s;}
@@ -94,8 +90,6 @@ canvas.region-canvas{display:block;cursor:default;}
 .editor-fields label{font-size:11px;color:var(--ink-dim);}
 .editor-fields input{width:100%;background:var(--surface-3);border:1px solid var(--line);border-radius:6px;padding:5px 8px;color:var(--ink);font-size:13px;font-family:var(--mono);}
 .editor-fields input:focus{outline:none;border-color:var(--violet);}
-
-/* ── Caption editor ── */
 .caption-editor-clips{display:flex;flex-direction:column;gap:16px;}
 .caption-clip{background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:16px;}
 .caption-clip h4{margin:0 0 10px;font-size:13px;color:var(--ink-dim);font-weight:600;}
@@ -105,8 +99,6 @@ canvas.region-canvas{display:block;cursor:default;}
 .caption-group .time-label{font-size:11px;color:var(--ink-dim);font-family:var(--mono);white-space:nowrap;min-width:80px;}
 .caption-group input{flex:1;background:none;border:none;color:var(--ink);font-size:13px;font-family:var(--sans);padding:0;}
 .caption-group input:focus{outline:none;}
-
-/* ── Results ── */
 .clip{background:var(--surface-2);border:1px solid var(--line);border-radius:12px;overflow:hidden;}
 .clip video{width:100%;display:block;background:#000;aspect-ratio:9/16;}
 .clip-meta{padding:10px 12px;font-size:12.5px;color:var(--ink-dim);line-height:1.5;}
@@ -124,8 +116,6 @@ canvas.region-canvas{display:block;cursor:default;}
 .compilation-banner a{padding:8px 18px;background:var(--violet);color:#fff;border-radius:8px;text-decoration:none;font-weight:700;font-size:13px;white-space:nowrap;}
 .divider{height:1px;background:var(--line);margin:16px 0;}
 .hint{font-size:12px;color:var(--ink-dim);margin-top:8px;}
-
-/* ── URL info card ── */
 .url-verify-btn{padding:9px 16px;border:1px solid var(--violet);border-radius:8px;background:rgba(123,79,214,.12);color:var(--violet);font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans);white-space:nowrap;transition:all .15s;}
 .url-verify-btn:hover{background:rgba(123,79,214,.22);}
 .url-verify-btn:disabled{opacity:.5;cursor:not-allowed;}
@@ -142,8 +132,6 @@ canvas.region-canvas{display:block;cursor:default;}
 .time-arrow{color:var(--ink-dim);font-size:18px;padding-bottom:8px;}
 .url-full-btn{padding:7px 12px;border:1px solid var(--line);border-radius:6px;background:none;color:var(--ink-dim);font-size:12px;cursor:pointer;font-family:var(--sans);margin-bottom:2px;}
 .url-full-btn:hover{border-color:var(--violet);color:var(--ink);}
-
-/* ── Feedback detail panel ── */
 .clips{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px;margin-top:18px;align-items:start;}
 .feedback-detail{display:none;padding:10px 12px 12px;border-top:1px solid var(--line);background:var(--surface-3);}
 .feedback-detail.open{display:block;}
@@ -160,36 +148,91 @@ canvas.region-canvas{display:block;cursor:default;}
 .fb-save-row{display:flex;justify-content:flex-end;gap:8px;margin-top:8px;}
 .fb-save-btn{padding:6px 14px;border:none;border-radius:6px;background:var(--violet);color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans);}
 .fb-saved-badge{font-size:11px;color:var(--green);align-self:center;}
-
-/* ── Profiles modal ── */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:100;}
 .modal-overlay.open{display:flex;}
 .modal{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:28px;min-width:320px;max-width:500px;width:100%;}
 .modal h3{margin:0 0 18px;font-size:16px;}
 .modal-actions{display:flex;gap:8px;margin-top:20px;justify-content:flex-end;}
+/* Client selector */
+#view-clients{display:none;}
+#view-clients .clients-wrap{max-width:940px;margin:0 auto;padding:72px 24px 96px;text-align:center;}
+#view-clients .clients-brand{font-weight:800;font-size:13px;letter-spacing:.1em;color:var(--ink-dim);text-transform:uppercase;margin-bottom:32px;}
+#view-clients .clients-brand b{color:var(--magenta);}
+#view-clients h1{font-size:36px;font-weight:800;margin:0 0 10px;letter-spacing:-.02em;}
+#view-clients .clients-sub{color:var(--ink-dim);font-size:15px;margin-bottom:52px;}
+.client-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;max-width:580px;margin:0 auto;}
+.client-card{background:var(--surface);border:1.5px solid var(--line);border-radius:16px;padding:28px 24px;cursor:pointer;transition:all .18s;text-align:left;}
+.client-card:hover{transform:translateY(-3px);box-shadow:0 12px 40px rgba(0,0,0,.4);}
+.client-card-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:16px;}
+.client-card h3{margin:0 0 8px;font-size:18px;font-weight:700;}
+.client-card p{margin:0;font-size:13px;color:var(--ink-dim);line-height:1.5;}
+.client-card .client-arrow{display:flex;align-items:center;gap:6px;margin-top:18px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;}
+/* Back button */
+.back-btn{display:inline-flex;align-items:center;gap:7px;padding:8px 16px;border:1px solid var(--line);border-radius:8px;background:none;color:var(--ink-dim);font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans);margin-bottom:24px;transition:all .15s;}
+.back-btn:hover{border-color:var(--violet);color:var(--ink);}
+/* Baesh */
+.baesh-summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-top:12px;}
+.baesh-stat{background:var(--surface-3);border-radius:8px;padding:12px 14px;}
+.baesh-stat .stat-label{font-size:11px;color:var(--ink-dim);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;}
+.baesh-stat .stat-value{font-size:20px;font-weight:700;color:var(--ink);}
+.baesh-segments-table{width:100%;border-collapse:collapse;font-size:13px;margin-top:12px;}
+.baesh-segments-table th{text-align:left;color:var(--ink-dim);font-size:11px;text-transform:uppercase;letter-spacing:.06em;padding:6px 10px;border-bottom:1px solid var(--line);}
+.baesh-segments-table td{padding:8px 10px;border-bottom:1px solid var(--line);color:var(--ink);}
+.baesh-segments-table tr:last-child td{border-bottom:none;}
+.baesh-video-wrap{background:#000;border-radius:12px;overflow:hidden;margin-bottom:16px;}
+.baesh-video-wrap video{width:100%;display:block;max-height:480px;object-fit:contain;}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:3px;background:var(--line);outline:none;cursor:pointer;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:18px;height:18px;border-radius:50%;background:var(--violet);cursor:pointer;border:2px solid var(--bg);}
+input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--violet);cursor:pointer;border:2px solid var(--bg);}
+.slider-row{display:flex;align-items:center;gap:12px;}
+.slider-row span{font-size:13px;color:var(--ink);min-width:36px;text-align:right;font-family:var(--mono);}
 </style>
 </head>
 <body>
+
+<div id="view-clients">
+  <div class="clients-wrap">
+    <div class="clients-brand">selva agency <b>/</b> clipper</div>
+    <h1>Clipper</h1>
+    <p class="clients-sub">Selecione o cliente para continuar</p>
+    <div class="client-grid">
+      <div class="client-card" onclick="showView('spin')" style="border-color:rgba(123,79,214,.4);">
+        <div class="client-card-icon" style="background:rgba(123,79,214,.2);">&#127916;</div>
+        <h3>Spin</h3>
+        <p>Highlights de streaming: detecta rea&ccedil;&otilde;es, recorta, comp&otilde;e moldura, legenda.</p>
+        <div class="client-arrow" style="color:#7b4fd6;">Acessar <span>&#8594;</span></div>
+      </div>
+      <div class="client-card" onclick="showView('baesh')" style="border-color:rgba(0,184,148,.4);">
+        <div class="client-card-icon" style="background:rgba(0,184,148,.2);">&#10024;</div>
+        <h3>Baesh</h3>
+        <p>Remove automaticamente trechos desfocados, entregando um v&iacute;deo limpo e cont&iacute;nuo.</p>
+        <div class="client-arrow" style="color:#00b894;">Acessar <span>&#8594;</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="view-spin" style="display:none;">
 <div class="wrap">
+  <button class="back-btn" onclick="showView('clients')">&#8592; Clientes</button>
   <header>
     <div class="brand">selva agency <b>/</b> spin clipper</div>
     <button class="btn btn-cancel" onclick="openProfilesModal()">Perfis</button>
   </header>
-  <h1>Sobe o vídeo bruto, sai o clipe pronto.</h1>
-  <p class="sub">Detecta reações, recorta, compõe, legenda. Automático — com validação em cada etapa.</p>
+  <h1>Sobe o v&iacute;deo bruto, sai o clipe pronto.</h1>
+  <p class="sub">Detecta rea&ccedil;&otilde;es, recorta, comp&otilde;e, legenda. Autom&aacute;tico &mdash; com valida&ccedil;&atilde;o em cada etapa.</p>
 
-  <!-- ── FORM ── -->
   <form id="form" class="card">
-    <h2>Fonte do vídeo</h2>
+    <h2>Fonte do v&iacute;deo</h2>
     <div class="tabs">
       <button type="button" class="tab-btn active" data-tab="files">Dois arquivos</button>
       <button type="button" class="tab-btn" data-tab="url">Link / URL</button>
-      <button type="button" class="tab-btn" data-tab="combined">Vídeo único (webcam+jogo)</button>
+      <button type="button" class="tab-btn" data-tab="combined">V&iacute;deo &uacute;nico (webcam+jogo)</button>
     </div>
 
     <div id="tab-files" class="tab-panel active">
       <div class="drop-grid">
-        <label class="drop" id="drop-streamer"><input type="file" name="streamer" accept="video/*" /><span class="label">Câmera do streamer</span><span class="hint-inline">arraste ou clique</span></label>
+        <label class="drop" id="drop-streamer"><input type="file" name="streamer" accept="video/*" /><span class="label">C&acirc;mera do streamer</span><span class="hint-inline">arraste ou clique</span></label>
         <label class="drop" id="drop-mesa"><input type="file" name="mesa" accept="video/*" /><span class="label">Mesa / jogo</span><span class="hint-inline">arraste ou clique</span></label>
       </div>
     </div>
@@ -198,33 +241,31 @@ canvas.region-canvas{display:block;cursor:default;}
         <input type="text" id="url-input" placeholder="https://youtube.com/... ou twitch.tv/videos/..." />
         <button type="button" class="url-verify-btn" id="url-verify-btn" onclick="fetchVideoInfo()">Verificar</button>
       </div>
-      <p class="hint">Suporta YouTube, Twitch, Kick e links diretos. Após verificar, você pode selecionar apenas o trecho que quer clipar.</p>
-
-      <!-- Aparece após verificar o link -->
+      <p class="hint">Suporta YouTube, Twitch, Kick e links diretos.</p>
       <div class="url-info-card" id="url-info-card" style="display:none">
         <div class="url-info-row">
-          <span class="url-info-platform" id="url-platform">—</span>
-          <span class="url-info-title" id="url-title">—</span>
+          <span class="url-info-platform" id="url-platform">&mdash;</span>
+          <span class="url-info-title" id="url-title">&mdash;</span>
           <span class="url-info-duration" id="url-duration-label">0:00:00</span>
         </div>
         <div class="time-range-row">
           <div class="field">
-            <label>Início</label>
+            <label>In&iacute;cio</label>
             <input type="text" class="time-input" id="url-start" placeholder="0:00:00" value="0:00:00" />
           </div>
-          <div class="time-arrow">→</div>
+          <div class="time-arrow">&#8594;</div>
           <div class="field">
             <label>Fim</label>
             <input type="text" class="time-input" id="url-end" placeholder="0:00:00" value="0:00:00" />
           </div>
           <button type="button" class="url-full-btn" onclick="resetUrlRange()">Usar live completa</button>
         </div>
-        <p class="hint" style="margin-top:8px;">Somente o trecho selecionado será baixado. Para Twitch/YouTube, usa segmentos diretos — sem baixar a live inteira.</p>
+        <p class="hint" style="margin-top:8px;">Somente o trecho selecionado ser&aacute; baixado.</p>
       </div>
     </div>
     <div id="tab-combined" class="tab-panel">
       <div class="drop-grid single">
-        <label class="drop" id="drop-combined"><input type="file" name="combined" accept="video/*" /><span class="label">Vídeo combinado (webcam + jogo)</span><span class="hint-inline">O sistema detecta as regiões automaticamente</span></label>
+        <label class="drop" id="drop-combined"><input type="file" name="combined" accept="video/*" /><span class="label">V&iacute;deo combinado (webcam + jogo)</span><span class="hint-inline">O sistema detecta as regi&otilde;es automaticamente</span></label>
       </div>
     </div>
 
@@ -233,22 +274,22 @@ canvas.region-canvas{display:block;cursor:default;}
     <div class="check-group" id="outro-default-row" style="display:none;margin-bottom:10px;">
       <label class="check-row">
         <input type="checkbox" id="opt-use-default-outro" checked />
-        <span><b>Utilizar vídeo final padrão</b> (spin_final.mp4)</span>
+        <span><b>Utilizar v&iacute;deo final padr&atilde;o</b> (spin_final.mp4)</span>
       </label>
     </div>
     <div id="outro-upload-wrap" class="drop-grid single">
-      <label class="drop" id="drop-outro"><input type="file" name="outro" accept="video/*" /><span class="label">Outro / spin final.mp4</span><span class="hint-inline">opcional — arraste ou clique</span></label>
+      <label class="drop" id="drop-outro"><input type="file" name="outro" accept="video/*" /><span class="label">Outro / spin final.mp4</span><span class="hint-inline">opcional &mdash; arraste ou clique</span></label>
     </div>
 
     <div class="divider"></div>
     <h2>Moldura</h2>
     <div class="toggle-group">
       <label><input type="radio" name="moldura" value="split" checked /><b>Split</b><span>Streamer em cima, mesa embaixo</span></label>
-      <label><input type="radio" name="moldura" value="full" /><b>Cheia</b><span>Fonte única, tela inteira</span></label>
+      <label><input type="radio" name="moldura" value="full" /><b>Cheia</b><span>Fonte &uacute;nica, tela inteira</span></label>
     </div>
 
     <div class="divider"></div>
-    <h2>Duração dos clipes</h2>
+    <h2>Dura&ccedil;&atilde;o dos clipes</h2>
     <div class="duration-presets">
       <button type="button" class="preset-btn" data-duration="30">30s</button>
       <button type="button" class="preset-btn active" data-duration="45">45s</button>
@@ -258,7 +299,7 @@ canvas.region-canvas{display:block;cursor:default;}
     </div>
     <div id="custom-duration-fields" style="display:none;margin-top:10px;">
       <div style="display:flex;gap:12px;flex-wrap:wrap;">
-        <div class="field"><label>Duração máx. (s)</label><input type="number" id="maxClipDurationSec" value="45" min="10" max="300" /></div>
+        <div class="field"><label>Dura&ccedil;&atilde;o m&aacute;x. (s)</label><input type="number" id="maxClipDurationSec" value="45" min="10" max="300" /></div>
         <div class="field"><label>Contexto antes (s)</label><input type="number" id="padBeforeSec" value="8" min="0" max="60" /></div>
         <div class="field"><label>Contexto depois (s)</label><input type="number" id="padAfterSec" value="6" min="0" max="60" /></div>
       </div>
@@ -266,39 +307,36 @@ canvas.region-canvas{display:block;cursor:default;}
     <input type="hidden" id="presetDuration" value="45" />
 
     <div class="divider"></div>
-    <h2>Opções</h2>
+    <h2>Op&ccedil;&otilde;es</h2>
     <div style="display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap;margin-top:0;">
-      <div class="field" style="margin-top:0;"><label>Máximo de clipes</label><input type="number" name="maxClips" value="8" min="1" max="20" style="width:100px;" /></div>
+      <div class="field" style="margin-top:0;"><label>M&aacute;ximo de clipes</label><input type="number" name="maxClips" value="8" min="1" max="20" style="width:100px;" /></div>
       <div class="field" style="margin-top:0;flex:1;min-width:180px;"><label>Perfil do streamer</label><select id="profileSelect" style="width:100%;"><option value="">Nenhum</option></select></div>
     </div>
     <div class="check-group">
-      <label class="check-row"><input type="checkbox" id="opt-crop" /><span><b>Recortar streamer</b> — remove bordas, barra de URL. A IA sugere, você confirma o enquadramento.</span></label>
-      <label class="check-row"><input type="checkbox" id="opt-game-crop" /><span><b>Recortar mesa / jogo</b> — enquadra dealer e cartas. A IA sugere, você confirma.</span></label>
-      <label class="check-row"><input type="checkbox" id="opt-captions" /><span><b>Legendas automáticas</b> — transcreve a fala e abre editor antes de queimar. Requer ASSEMBLYAI_API_KEY.</span></label>
-      <div id="caption-options" style="display:none;margin-left:26px;margin-top:4px;display:none;flex-direction:column;gap:8px;">
-        <label class="check-row"><input type="checkbox" id="opt-censor" /><span><b>Censura automática de palavrões</b> — detecta beep no áudio + C****** na legenda. Usa as variações de beep da Spin automaticamente.</span></label>
+      <label class="check-row"><input type="checkbox" id="opt-crop" /><span><b>Recortar streamer</b> &mdash; remove bordas, barra de URL. A IA sugere, voc&ecirc; confirma o enquadramento.</span></label>
+      <label class="check-row"><input type="checkbox" id="opt-game-crop" /><span><b>Recortar mesa / jogo</b> &mdash; enquadra dealer e cartas. A IA sugere, voc&ecirc; confirma.</span></label>
+      <label class="check-row"><input type="checkbox" id="opt-captions" /><span><b>Legendas autom&aacute;ticas</b> &mdash; transcreve a fala e abre editor antes de queimar. Requer ASSEMBLYAI_API_KEY.</span></label>
+      <div id="caption-options" style="display:none;margin-left:26px;margin-top:4px;flex-direction:column;gap:8px;">
+        <label class="check-row"><input type="checkbox" id="opt-censor" /><span><b>Censura autom&aacute;tica de palavr&otilde;es</b> &mdash; detecta beep no &aacute;udio + C****** na legenda.</span></label>
       </div>
-      <label class="check-row"><input type="checkbox" id="opt-compilation" /><span><b>Gerar compilação</b> — vídeo único com todos os melhores momentos em sequência.</span></label>
+      <label class="check-row"><input type="checkbox" id="opt-compilation" /><span><b>Gerar compila&ccedil;&atilde;o</b> &mdash; v&iacute;deo &uacute;nico com todos os melhores momentos em sequ&ecirc;ncia.</span></label>
     </div>
 
     <button class="run" type="submit">Gerar clipes</button>
     <div style="display:flex;align-items:center;gap:12px;margin-top:12px;">
-      <div class="hint" style="margin-top:0;">Vídeos longos demoram mais — log em tempo real abaixo.</div>
-      <button type="button" class="btn btn-cancel" id="cancel-job-btn" style="display:none;margin-left:auto;padding:6px 14px;font-size:13px;" onclick="cancelCurrentJob()">✕ Cancelar download</button>
+      <div class="hint" style="margin-top:0;">V&iacute;deos longos demoram mais &mdash; log em tempo real abaixo.</div>
+      <button type="button" class="btn btn-cancel" id="cancel-job-btn" style="display:none;margin-left:auto;padding:6px 14px;font-size:13px;" onclick="cancelCurrentJob()">&#10005; Cancelar download</button>
     </div>
     <div class="log" id="log"></div>
   </form>
 
-  <!-- ══════════════════════════════════════════════════════
-       CROP — STREAMER
-  ══════════════════════════════════════════════════════ -->
   <div id="crop-approval" class="approval-panel">
-    <h3>✂️ Enquadramento — Streamer</h3>
-    <p class="desc">Frame original do vídeo. Arraste os cantos ou bordas da caixa para definir exatamente a área que deve aparecer no clipe. Os números abaixo mostram as coordenadas em pixels.</p>
+    <h3>&#9986;&#65039; Enquadramento &mdash; Streamer</h3>
+    <p class="desc">Frame original do v&iacute;deo. Arraste os cantos ou bordas da caixa para definir exatamente a &aacute;rea que deve aparecer no clipe.</p>
     <div class="region-editor-wrap">
       <div class="editor-toolbar">
-        <button type="button" class="tool-btn" id="crop-reset-btn">Resetar para sugestão da IA</button>
-        <span class="editor-hint">Arraste a caixa para mover &nbsp;·&nbsp; Arraste as bordas/cantos para redimensionar</span>
+        <button type="button" class="tool-btn" id="crop-reset-btn">Resetar para sugest&atilde;o da IA</button>
+        <span class="editor-hint">Arraste a caixa para mover &nbsp;&middot;&nbsp; Arraste as bordas/cantos para redimensionar</span>
       </div>
       <div class="editor-canvas-wrap"><canvas id="canvas-crop" class="region-canvas"></canvas></div>
       <div class="editor-fields">
@@ -310,20 +348,17 @@ canvas.region-canvas{display:block;cursor:default;}
     </div>
     <div class="approval-actions">
       <button type="button" class="btn btn-approve" id="crop-approve">Salvar enquadramento</button>
-      <button type="button" class="btn btn-cancel" id="crop-skip">Usar vídeo inteiro</button>
+      <button type="button" class="btn btn-cancel" id="crop-skip">Usar v&iacute;deo inteiro</button>
     </div>
   </div>
 
-  <!-- ══════════════════════════════════════════════════════
-       CROP — JOGO / MESA
-  ══════════════════════════════════════════════════════ -->
   <div id="game-crop-approval" class="approval-panel">
-    <h3>🎮 Enquadramento — Mesa / Jogo</h3>
-    <p class="desc">Frame original do vídeo de jogo. Enquadre o dealer, a mesa e as cartas. A área selecionada será usada exatamente assim no clipe final.</p>
+    <h3>&#127918; Enquadramento &mdash; Mesa / Jogo</h3>
+    <p class="desc">Frame original do v&iacute;deo de jogo. Enquadre o dealer, a mesa e as cartas.</p>
     <div class="region-editor-wrap">
       <div class="editor-toolbar">
-        <button type="button" class="tool-btn" id="game-crop-reset-btn">Resetar para sugestão da IA</button>
-        <span class="editor-hint">Arraste a caixa para mover &nbsp;·&nbsp; Arraste as bordas/cantos para redimensionar</span>
+        <button type="button" class="tool-btn" id="game-crop-reset-btn">Resetar para sugest&atilde;o da IA</button>
+        <span class="editor-hint">Arraste a caixa para mover &nbsp;&middot;&nbsp; Arraste as bordas/cantos para redimensionar</span>
       </div>
       <div class="editor-canvas-wrap"><canvas id="canvas-game" class="region-canvas"></canvas></div>
       <div class="editor-fields">
@@ -339,28 +374,22 @@ canvas.region-canvas{display:block;cursor:default;}
     </div>
   </div>
 
-  <!-- ══════════════════════════════════════════════════════
-       COMPOSITION PREVIEW
-  ══════════════════════════════════════════════════════ -->
   <div id="composition-preview" class="approval-panel">
-    <h3>🎬 Pré-visualização da composição</h3>
-    <p class="desc">Exatamente como o vídeo final vai ficar. Aprovando aqui, os enquadramentos ficam congelados — nenhuma modificação posterior.</p>
+    <h3>&#127909; Pr&eacute;-visualiza&ccedil;&atilde;o da composi&ccedil;&atilde;o</h3>
+    <p class="desc">Exatamente como o v&iacute;deo final vai ficar.</p>
     <div style="display:flex;justify-content:center;margin-bottom:16px;background:#000;border-radius:8px;overflow:hidden;">
-      <img id="comp-preview-img" src="" alt="Preview da composição" style="max-height:600px;max-width:100%;object-fit:contain;display:block;" />
+      <img id="comp-preview-img" src="" alt="Preview da composi&ccedil;&atilde;o" style="max-height:600px;max-width:100%;object-fit:contain;display:block;" />
     </div>
     <div class="approval-actions">
-      <button type="button" class="btn btn-approve" id="comp-approve">✓ Aprovar composição</button>
-      <button type="button" class="btn btn-secondary" id="comp-adjust-streamer">↩ Ajustar Streamer</button>
-      <button type="button" class="btn btn-secondary" id="comp-adjust-mesa">↩ Ajustar Mesa</button>
+      <button type="button" class="btn btn-approve" id="comp-approve">&#10003; Aprovar composi&ccedil;&atilde;o</button>
+      <button type="button" class="btn btn-secondary" id="comp-adjust-streamer">&#8617; Ajustar Streamer</button>
+      <button type="button" class="btn btn-secondary" id="comp-adjust-mesa">&#8617; Ajustar Mesa</button>
     </div>
   </div>
 
-  <!-- ══════════════════════════════════════════════════════
-       LAYOUT — VÍDEO ÚNICO (dois passos)
-  ══════════════════════════════════════════════════════ -->
   <div id="layout-approval" class="approval-panel">
-    <h3 id="layout-title">📷 Passo 1 de 2 — Webcam</h3>
-    <p class="desc" id="layout-desc">Selecione a área onde a webcam aparece no vídeo. A caixa cobre apenas esse elemento.</p>
+    <h3 id="layout-title">&#128247; Passo 1 de 2 &mdash; Webcam</h3>
+    <p class="desc" id="layout-desc">Selecione a &aacute;rea onde a webcam aparece no v&iacute;deo.</p>
     <div class="step-bar">
       <div class="step-pip active" id="layout-step-1">1 Webcam</div>
       <div class="step-connector"></div>
@@ -368,8 +397,8 @@ canvas.region-canvas{display:block;cursor:default;}
     </div>
     <div class="region-editor-wrap">
       <div class="editor-toolbar">
-        <button type="button" class="tool-btn" id="layout-reset-btn">Resetar para sugestão da IA</button>
-        <span class="editor-hint">Arraste a caixa para mover &nbsp;·&nbsp; Arraste as bordas/cantos para redimensionar</span>
+        <button type="button" class="tool-btn" id="layout-reset-btn">Resetar para sugest&atilde;o da IA</button>
+        <span class="editor-hint">Arraste a caixa para mover &nbsp;&middot;&nbsp; Arraste as bordas/cantos para redimensionar</span>
       </div>
       <div class="editor-canvas-wrap"><canvas id="canvas-layout" class="region-canvas"></canvas></div>
       <div class="editor-fields">
@@ -380,18 +409,15 @@ canvas.region-canvas{display:block;cursor:default;}
       </div>
     </div>
     <div class="approval-actions">
-      <button type="button" class="btn btn-approve" id="layout-next-btn">Próximo: Mesa →</button>
-      <button type="button" class="btn btn-secondary" id="layout-back-btn" style="display:none">← Voltar para webcam</button>
+      <button type="button" class="btn btn-approve" id="layout-next-btn">Pr&oacute;ximo: Mesa &#8594;</button>
+      <button type="button" class="btn btn-secondary" id="layout-back-btn" style="display:none">&#8592; Voltar para webcam</button>
       <button type="button" class="btn btn-cancel" id="layout-cancel-btn">Cancelar</button>
     </div>
   </div>
 
-  <!-- ══════════════════════════════════════════════════════
-       CAPTIONS
-  ══════════════════════════════════════════════════════ -->
   <div id="captions-approval" class="approval-panel">
-    <h3>💬 Editor de legendas</h3>
-    <p class="desc">Revise e edite o texto antes de queimar nos vídeos. Clique em qualquer linha para corrigir.</p>
+    <h3>&#128172; Editor de legendas</h3>
+    <p class="desc">Revise e edite o texto antes de queimar nos v&iacute;deos.</p>
     <div class="caption-editor-clips" id="caption-clips-container"></div>
     <div class="approval-actions">
       <button type="button" class="btn btn-approve" id="captions-approve">Aprovar e queimar legendas</button>
@@ -399,15 +425,14 @@ canvas.region-canvas{display:block;cursor:default;}
     </div>
   </div>
 
-  <!-- ── RESULTS ── -->
   <div class="card" id="results-card" style="display:none;">
     <h2>Clipes gerados</h2>
     <div id="compilation-banner"></div>
     <div class="clips" id="clips"></div>
   </div>
 </div>
+</div>
 
-<!-- ── PROFILES MODAL ── -->
 <div class="modal-overlay" id="profiles-modal">
   <div class="modal">
     <h3>Perfis de streamers</h3>
@@ -419,11 +444,11 @@ canvas.region-canvas{display:block;cursor:default;}
 <div class="modal-overlay" id="create-profile-modal">
   <div class="modal">
     <h3>Novo perfil</h3>
-    <div class="field" style="margin-top:0;"><label>Nome do streamer</label><input type="text" id="pf-name" style="width:100%;" placeholder="Ex: João Casino" /></div>
+    <div class="field" style="margin-top:0;"><label>Nome do streamer</label><input type="text" id="pf-name" style="width:100%;" placeholder="Ex: Jo&atilde;o Casino" /></div>
     <div class="field"><label>Jogo principal</label>
       <select id="pf-game" style="width:100%;"><option value="all">Todos</option><option value="baccarat">Baccarat</option><option value="blackjack">Blackjack</option><option value="roulette">Roleta</option></select>
     </div>
-    <div class="field"><label>Duração padrão dos clipes (s)</label><input type="number" id="pf-dur" value="45" min="10" max="300" style="width:100px;" /></div>
+    <div class="field"><label>Dura&ccedil;&atilde;o padr&atilde;o dos clipes (s)</label><input type="number" id="pf-dur" value="45" min="10" max="300" style="width:100px;" /></div>
     <div class="field"><label>Notas sobre o estilo</label><input type="text" id="pf-notes" style="width:100%;" placeholder="Ex: grita muito, prefere viradas" /></div>
     <div class="modal-actions">
       <button type="button" class="btn btn-cancel" onclick="closeCreateProfile()">Cancelar</button>
@@ -432,13 +457,101 @@ canvas.region-canvas{display:block;cursor:default;}
   </div>
 </div>
 
+<div id="view-baesh" style="display:none;">
+<div class="wrap">
+  <button class="back-btn" onclick="showView('clients')">&#8592; Clientes</button>
+  <header>
+    <div class="brand">selva agency <b>/</b> baesh</div>
+  </header>
+  <h1>Remove desfoque automaticamente.</h1>
+  <p class="sub">Detecta e remove trechos desfocados entregando um v&iacute;deo limpo e cont&iacute;nuo.</p>
+
+  <form id="baesh-form" class="card">
+    <h2>V&iacute;deo</h2>
+    <div class="drop-grid single">
+      <label class="drop" id="baesh-drop-video"><input type="file" name="video" accept="video/*" id="baesh-video-input" /><span class="label">V&iacute;deo para processar</span><span class="hint-inline" id="baesh-drop-hint">arraste ou clique</span></label>
+    </div>
+
+    <div class="divider"></div>
+    <h2>Configura&ccedil;&otilde;es de detec&ccedil;&atilde;o</h2>
+
+    <div class="field">
+      <label>Sensibilidade (<span id="sensitivity-label">50</span>)</label>
+      <div class="slider-row">
+        <span style="font-size:12px;color:var(--ink-dim);min-width:60px;">Menos</span>
+        <input type="range" id="baesh-sensitivity" name="sensitivity" min="0" max="100" value="50" />
+        <span style="font-size:12px;color:var(--ink-dim);min-width:40px;">Mais</span>
+        <span id="sensitivity-val">50</span>
+      </div>
+      <p class="hint">Sensibilidade maior = mais trechos identificados como desfocados.</p>
+    </div>
+
+    <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:16px;">
+      <div class="field" style="margin-top:0;">
+        <label>Dura&ccedil;&atilde;o m&iacute;nima do desfoque (s)</label>
+        <input type="number" id="baesh-min-blur" name="minBlurSec" value="0.5" min="0.1" max="10" step="0.1" style="width:110px;" />
+      </div>
+      <div class="field" style="margin-top:0;">
+        <label>Amostras por segundo</label>
+        <select id="baesh-sample-fps" name="sampleFps" style="width:120px;">
+          <option value="1">1 fps</option>
+          <option value="2" selected>2 fps</option>
+          <option value="4">4 fps</option>
+        </select>
+      </div>
+    </div>
+
+    <button class="run" type="submit" style="background:linear-gradient(135deg,#00b894,#00cec9);">Processar v&iacute;deo</button>
+    <div class="log" id="baesh-log"></div>
+  </form>
+
+  <div id="baesh-results" style="display:none;">
+    <div class="card">
+      <h2>V&iacute;deo processado</h2>
+      <div class="baesh-video-wrap">
+        <video id="baesh-output-video" controls preload="metadata"></video>
+      </div>
+      <a id="baesh-download-btn" href="#" download style="display:inline-block;padding:10px 22px;background:#00b894;color:#fff;border-radius:8px;font-weight:700;font-size:14px;text-decoration:none;">Baixar v&iacute;deo</a>
+    </div>
+
+    <div class="card">
+      <h2>Resumo</h2>
+      <div class="baesh-summary-grid" id="baesh-summary-grid"></div>
+    </div>
+
+    <div class="card" id="baesh-segments-card" style="display:none;">
+      <h2>Trechos removidos</h2>
+      <div style="overflow-x:auto;">
+        <table class="baesh-segments-table" id="baesh-segments-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>In&iacute;cio</th>
+              <th>Fim</th>
+              <th>Dura&ccedil;&atilde;o</th>
+              <th>Score m&eacute;dio</th>
+            </tr>
+          </thead>
+          <tbody id="baesh-segments-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
 <script>
-// ════════════════════════════════════════════════════════════════════════════
-//  RegionEditor
-//  Editor de região simples — sem zoom, sem pan.
-//  A imagem ocupa o canvas inteiro. Apenas a caixa de seleção é interativa.
-//  Estilo: Windows Snipping Tool / OBS / Photoshop crop.
-// ════════════════════════════════════════════════════════════════════════════
+function showView(view) {
+  document.getElementById("view-clients").style.display = "none";
+  document.getElementById("view-spin").style.display    = "none";
+  document.getElementById("view-baesh").style.display   = "none";
+  if (view === "clients") document.getElementById("view-clients").style.display = "block";
+  else if (view === "spin") document.getElementById("view-spin").style.display = "block";
+  else if (view === "baesh") document.getElementById("view-baesh").style.display = "block";
+  window.scrollTo(0, 0);
+}
+showView("clients");
+
 class RegionEditor {
   constructor(canvasId, key, color, label, inputs, opts = {}) {
     this.canvas  = document.getElementById(canvasId);
@@ -446,251 +559,146 @@ class RegionEditor {
     this.key     = key;
     this.color   = color;
     this.label   = label;
-    this.inputs  = inputs; // { x, y, w, h } — IDs dos campos numéricos
+    this.inputs  = inputs;
     this.imgW    = opts.imgW || 1920;
     this.imgH    = opts.imgH || 1080;
     this.img     = null;
-    this.sel     = null;  // { x, y, w, h } em coordenadas de imagem
+    this.sel     = null;
     this.default = null;
     this.drag    = null;
-    this.HR      = 8;     // handle radius px (display)
+    this.HR      = 8;
     this._buildCanvas();
     this._bindEvents();
     if (opts.imageUrl) this._loadImage(opts.imageUrl);
   }
-
-  // ── Setup ──────────────────────────────────────────────────────────────────
   _buildCanvas() {
     const dpr = window.devicePixelRatio || 1;
-    // Parent width; fallback to 800 if not yet laid out
-    const parentW = this.canvas.parentElement
-      ? this.canvas.parentElement.getBoundingClientRect().width || 800
-      : 800;
+    const parentW = this.canvas.parentElement ? this.canvas.parentElement.getBoundingClientRect().width || 800 : 800;
     const MAX_H = 580;
     let cw = Math.round(parentW);
     let ch = Math.round(cw * this.imgH / this.imgW);
     if (ch > MAX_H) { ch = MAX_H; cw = Math.round(ch * this.imgW / this.imgH); }
     this.cw = cw; this.ch = ch;
-    this.canvas.width  = cw * dpr;
-    this.canvas.height = ch * dpr;
-    this.canvas.style.width  = cw + "px";
-    this.canvas.style.height = ch + "px";
+    this.canvas.width  = cw * dpr; this.canvas.height = ch * dpr;
+    this.canvas.style.width  = cw + "px"; this.canvas.style.height = ch + "px";
     this.ctx.scale(dpr, dpr);
   }
-
   _loadImage(url) {
-    this.img = new Image();
-    this.img.crossOrigin = "anonymous";
+    this.img = new Image(); this.img.crossOrigin = "anonymous";
     this.img.onload = () => this.render();
     this.img.src = url + "?t=" + Date.now();
   }
-
-  // ── Coordinate mapping (linear — image ↔ display) ─────────────────────────
-  // No scale/translate transforms. Image always fills the canvas exactly.
   _iTD(ix, iy) { return { x: ix / this.imgW * this.cw, y: iy / this.imgH * this.ch }; }
   _dTI(dx, dy) { return { x: dx / this.cw * this.imgW, y: dy / this.ch * this.imgH }; }
-
-  // ── Public API ─────────────────────────────────────────────────────────────
   setRegion(rect) {
     this.sel = { x: Math.round(rect.x), y: Math.round(rect.y), w: Math.round(rect.w), h: Math.round(rect.h) };
-    this.render();
-    this._syncFields();
+    this.render(); this._syncFields();
   }
-
-  setDefault(rect) {
-    this.default = { ...rect };
-    this.setRegion(rect);
-  }
-
+  setDefault(rect) { this.default = { ...rect }; this.setRegion(rect); }
   resetToDefault() { if (this.default) this.setRegion(this.default); }
-
   getRegion() { return this.sel ? { ...this.sel } : null; }
-
-  // ── Hit testing ────────────────────────────────────────────────────────────
   _handles() {
     if (!this.sel) return [];
     const { x, y, w, h } = this.sel;
     return [
-      { id:"nw", ix:x,     iy:y     },
-      { id:"n",  ix:x+w/2, iy:y     },
-      { id:"ne", ix:x+w,   iy:y     },
-      { id:"e",  ix:x+w,   iy:y+h/2 },
-      { id:"se", ix:x+w,   iy:y+h   },
-      { id:"s",  ix:x+w/2, iy:y+h   },
-      { id:"sw", ix:x,     iy:y+h   },
-      { id:"w",  ix:x,     iy:y+h/2 },
+      { id:"nw", ix:x,     iy:y     }, { id:"n",  ix:x+w/2, iy:y     }, { id:"ne", ix:x+w, iy:y     },
+      { id:"e",  ix:x+w,   iy:y+h/2 }, { id:"se", ix:x+w,   iy:y+h   }, { id:"s",  ix:x+w/2, iy:y+h },
+      { id:"sw", ix:x,     iy:y+h   }, { id:"w",  ix:x,     iy:y+h/2 },
     ].map(h => { const d = this._iTD(h.ix, h.iy); return { ...h, dx: d.x, dy: d.y }; });
   }
-
   _hitTest(dx, dy) {
     if (!this.sel) return null;
     const HR = this.HR;
     for (const h of this._handles())
-      if (Math.abs(dx - h.dx) <= HR + 2 && Math.abs(dy - h.dy) <= HR + 2)
-        return { type: "resize", id: h.id };
+      if (Math.abs(dx - h.dx) <= HR + 2 && Math.abs(dy - h.dy) <= HR + 2) return { type: "resize", id: h.id };
     const tl = this._iTD(this.sel.x, this.sel.y);
     const br = this._iTD(this.sel.x + this.sel.w, this.sel.y + this.sel.h);
-    if (dx >= tl.x && dx <= br.x && dy >= tl.y && dy <= br.y)
-      return { type: "move" };
+    if (dx >= tl.x && dx <= br.x && dy >= tl.y && dy <= br.y) return { type: "move" };
     return null;
   }
-
   _cursor(hit) {
     if (!hit) return "default";
     if (hit.type === "move") return "move";
-    const c = { nw:"nw-resize", ne:"ne-resize", se:"se-resize", sw:"sw-resize",
-                 n:"n-resize",  e:"e-resize",   s:"s-resize",   w:"w-resize" };
+    const c = { nw:"nw-resize", ne:"ne-resize", se:"se-resize", sw:"sw-resize", n:"n-resize", e:"e-resize", s:"s-resize", w:"w-resize" };
     return c[hit.id] || "crosshair";
   }
-
-  // ── Drag logic ─────────────────────────────────────────────────────────────
   _applyResize(id, ddx, ddy) {
-    const dxi = ddx / this.cw * this.imgW;
-    const dyi = ddy / this.ch * this.imgH;
-    const MIN = 16;
+    const dxi = ddx / this.cw * this.imgW, dyi = ddy / this.ch * this.imgH, MIN = 16;
     let { x, y, w, h } = this.sel;
     if (id.includes("w")) { const nw = w - dxi; if (nw > MIN) { x += dxi; w = nw; } }
     if (id.includes("e")) { w = Math.max(MIN, w + dxi); }
     if (id.includes("n")) { const nh = h - dyi; if (nh > MIN) { y += dyi; h = nh; } }
     if (id.includes("s")) { h = Math.max(MIN, h + dyi); }
-    x = Math.max(0, Math.min(x, this.imgW - 1));
-    y = Math.max(0, Math.min(y, this.imgH - 1));
-    w = Math.min(w, this.imgW - x);
-    h = Math.min(h, this.imgH - y);
+    x = Math.max(0, Math.min(x, this.imgW - 1)); y = Math.max(0, Math.min(y, this.imgH - 1));
+    w = Math.min(w, this.imgW - x); h = Math.min(h, this.imgH - y);
     this.sel = { x: Math.round(x), y: Math.round(y), w: Math.round(w), h: Math.round(h) };
   }
-
   _bindEvents() {
-    const cv = this.canvas;
-    let lastX = 0, lastY = 0;
-
-    const pos = (e) => {
-      const r = cv.getBoundingClientRect();
-      const s = e.touches ? e.touches[0] : e;
-      return { x: s.clientX - r.left, y: s.clientY - r.top };
-    };
-
+    const cv = this.canvas; let lastX = 0, lastY = 0;
+    const pos = (e) => { const r = cv.getBoundingClientRect(); const s = e.touches ? e.touches[0] : e; return { x: s.clientX - r.left, y: s.clientY - r.top }; };
     cv.addEventListener("mousedown", (e) => {
-      const { x, y } = pos(e);
-      const hit = this._hitTest(x, y);
-      if (!hit) return;
-      e.preventDefault();
-      this.drag = { ...hit, sx: x, sy: y, snap: { ...this.sel } };
-      lastX = x; lastY = y;
+      const { x, y } = pos(e); const hit = this._hitTest(x, y);
+      if (!hit) return; e.preventDefault();
+      this.drag = { ...hit, sx: x, sy: y, snap: { ...this.sel } }; lastX = x; lastY = y;
     });
-
     window.addEventListener("mousemove", (e) => {
       const { x, y } = pos(e);
-      if (!this.drag) {
-        cv.style.cursor = this._cursor(this._hitTest(x, y));
-        return;
-      }
+      if (!this.drag) { cv.style.cursor = this._cursor(this._hitTest(x, y)); return; }
       const ddx = x - lastX, ddy = y - lastY;
       if (this.drag.type === "move") {
-        const dxi = (x - this.drag.sx) / this.cw * this.imgW;
-        const dyi = (y - this.drag.sy) / this.ch * this.imgH;
+        const dxi = (x - this.drag.sx) / this.cw * this.imgW, dyi = (y - this.drag.sy) / this.ch * this.imgH;
         this.sel.x = Math.round(Math.max(0, Math.min(this.drag.snap.x + dxi, this.imgW - this.drag.snap.w)));
         this.sel.y = Math.round(Math.max(0, Math.min(this.drag.snap.y + dyi, this.imgH - this.drag.snap.h)));
-      } else {
-        this._applyResize(this.drag.id, ddx, ddy);
-      }
-      this.render();
-      this._syncFields();
-      lastX = x; lastY = y;
+      } else { this._applyResize(this.drag.id, ddx, ddy); }
+      this.render(); this._syncFields(); lastX = x; lastY = y;
     });
-
     window.addEventListener("mouseup", () => { this.drag = null; });
-
-    // Sync from number inputs → canvas
     for (const [k, id] of Object.entries(this.inputs)) {
-      const el = document.getElementById(id);
-      if (!el) continue;
+      const el = document.getElementById(id); if (!el) continue;
       el.addEventListener("input", () => {
         if (!this.sel) this.sel = { x:0, y:0, w:100, h:100 };
-        this.sel[k] = Math.max(0, Number(el.value));
-        this.render();
+        this.sel[k] = Math.max(0, Number(el.value)); this.render();
       });
     }
   }
-
   _syncFields() {
     if (!this.sel) return;
-    for (const [k, id] of Object.entries(this.inputs)) {
-      const el = document.getElementById(id);
-      if (el) el.value = this.sel[k];
-    }
+    for (const [k, id] of Object.entries(this.inputs)) { const el = document.getElementById(id); if (el) el.value = this.sel[k]; }
   }
-
-  // ── Render ─────────────────────────────────────────────────────────────────
   render() {
     const { ctx, cw, ch } = this;
-    ctx.clearRect(0, 0, cw, ch);
-    ctx.fillStyle = "#111";
-    ctx.fillRect(0, 0, cw, ch);
-
-    if (this.img?.complete && this.img.naturalWidth)
-      ctx.drawImage(this.img, 0, 0, cw, ch);
-
+    ctx.clearRect(0, 0, cw, ch); ctx.fillStyle = "#111"; ctx.fillRect(0, 0, cw, ch);
+    if (this.img?.complete && this.img.naturalWidth) ctx.drawImage(this.img, 0, 0, cw, ch);
     if (!this.sel) return;
-
     const tl = this._iTD(this.sel.x, this.sel.y);
-    const dw = this.sel.w / this.imgW * cw;
-    const dh = this.sel.h / this.imgH * ch;
-
-    // Darken outside selection
+    const dw = this.sel.w / this.imgW * cw, dh = this.sel.h / this.imgH * ch;
     ctx.fillStyle = "rgba(0,0,0,0.55)";
-    ctx.fillRect(0,       0,       cw,       tl.y);
-    ctx.fillRect(0,       tl.y+dh, cw,       ch-tl.y-dh);
-    ctx.fillRect(0,       tl.y,    tl.x,     dh);
-    ctx.fillRect(tl.x+dw, tl.y,    cw-tl.x-dw, dh);
-
-    // Border
-    ctx.strokeStyle = this.color;
-    ctx.lineWidth = 2;
-    ctx.setLineDash([]);
+    ctx.fillRect(0, 0, cw, tl.y); ctx.fillRect(0, tl.y+dh, cw, ch-tl.y-dh);
+    ctx.fillRect(0, tl.y, tl.x, dh); ctx.fillRect(tl.x+dw, tl.y, cw-tl.x-dw, dh);
+    ctx.strokeStyle = this.color; ctx.lineWidth = 2; ctx.setLineDash([]);
     ctx.strokeRect(tl.x, tl.y, dw, dh);
-
-    // Rule-of-thirds guides inside selection
-    ctx.strokeStyle = "rgba(255,255,255,0.15)";
-    ctx.lineWidth = 1;
-    ctx.setLineDash([4, 4]);
+    ctx.strokeStyle = "rgba(255,255,255,0.15)"; ctx.lineWidth = 1; ctx.setLineDash([4, 4]);
     for (let i = 1; i <= 2; i++) {
       const gx = tl.x + dw * i / 3, gy = tl.y + dh * i / 3;
       ctx.beginPath(); ctx.moveTo(gx, tl.y); ctx.lineTo(gx, tl.y+dh); ctx.stroke();
       ctx.beginPath(); ctx.moveTo(tl.x, gy); ctx.lineTo(tl.x+dw, gy); ctx.stroke();
     }
     ctx.setLineDash([]);
-
-    // Label
-    ctx.fillStyle = this.color;
-    ctx.font = "bold 12px sans-serif";
+    ctx.fillStyle = this.color; ctx.font = "bold 12px sans-serif";
     ctx.fillText(this.label, tl.x + 6, tl.y + 16);
-
-    // Handles
     const HR = this.HR;
     for (const h of this._handles()) {
-      ctx.fillStyle = "#fff";
-      ctx.fillRect(h.dx - HR, h.dy - HR, HR*2, HR*2);
-      ctx.strokeStyle = this.color;
-      ctx.lineWidth = 2;
-      ctx.strokeRect(h.dx - HR, h.dy - HR, HR*2, HR*2);
+      ctx.fillStyle = "#fff"; ctx.fillRect(h.dx - HR, h.dy - HR, HR*2, HR*2);
+      ctx.strokeStyle = this.color; ctx.lineWidth = 2; ctx.strokeRect(h.dx - HR, h.dy - HR, HR*2, HR*2);
     }
   }
 }
 
-// ════════════════════════════════════════════════════════════════════════════
-//  App state
-// ════════════════════════════════════════════════════════════════════════════
 let currentJobId = null, pollInterval = null, lastLogLen = 0;
 let editorCrop = null, editorGame = null, editorLayout = null;
-
-// Layout two-step state
 let layoutData = null, layoutWebcamCoords = null, layoutPhase = "webcam";
+let urlTotalDuration = 0;
 
-// URL partial download state
-let urlTotalDuration = 0; // seconds
-
-// ── Helpers de tempo (HH:MM:SS ↔ segundos)
 function hmsToSec(hms) {
   if (!hms) return 0;
   const p = hms.split(":").map(Number);
@@ -699,13 +707,10 @@ function hmsToSec(hms) {
   return p[0]||0;
 }
 function secToHMS(sec) {
-  const h = Math.floor(sec / 3600);
-  const m = Math.floor((sec % 3600) / 60);
-  const s = Math.floor(sec % 60);
+  const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), s = Math.floor(sec % 60);
   return `${h}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
 }
 
-// ── Tab switching
 document.querySelectorAll(".tab-btn").forEach(btn =>
   btn.addEventListener("click", () => {
     document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
@@ -715,10 +720,8 @@ document.querySelectorAll(".tab-btn").forEach(btn =>
   })
 );
 
-// ── Drop zones
 for (const id of ["drop-streamer","drop-mesa","drop-combined","drop-outro"]) {
-  const el = document.getElementById(id);
-  if (!el) continue;
+  const el = document.getElementById(id); if (!el) continue;
   const inp = el.querySelector("input");
   inp?.addEventListener("change", () => {
     el.classList.toggle("filled", inp.files.length > 0);
@@ -726,7 +729,15 @@ for (const id of ["drop-streamer","drop-mesa","drop-combined","drop-outro"]) {
   });
 }
 
-// ── Duration presets
+const baeshVideoInput = document.getElementById("baesh-video-input");
+if (baeshVideoInput) {
+  baeshVideoInput.addEventListener("change", () => {
+    const el = document.getElementById("baesh-drop-video");
+    el.classList.toggle("filled", baeshVideoInput.files.length > 0);
+    if (baeshVideoInput.files[0]) document.getElementById("baesh-drop-hint").textContent = baeshVideoInput.files[0].name;
+  });
+}
+
 document.querySelectorAll(".preset-btn").forEach(btn =>
   btn.addEventListener("click", () => {
     document.querySelectorAll(".preset-btn").forEach(b => b.classList.remove("active"));
@@ -743,45 +754,38 @@ document.querySelectorAll(".preset-btn").forEach(btn =>
   })
 );
 
-// ── Log helper
 const logEl = document.getElementById("log");
 function logLine(text, cls) {
   logEl.classList.add("show");
   const span = document.createElement("div");
   if (cls) span.className = cls;
   span.textContent = text;
-  logEl.appendChild(span);
-  logEl.scrollTop = logEl.scrollHeight;
+  logEl.appendChild(span); logEl.scrollTop = logEl.scrollHeight;
 }
 
-// ── Form submit
 document.getElementById("form").addEventListener("submit", e => { e.preventDefault(); startJob(); });
 
 async function startJob() {
   logEl.innerHTML = "";
   document.getElementById("cancel-job-btn").style.display = "none";
   document.getElementById("cancel-job-btn").disabled = false;
-  document.getElementById("cancel-job-btn").textContent = "✕ Cancelar download";
+  document.getElementById("cancel-job-btn").textContent = "\u2715 Cancelar download";
   document.getElementById("results-card").style.display = "none";
   document.getElementById("clips").innerHTML = "";
   document.getElementById("compilation-banner").innerHTML = "";
   hideAllApprovals();
-
   const form = document.getElementById("form");
   form.querySelector("button.run").disabled = true;
-
   const fd = new FormData(form);
   const activeTab = document.querySelector(".tab-btn.active").dataset.tab;
-
   if (activeTab === "url") {
     const urlVal = document.getElementById("url-input").value.trim();
-    if (!urlVal) { logLine("Informe um link válido.", "err"); form.querySelector("button.run").disabled = false; return; }
+    if (!urlVal) { logLine("Informe um link v\u00e1lido.", "err"); form.querySelector("button.run").disabled = false; return; }
     fd.append("mode","url"); fd.append("urlLink", urlVal);
-    // Trecho parcial — só envia se info card foi aberto e o usuário ajustou os tempos
     if (document.getElementById("url-info-card").style.display !== "none") {
       const startSec = hmsToSec(document.getElementById("url-start").value);
       const endSec   = hmsToSec(document.getElementById("url-end").value);
-      if (startSec > 0)                        fd.append("urlStartSec", startSec);
+      if (startSec > 0) fd.append("urlStartSec", startSec);
       if (endSec > 0 && endSec < urlTotalDuration) fd.append("urlEndSec", endSec);
     }
   } else if (activeTab === "combined") {
@@ -789,31 +793,26 @@ async function startJob() {
   } else {
     fd.append("mode","files");
   }
-
-  // Duration: envia pads apenas no modo personalizado
   const isCustom = document.getElementById("presetDuration").value === "custom";
   fd.append("maxClipDurationSec", document.getElementById("maxClipDurationSec").value);
   if (isCustom) {
     fd.append("padBeforeSec", document.getElementById("padBeforeSec").value);
     fd.append("padAfterSec",  document.getElementById("padAfterSec").value);
   }
-
-  fd.append("detectCrop",          document.getElementById("opt-crop").checked              ? "true" : "false");
-  fd.append("detectGameCrop",      document.getElementById("opt-game-crop").checked          ? "true" : "false");
-  fd.append("enableCaptions",      document.getElementById("opt-captions").checked           ? "true" : "false");
-  fd.append("enableCensorship",    document.getElementById("opt-censor").checked             ? "true" : "false");
-  fd.append("generateCompilation", document.getElementById("opt-compilation").checked        ? "true" : "false");
+  fd.append("detectCrop",          document.getElementById("opt-crop").checked        ? "true" : "false");
+  fd.append("detectGameCrop",      document.getElementById("opt-game-crop").checked    ? "true" : "false");
+  fd.append("enableCaptions",      document.getElementById("opt-captions").checked     ? "true" : "false");
+  fd.append("enableCensorship",    document.getElementById("opt-censor").checked       ? "true" : "false");
+  fd.append("generateCompilation", document.getElementById("opt-compilation").checked  ? "true" : "false");
   fd.append("useDefaultOutro",     (document.getElementById("opt-use-default-outro")?.checked ?? false) ? "true" : "false");
   const profileId = document.getElementById("profileSelect").value;
   if (profileId) fd.append("profileId", profileId);
-
   logLine("Enviando...");
   try {
     const res  = await fetch("/api/jobs", { method:"POST", body:fd });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "Falha ao criar job.");
-    currentJobId = data.jobId;
-    lastLogLen = 0;
+    currentJobId = data.jobId; lastLogLen = 0;
     document.getElementById("cancel-job-btn").style.display = "inline-flex";
     pollInterval = setInterval(pollJob, 1500);
   } catch (err) {
@@ -822,7 +821,6 @@ async function startJob() {
   }
 }
 
-// ── URL video info + partial range
 async function fetchVideoInfo() {
   const url = document.getElementById("url-input").value.trim();
   if (!url) { alert("Cole um link primeiro."); return; }
@@ -834,17 +832,14 @@ async function fetchVideoInfo() {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "Falha ao obter info.");
     urlTotalDuration = data.durationSec || 0;
-    document.getElementById("url-platform").textContent      = data.platform || "—";
-    document.getElementById("url-title").textContent         = data.title || url;
+    document.getElementById("url-platform").textContent       = data.platform || "\u2014";
+    document.getElementById("url-title").textContent          = data.title || url;
     document.getElementById("url-duration-label").textContent = secToHMS(urlTotalDuration);
     document.getElementById("url-start").value = "0:00:00";
     document.getElementById("url-end").value   = secToHMS(urlTotalDuration);
     document.getElementById("url-info-card").style.display = "block";
-  } catch (err) {
-    alert("Erro: " + err.message);
-  } finally {
-    btn.disabled = false; btn.textContent = "Verificar";
-  }
+  } catch (err) { alert("Erro: " + err.message); }
+  finally { btn.disabled = false; btn.textContent = "Verificar"; }
 }
 
 function resetUrlRange() {
@@ -852,7 +847,6 @@ function resetUrlRange() {
   document.getElementById("url-end").value   = secToHMS(urlTotalDuration);
 }
 
-// ── Polling
 async function pollJob() {
   if (!currentJobId) return;
   try {
@@ -860,23 +854,14 @@ async function pollJob() {
     const job = await res.json();
     for (let i = lastLogLen; i < job.log.length; i++) logLine(job.log[i]);
     lastLogLen = job.log.length;
-
-    if (job.status === "waiting-crop-approval") {
-      clearInterval(pollInterval); pollInterval = null;
-      handleCropApproval(job.pendingApproval.data);
-    } else if (job.status === "waiting-composition-preview") {
-      clearInterval(pollInterval); pollInterval = null;
-      handleCompositionPreview(job.pendingApproval.data);
-    } else if (job.status === "waiting-layout-approval") {
-      clearInterval(pollInterval); pollInterval = null;
-      handleLayoutApproval(job.pendingApproval.data);
-    } else if (job.status === "waiting-captions-approval") {
-      clearInterval(pollInterval); pollInterval = null;
-      handleCaptionsApproval(job.pendingApproval.data);
-    } else if (job.status === "done") {
+    if (job.status === "waiting-crop-approval") { clearInterval(pollInterval); pollInterval = null; handleCropApproval(job.pendingApproval.data); }
+    else if (job.status === "waiting-composition-preview") { clearInterval(pollInterval); pollInterval = null; handleCompositionPreview(job.pendingApproval.data); }
+    else if (job.status === "waiting-layout-approval") { clearInterval(pollInterval); pollInterval = null; handleLayoutApproval(job.pendingApproval.data); }
+    else if (job.status === "waiting-captions-approval") { clearInterval(pollInterval); pollInterval = null; handleCaptionsApproval(job.pendingApproval.data); }
+    else if (job.status === "done") {
       clearInterval(pollInterval); pollInterval = null;
       document.getElementById("cancel-job-btn").style.display = "none";
-      logLine(`Pronto! ${job.clips.length} clipe(s) gerado(s).`, "ok");
+      logLine("Pronto! " + job.clips.length + " clipe(s) gerado(s).", "ok");
       document.getElementById("form").querySelector("button.run").disabled = false;
       showResults(job);
     } else if (job.status === "error") {
@@ -887,7 +872,7 @@ async function pollJob() {
     } else if (job.status === "cancelled") {
       clearInterval(pollInterval); pollInterval = null;
       document.getElementById("cancel-job-btn").style.display = "none";
-      logLine("Download cancelado pelo usuário.", "err");
+      logLine("Download cancelado pelo usu\u00e1rio.", "err");
       document.getElementById("form").querySelector("button.run").disabled = false;
     }
   } catch(e) { console.warn("poll err", e); }
@@ -900,168 +885,114 @@ async function cancelCurrentJob() {
   const btn = document.getElementById("cancel-job-btn");
   btn.disabled = true; btn.textContent = "Cancelando...";
   try {
-    await fetch(`/api/jobs/${currentJobId}/cancel`, { method: "POST" });
-    logLine("Solicitação de cancelamento enviada.", "wait");
+    await fetch("/api/jobs/" + currentJobId + "/cancel", { method: "POST" });
+    logLine("Solicita\u00e7\u00e3o de cancelamento enviada.", "wait");
   } catch(e) {
     logLine("Erro ao cancelar: " + e.message, "err");
-    btn.disabled = false; btn.textContent = "✕ Cancelar download";
+    btn.disabled = false; btn.textContent = "\u2715 Cancelar download";
   }
 }
+
 function hideAllApprovals() {
   ["crop-approval","game-crop-approval","composition-preview","layout-approval","captions-approval"]
     .forEach(id => document.getElementById(id).classList.remove("visible"));
 }
 
-// ════════════════════════════════════════════════════════════════════════════
-//  CROP — STREAMER
-// ════════════════════════════════════════════════════════════════════════════
 function handleCropApproval(data) {
   if (data.target === "game") { handleGameCropApproval(data); return; }
-
   const panel = document.getElementById("crop-approval");
-  panel.classList.add("visible");
-  panel.scrollIntoView({ behavior:"smooth" });
-
-  editorCrop = new RegionEditor(
-    "canvas-crop", "crop", "#e8418c", "Streamer",
+  panel.classList.add("visible"); panel.scrollIntoView({ behavior:"smooth" });
+  editorCrop = new RegionEditor("canvas-crop", "crop", "#e8418c", "Streamer",
     { x:"crop-x", y:"crop-y", w:"crop-w", h:"crop-h" },
-    { imgW: data.videoW, imgH: data.videoH, imageUrl: data.previewUrl }
-  );
+    { imgW: data.videoW, imgH: data.videoH, imageUrl: data.previewUrl });
   editorCrop.setDefault(data.detected);
-
   document.getElementById("crop-reset-btn").onclick = () => editorCrop.resetToDefault();
-  logLine("Aguardando aprovação do enquadramento...", "wait");
+  logLine("Aguardando aprova\u00e7\u00e3o do enquadramento...", "wait");
 }
 
 document.getElementById("crop-approve").addEventListener("click", async () => {
   const sel = editorCrop?.getRegion();
   document.getElementById("crop-approval").classList.remove("visible");
   await sendApproval("crop", true, sel);
-  logLine("Enquadramento do streamer salvo.", "ok");
-  resumePolling();
+  logLine("Enquadramento do streamer salvo.", "ok"); resumePolling();
 });
 document.getElementById("crop-skip").addEventListener("click", async () => {
   document.getElementById("crop-approval").classList.remove("visible");
   await sendApproval("crop", true, null);
-  logLine("Usando frame completo do streamer.", "ok");
-  resumePolling();
+  logLine("Usando frame completo do streamer.", "ok"); resumePolling();
 });
 
-// ════════════════════════════════════════════════════════════════════════════
-//  CROP — JOGO / MESA
-// ════════════════════════════════════════════════════════════════════════════
 function handleGameCropApproval(data) {
   const panel = document.getElementById("game-crop-approval");
-  panel.classList.add("visible");
-  panel.scrollIntoView({ behavior:"smooth" });
-
-  editorGame = new RegionEditor(
-    "canvas-game", "game", "#3de89a", "Mesa / Jogo",
+  panel.classList.add("visible"); panel.scrollIntoView({ behavior:"smooth" });
+  editorGame = new RegionEditor("canvas-game", "game", "#3de89a", "Mesa / Jogo",
     { x:"game-x", y:"game-y", w:"game-w", h:"game-h" },
-    { imgW: data.videoW, imgH: data.videoH, imageUrl: data.previewUrl }
-  );
+    { imgW: data.videoW, imgH: data.videoH, imageUrl: data.previewUrl });
   editorGame.setDefault(data.detected);
-
   document.getElementById("game-crop-reset-btn").onclick = () => editorGame.resetToDefault();
-  logLine("Aguardando aprovação do enquadramento do jogo...", "wait");
+  logLine("Aguardando aprova\u00e7\u00e3o do enquadramento do jogo...", "wait");
 }
 
 document.getElementById("game-crop-approve").addEventListener("click", async () => {
   const sel = editorGame?.getRegion();
   document.getElementById("game-crop-approval").classList.remove("visible");
   await sendApproval("crop", true, sel);
-  logLine("Enquadramento do jogo salvo.", "ok");
-  resumePolling();
+  logLine("Enquadramento do jogo salvo.", "ok"); resumePolling();
 });
 document.getElementById("game-crop-skip").addEventListener("click", async () => {
   document.getElementById("game-crop-approval").classList.remove("visible");
   await sendApproval("crop", true, null);
-  logLine("Usando frame completo do jogo.", "ok");
-  resumePolling();
+  logLine("Usando frame completo do jogo.", "ok"); resumePolling();
 });
 
-// ════════════════════════════════════════════════════════════════════════════
-//  LAYOUT — VÍDEO ÚNICO (dois passos: webcam → mesa)
-// ════════════════════════════════════════════════════════════════════════════
 function handleLayoutApproval(data) {
-  layoutData = data;
-  layoutWebcamCoords = null;
-  layoutPhase = "webcam";
-
+  layoutData = data; layoutWebcamCoords = null; layoutPhase = "webcam";
   const panel = document.getElementById("layout-approval");
-  panel.classList.add("visible");
-  panel.scrollIntoView({ behavior:"smooth" });
-
-  // Criar editor com a região da webcam (passo 1)
-  editorLayout = new RegionEditor(
-    "canvas-layout", "layout", "#a07fde", "Webcam",
+  panel.classList.add("visible"); panel.scrollIntoView({ behavior:"smooth" });
+  editorLayout = new RegionEditor("canvas-layout", "layout", "#a07fde", "Webcam",
     { x:"layout-x", y:"layout-y", w:"layout-w", h:"layout-h" },
-    { imgW: data.videoW, imgH: data.videoH, imageUrl: data.previewUrl }
-  );
+    { imgW: data.videoW, imgH: data.videoH, imageUrl: data.previewUrl });
   editorLayout.setDefault(data.webcam);
-
   _updateLayoutUI("webcam");
-  logLine("Passo 1/2: selecione a área da webcam.", "wait");
+  logLine("Passo 1/2: selecione a \u00e1rea da webcam.", "wait");
 }
 
 function _updateLayoutUI(phase) {
-  const pip1 = document.getElementById("layout-step-1");
-  const pip2 = document.getElementById("layout-step-2");
-  const nextBtn = document.getElementById("layout-next-btn");
-  const backBtn = document.getElementById("layout-back-btn");
-
+  const pip1 = document.getElementById("layout-step-1"), pip2 = document.getElementById("layout-step-2");
+  const nextBtn = document.getElementById("layout-next-btn"), backBtn = document.getElementById("layout-back-btn");
   if (phase === "webcam") {
-    document.getElementById("layout-title").textContent = "📷 Passo 1 de 2 — Webcam";
+    document.getElementById("layout-title").textContent = "\ud83d\udcf7 Passo 1 de 2 \u2014 Webcam";
     document.getElementById("layout-desc").textContent  = "Arraste a caixa para enquadrar exatamente a janela da webcam.";
     pip1.className = "step-pip active"; pip2.className = "step-pip";
-    nextBtn.textContent = "Próximo: Mesa →";
-    backBtn.style.display = "none";
+    nextBtn.textContent = "Pr\u00f3ximo: Mesa \u2192"; backBtn.style.display = "none";
   } else {
-    document.getElementById("layout-title").textContent = "🎮 Passo 2 de 2 — Mesa / Jogo";
+    document.getElementById("layout-title").textContent = "\ud83c\udfae Passo 2 de 2 \u2014 Mesa / Jogo";
     document.getElementById("layout-desc").textContent  = "Agora enquadre a mesa, o dealer e as cartas.";
     pip1.className = "step-pip done"; pip2.className = "step-pip active";
-    nextBtn.textContent = "Aprovar layout ✓";
-    backBtn.style.display = "";
+    nextBtn.textContent = "Aprovar layout \u2713"; backBtn.style.display = "";
   }
 }
 
-document.getElementById("layout-reset-btn").addEventListener("click", () => {
-  if (!editorLayout || !layoutData) return;
-  editorLayout.resetToDefault();
-});
+document.getElementById("layout-reset-btn").addEventListener("click", () => { if (editorLayout && layoutData) editorLayout.resetToDefault(); });
 
 document.getElementById("layout-next-btn").addEventListener("click", async () => {
   if (layoutPhase === "webcam") {
-    // Salvar coords da webcam e ir para o passo 2
-    layoutWebcamCoords = editorLayout.getRegion();
-    layoutPhase = "mesa";
-    _updateLayoutUI("mesa");
-
-    // Reconfigurar o mesmo editor para a mesa/jogo
-    editorLayout.color   = "#3de89a";
-    editorLayout.label   = "Mesa / Jogo";
-    editorLayout.default = { ...layoutData.game };
-    editorLayout.setRegion(layoutData.game);
-
-    logLine("Passo 2/2: selecione a área do jogo/mesa.", "wait");
+    layoutWebcamCoords = editorLayout.getRegion(); layoutPhase = "mesa"; _updateLayoutUI("mesa");
+    editorLayout.color = "#3de89a"; editorLayout.label = "Mesa / Jogo";
+    editorLayout.default = { ...layoutData.game }; editorLayout.setRegion(layoutData.game);
+    logLine("Passo 2/2: selecione a \u00e1rea do jogo/mesa.", "wait");
   } else {
-    // Passo 2: aprovar tudo
     const mesaCoords = editorLayout.getRegion();
     document.getElementById("layout-approval").classList.remove("visible");
     await sendApproval("layout", true, { webcam: layoutWebcamCoords, game: mesaCoords });
-    logLine("Layout aprovado. Webcam e mesa confirmadas.", "ok");
-    resumePolling();
+    logLine("Layout aprovado.", "ok"); resumePolling();
   }
 });
 
 document.getElementById("layout-back-btn").addEventListener("click", () => {
-  // Voltar ao passo 1 da webcam
-  layoutPhase = "webcam";
-  _updateLayoutUI("webcam");
-  editorLayout.color   = "#a07fde";
-  editorLayout.label   = "Webcam";
+  layoutPhase = "webcam"; _updateLayoutUI("webcam");
+  editorLayout.color = "#a07fde"; editorLayout.label = "Webcam";
   editorLayout.default = { ...layoutData.webcam };
-  // Restaurar coords que o usuário já tinha definido (se voltar, não perder o trabalho)
   if (layoutWebcamCoords) editorLayout.setRegion(layoutWebcamCoords);
   else editorLayout.resetToDefault();
 });
@@ -1073,33 +1004,28 @@ document.getElementById("layout-cancel-btn").addEventListener("click", async () 
   document.getElementById("form").querySelector("button.run").disabled = false;
 });
 
-// ════════════════════════════════════════════════════════════════════════════
-//  CAPTIONS
-// ════════════════════════════════════════════════════════════════════════════
 function handleCaptionsApproval(data) {
   const container = document.getElementById("caption-clips-container");
   container.innerHTML = "";
   for (const clip of data.clips) {
     const div = document.createElement("div");
-    div.className = "caption-clip";
-    div.dataset.clipId = clip.clipId;
-    div.innerHTML = `<h4>${clip.startSec.toFixed(1)}s – ${clip.endSec.toFixed(1)}s</h4>
-      <video src="${clip.clipUrl}" controls preload="metadata"></video>
-      <div class="caption-groups" id="grps-${clip.clipId}"></div>`;
+    div.className = "caption-clip"; div.dataset.clipId = clip.clipId;
+    div.innerHTML = "<h4>" + clip.startSec.toFixed(1) + "s \u2013 " + clip.endSec.toFixed(1) + "s</h4>" +
+      "<video src=\"" + clip.clipUrl + "\" controls preload=\"metadata\"></video>" +
+      "<div class=\"caption-groups\" id=\"grps-" + clip.clipId + "\"></div>";
     const grpsEl = div.querySelector(".caption-groups");
     for (const g of clip.groups) {
       const row = document.createElement("div");
-      row.className = "caption-group";
-      row.dataset.gid = g.id; row.dataset.start = g.startSec; row.dataset.end = g.endSec;
-      row.innerHTML = `<span class="time-label">${g.startSec.toFixed(2)}→${g.endSec.toFixed(2)}</span>
-        <input type="text" value="${g.text.replace(/"/g,"&quot;")}" />`;
+      row.className = "caption-group"; row.dataset.gid = g.id; row.dataset.start = g.startSec; row.dataset.end = g.endSec;
+      row.innerHTML = "<span class=\"time-label\">" + g.startSec.toFixed(2) + "\u2192" + g.endSec.toFixed(2) + "</span>" +
+        "<input type=\"text\" value=\"" + g.text.replace(/"/g,"&quot;") + "\" />";
       grpsEl.appendChild(row);
     }
     container.appendChild(div);
   }
   document.getElementById("captions-approval").classList.add("visible");
   document.getElementById("captions-approval").scrollIntoView({ behavior:"smooth" });
-  logLine("Aguardando revisão das legendas...", "wait");
+  logLine("Aguardando revis\u00e3o das legendas...", "wait");
 }
 
 document.getElementById("captions-approve").addEventListener("click", async () => {
@@ -1107,26 +1033,22 @@ document.getElementById("captions-approve").addEventListener("click", async () =
   document.querySelectorAll(".caption-clip").forEach(clipEl => {
     const groups = [];
     clipEl.querySelectorAll(".caption-group").forEach(row =>
-      groups.push({ id:row.dataset.gid, text:row.querySelector("input").value,
-                    startSec:+row.dataset.start, endSec:+row.dataset.end }));
+      groups.push({ id:row.dataset.gid, text:row.querySelector("input").value, startSec:+row.dataset.start, endSec:+row.dataset.end }));
     clips.push({ clipId:clipEl.dataset.clipId, groups });
   });
   document.getElementById("captions-approval").classList.remove("visible");
   await sendApproval("captions", true, { clips });
-  logLine("Legendas aprovadas.", "ok");
-  resumePolling();
+  logLine("Legendas aprovadas.", "ok"); resumePolling();
 });
 document.getElementById("captions-skip").addEventListener("click", async () => {
   document.getElementById("captions-approval").classList.remove("visible");
   await sendApproval("captions", false, null);
-  logLine("Legendas ignoradas.", "ok");
-  resumePolling();
+  logLine("Legendas ignoradas.", "ok"); resumePolling();
 });
 
-// ── Send approval to backend
 async function sendApproval(type, approved, adjustedData) {
   try {
-    const res = await fetch(`/api/jobs/${currentJobId}/approve`, {
+    const res = await fetch("/api/jobs/" + currentJobId + "/approve", {
       method:"POST", headers:{"content-type":"application/json"},
       body: JSON.stringify({ type, approved, adjustedData }),
     });
@@ -1134,56 +1056,39 @@ async function sendApproval(type, approved, adjustedData) {
   } catch(e) { logLine("Erro de rede: " + e.message, "err"); }
 }
 
-// ════════════════════════════════════════════════════════════════════════════
-//  COMPOSITION PREVIEW
-// ════════════════════════════════════════════════════════════════════════════
 function handleCompositionPreview(data) {
   const panel = document.getElementById("composition-preview");
-  panel.classList.add("visible");
-  panel.scrollIntoView({ behavior: "smooth" });
+  panel.classList.add("visible"); panel.scrollIntoView({ behavior:"smooth" });
   document.getElementById("comp-preview-img").src = data.previewUrl + "?t=" + Date.now();
   document.getElementById("comp-adjust-streamer").style.display = data.hasStreamer ? "" : "none";
   document.getElementById("comp-adjust-mesa").style.display     = data.hasMesa     ? "" : "none";
-  logLine("Pré-visualização pronta — aguardando aprovação...", "wait");
+  logLine("Pr\u00e9-visualiza\u00e7\u00e3o pronta \u2014 aguardando aprova\u00e7\u00e3o...", "wait");
 }
 
 document.getElementById("comp-approve").addEventListener("click", async () => {
   document.getElementById("composition-preview").classList.remove("visible");
   await sendApproval("composition-preview", true, null);
-  logLine("Composição aprovada. Renderizando...", "ok");
-  resumePolling();
+  logLine("Composi\u00e7\u00e3o aprovada. Renderizando...", "ok"); resumePolling();
 });
-
 document.getElementById("comp-adjust-streamer").addEventListener("click", async () => {
   document.getElementById("composition-preview").classList.remove("visible");
   await sendApproval("composition-preview", false, { action: "adjust-streamer" });
-  logLine("Ajustando enquadramento do streamer...", "wait");
-  resumePolling();
+  logLine("Ajustando enquadramento do streamer...", "wait"); resumePolling();
 });
-
 document.getElementById("comp-adjust-mesa").addEventListener("click", async () => {
   document.getElementById("composition-preview").classList.remove("visible");
   await sendApproval("composition-preview", false, { action: "adjust-mesa" });
-  logLine("Ajustando enquadramento da mesa...", "wait");
-  resumePolling();
+  logLine("Ajustando enquadramento da mesa...", "wait"); resumePolling();
 });
 
-// ════════════════════════════════════════════════════════════════════════════
-//  DEFAULT OUTRO TOGGLE
-// ════════════════════════════════════════════════════════════════════════════
 async function loadDefaults() {
   try {
-    const res  = await fetch("/api/defaults");
-    const data = await res.json();
+    const res  = await fetch("/api/defaults"), data = await res.json();
     if (data.spinFinal) {
       document.getElementById("outro-default-row").style.display = "";
-      // Default checked → esconde upload
       document.getElementById("outro-upload-wrap").style.display = "none";
     }
-    // Se spinFinal=false, upload já aparece (display padrão é "")
-  } catch (e) {
-    // Server offline ou rota não existe — upload visível como fallback
-  }
+  } catch (e) {}
 }
 loadDefaults();
 
@@ -1191,65 +1096,51 @@ document.getElementById("opt-use-default-outro")?.addEventListener("change", fun
   document.getElementById("outro-upload-wrap").style.display = this.checked ? "none" : "";
 });
 
-// Mostrar/esconder painel de opções de legenda
 document.getElementById("opt-captions").addEventListener("change", function() {
   const panel = document.getElementById("caption-options");
   panel.style.display = this.checked ? "flex" : "none";
   if (!this.checked) document.getElementById("opt-censor").checked = false;
 });
 
-
-// ════════════════════════════════════════════════════════════════════════════
-//  RESULTS + FEEDBACK DETALHADO
-// ════════════════════════════════════════════════════════════════════════════
-
 const FEEDBACK_TAGS = [
-  // Negativos
   { id:"wrong-moment",    label:"Momento errado",           pos:false },
   { id:"wrong-dealer",    label:"Dealer incorreto",         pos:false },
   { id:"bad-crop",        label:"Crop ruim",                pos:false },
-  { id:"bad-duration",    label:"Duração ruim",             pos:false },
-  { id:"started-late",    label:"Começou tarde",            pos:false },
+  { id:"bad-duration",    label:"Dura\u00e7\u00e3o ruim", pos:false },
+  { id:"started-late",    label:"Come\u00e7ou tarde",      pos:false },
   { id:"ended-early",     label:"Terminou cedo",            pos:false },
-  { id:"missed-reaction", label:"Perdeu a reação",          pos:false },
+  { id:"missed-reaction", label:"Perdeu a rea\u00e7\u00e3o", pos:false },
   { id:"not-best",        label:"Melhor momento ignorado",  pos:false },
-  // Positivos
   { id:"great-cut",       label:"Excelente corte",          pos:true  },
   { id:"great-crop",      label:"Excelente enquadramento",  pos:true  },
   { id:"great-timing",    label:"Timing perfeito",          pos:true  },
 ];
 
-// Envia rating (e opcionalmente tags/comment) para o backend
 async function sendFeedback(jobId, clipIndex, rating, card) {
   try {
-    await fetch(`/api/jobs/${jobId}/feedback`, {
+    await fetch("/api/jobs/" + jobId + "/feedback", {
       method:"POST", headers:{"content-type":"application/json"},
       body: JSON.stringify({ clipIndex, rating }),
     });
-    // Highlight button
-    card.querySelectorAll(".fb-btn").forEach(b =>
-      b.classList.remove("active-great","active-good","active-bad"));
-    card.querySelector(`[data-rating="${rating}"]`)?.classList.add(`active-${rating}`);
-    // Abrir painel de detalhe
+    card.querySelectorAll(".fb-btn").forEach(b => b.classList.remove("active-great","active-good","active-bad"));
+    card.querySelector("[data-rating=\"" + rating + "\"]")?.classList.add("active-" + rating);
     card.querySelector(".feedback-detail")?.classList.add("open");
   } catch(e) { console.warn("feedback err", e); }
 }
 
-// Envia tags + comentário (chamado pelo botão "Salvar" no detalhe)
 async function saveFeedbackDetail(jobId, clipIndex, detailEl) {
   const tags    = [...detailEl.querySelectorAll(".chip.active")].map(c => c.dataset.tag);
   const comment = detailEl.querySelector(".fb-textarea")?.value.trim() || "";
   const saveBtn = detailEl.querySelector(".fb-save-btn");
   if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = "Salvando..."; }
   try {
-    await fetch(`/api/jobs/${jobId}/feedback`, {
+    await fetch("/api/jobs/" + jobId + "/feedback", {
       method:"POST", headers:{"content-type":"application/json"},
       body: JSON.stringify({ clipIndex, tags, comment }),
     });
-    // Exibir confirmação
     const badge = detailEl.querySelector(".fb-saved-badge");
-    if (badge) badge.textContent = "✓ Feedback salvo";
-    if (saveBtn) { saveBtn.style.display = "none"; }
+    if (badge) badge.textContent = "\u2713 Feedback salvo";
+    if (saveBtn) saveBtn.style.display = "none";
   } catch(e) {
     if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = "Salvar"; }
     console.warn("feedback detail err", e);
@@ -1257,97 +1148,61 @@ async function saveFeedbackDetail(jobId, clipIndex, detailEl) {
 }
 
 function buildFeedbackDetail(jobId, idx) {
-  const negTags = FEEDBACK_TAGS.filter(t => !t.pos);
-  const posTags = FEEDBACK_TAGS.filter(t =>  t.pos);
-
-  const negChips = negTags.map(t =>
-    `<button class="chip" data-tag="${t.id}" onclick="this.classList.toggle('active')">${t.label}</button>`
-  ).join("");
-  const posChips = posTags.map(t =>
-    `<button class="chip chip-pos" data-tag="${t.id}" onclick="this.classList.toggle('active')">${t.label}</button>`
-  ).join("");
-
-  return `<div class="feedback-detail" id="fbdetail-${jobId}-${idx}">
-    <p class="fb-prompt">O que você achou deste corte? (opcional)</p>
-    <div class="chip-section">
-      <div class="chip-section-label">Pontos a melhorar</div>
-      <div class="chip-row">${negChips}</div>
-    </div>
-    <div class="chip-section">
-      <div class="chip-section-label">Pontos positivos</div>
-      <div class="chip-row">${posChips}</div>
-    </div>
-    <textarea class="fb-textarea" placeholder="Comentário livre — ex: a comemoração ficou fora do corte..."></textarea>
-    <div class="fb-save-row">
-      <span class="fb-saved-badge"></span>
-      <button class="fb-save-btn" onclick="saveFeedbackDetail('${jobId}',${idx},this.closest('.feedback-detail'))">Salvar detalhes</button>
-    </div>
-  </div>`;
+  const negChips = FEEDBACK_TAGS.filter(t => !t.pos).map(t =>
+    "<button class=\"chip\" data-tag=\"" + t.id + "\" onclick=\"this.classList.toggle('active')\">" + t.label + "</button>").join("");
+  const posChips = FEEDBACK_TAGS.filter(t =>  t.pos).map(t =>
+    "<button class=\"chip chip-pos\" data-tag=\"" + t.id + "\" onclick=\"this.classList.toggle('active')\">" + t.label + "</button>").join("");
+  return "<div class=\"feedback-detail\" id=\"fbdetail-" + jobId + "-" + idx + "\">" +
+    "<p class=\"fb-prompt\">O que voc\u00ea achou deste corte? (opcional)</p>" +
+    "<div class=\"chip-section\"><div class=\"chip-section-label\">Pontos a melhorar</div><div class=\"chip-row\">" + negChips + "</div></div>" +
+    "<div class=\"chip-section\"><div class=\"chip-section-label\">Pontos positivos</div><div class=\"chip-row\">" + posChips + "</div></div>" +
+    "<textarea class=\"fb-textarea\" placeholder=\"Coment\u00e1rio livre...\"></textarea>" +
+    "<div class=\"fb-save-row\"><span class=\"fb-saved-badge\"></span>" +
+    "<button class=\"fb-save-btn\" onclick=\"saveFeedbackDetail('" + jobId + "'," + idx + ",this.closest('.feedback-detail'))\">Salvar detalhes</button></div></div>";
 }
 
 function showResults(job) {
   const resultsCard = document.getElementById("results-card");
   const clipsEl     = document.getElementById("clips");
   const bannerEl    = document.getElementById("compilation-banner");
-
   if (job.compilationUrl) {
-    bannerEl.innerHTML = `<div class="compilation-banner">
-      <div class="left"><b>Compilação gerada</b><span>Todos os melhores momentos em sequência</span></div>
-      <a href="${job.compilationUrl}" download>Baixar compilação</a></div>`;
+    bannerEl.innerHTML = "<div class=\"compilation-banner\"><div class=\"left\"><b>Compila\u00e7\u00e3o gerada</b><span>Todos os melhores momentos em sequ\u00eancia</span></div>" +
+      "<a href=\"" + job.compilationUrl + "\" download>Baixar compila\u00e7\u00e3o</a></div>";
   }
-
   resultsCard.style.display = "block";
-  if (!job.clips.length) {
-    clipsEl.innerHTML = '<p style="color:var(--ink-dim)">Nenhum clipe gerado.</p>';
-    return;
-  }
-
+  if (!job.clips.length) { clipsEl.innerHTML = "<p style=\"color:var(--ink-dim)\">Nenhum clipe gerado.</p>"; return; }
   job.clips.forEach((clip, idx) => {
-    const dur      = (clip.endSec - clip.startSec).toFixed(1);
-    const scoreTag = clip.score != null ? `<span class="clip-score">${clip.score}</span>` : "";
-    const src      = clip.source === "ia" ? "IA" : "áudio";
-    const div      = document.createElement("div");
-    div.className  = "clip";
-    div.innerHTML  = `
-      <video src="${clip.url}" controls preload="metadata"></video>
-      <div class="clip-meta">
-        ${clip.startSec.toFixed(1)}s – ${clip.endSec.toFixed(1)}s &nbsp;·&nbsp; ${dur}s${scoreTag}<br/>
-        <span style="font-size:11px;text-transform:uppercase;">${src}</span><br/>
-        ${clip.reason}<br/>
-        <a href="${clip.url}" download>baixar</a>
-      </div>
-      <div class="feedback-row">
-        <button class="fb-btn" data-rating="great" onclick="sendFeedback('${job.id}',${idx},'great',this.closest('.clip'))">👍 Ótimo</button>
-        <button class="fb-btn" data-rating="good"  onclick="sendFeedback('${job.id}',${idx},'good', this.closest('.clip'))">👌 Bom</button>
-        <button class="fb-btn" data-rating="bad"   onclick="sendFeedback('${job.id}',${idx},'bad',  this.closest('.clip'))">👎 Ruim</button>
-      </div>
-      ${buildFeedbackDetail(job.id, idx)}`;
+    const dur = (clip.endSec - clip.startSec).toFixed(1);
+    const scoreTag = clip.score != null ? "<span class=\"clip-score\">" + clip.score + "</span>" : "";
+    const src = clip.source === "ia" ? "IA" : "\u00e1udio";
+    const div = document.createElement("div"); div.className = "clip";
+    div.innerHTML = "<video src=\"" + clip.url + "\" controls preload=\"metadata\"></video>" +
+      "<div class=\"clip-meta\">" + clip.startSec.toFixed(1) + "s \u2013 " + clip.endSec.toFixed(1) + "s &nbsp;\u00b7&nbsp; " + dur + "s" + scoreTag + "<br/>" +
+      "<span style=\"font-size:11px;text-transform:uppercase;\">" + src + "</span><br/>" +
+      clip.reason + "<br/><a href=\"" + clip.url + "\" download>baixar</a></div>" +
+      "<div class=\"feedback-row\"><button class=\"fb-btn\" data-rating=\"great\" onclick=\"sendFeedback('" + job.id + "'," + idx + ",'great',this.closest('.clip'))\">\ud83d\udc4d \u00d3timo</button>" +
+      "<button class=\"fb-btn\" data-rating=\"good\" onclick=\"sendFeedback('" + job.id + "'," + idx + ",'good',this.closest('.clip'))\">\ud83d\udc4c Bom</button>" +
+      "<button class=\"fb-btn\" data-rating=\"bad\" onclick=\"sendFeedback('" + job.id + "'," + idx + ",'bad',this.closest('.clip'))\">\ud83d\udc4e Ruim</button></div>" +
+      buildFeedbackDetail(job.id, idx);
     clipsEl.appendChild(div);
   });
 }
 
-// ════════════════════════════════════════════════════════════════════════════
-//  CREATOR PROFILES
-// ════════════════════════════════════════════════════════════════════════════
 async function loadProfiles() {
   try {
     const profiles = await fetch("/api/profiles").then(r => r.json());
     const sel = document.getElementById("profileSelect");
-    sel.innerHTML = '<option value="">Nenhum</option>';
+    sel.innerHTML = "<option value=\"\">Nenhum</option>";
     for (const p of profiles)
-      sel.innerHTML += `<option value="${p.id}">${p.name} (${p.preferredGame}, ${p.clipDurationSec}s)</option>`;
-
+      sel.innerHTML += "<option value=\"" + p.id + "\">" + p.name + " (" + p.preferredGame + ", " + p.clipDurationSec + "s)</option>";
     const list = document.getElementById("profiles-list");
     list.innerHTML = "";
-    if (!profiles.length) {
-      list.innerHTML = '<p style="color:var(--ink-dim);font-size:13px;">Nenhum perfil criado.</p>';
-      return;
-    }
+    if (!profiles.length) { list.innerHTML = "<p style=\"color:var(--ink-dim);font-size:13px;\">Nenhum perfil criado.</p>"; return; }
     for (const p of profiles) {
       const row = document.createElement("div");
       row.style.cssText = "display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--surface-2);border-radius:8px;";
-      row.innerHTML = `<div><b style="font-size:14px;">${p.name}</b><br/><span style="font-size:12px;color:var(--ink-dim);">${p.preferredGame} · ${p.clipDurationSec}s · ${p.notes||"sem notas"}</span></div>
-        <button onclick="deleteProfile('${p.id}')" style="background:none;border:1px solid var(--line);color:var(--ink-dim);border-radius:6px;padding:4px 10px;cursor:pointer;font-size:12px;">Excluir</button>`;
+      row.innerHTML = "<div><b style=\"font-size:14px;\">" + p.name + "</b><br/><span style=\"font-size:12px;color:var(--ink-dim);\">" + p.preferredGame + " \u00b7 " + p.clipDurationSec + "s \u00b7 " + (p.notes||"sem notas") + "</span></div>" +
+        "<button onclick=\"deleteProfile('" + p.id + "')\" style=\"background:none;border:1px solid var(--line);color:var(--ink-dim);border-radius:6px;padding:4px 10px;cursor:pointer;font-size:12px;\">Excluir</button>";
       list.appendChild(row);
     }
   } catch(e) { console.warn("profiles err", e); }
@@ -1364,14 +1219,9 @@ async function saveProfile() {
   try {
     await fetch("/api/profiles", {
       method:"POST", headers:{"content-type":"application/json"},
-      body: JSON.stringify({
-        name, preferredGame: document.getElementById("pf-game").value,
-        clipDurationSec: +document.getElementById("pf-dur").value,
-        audioSensitivity: 1, notes: document.getElementById("pf-notes").value,
-      }),
+      body: JSON.stringify({ name, preferredGame: document.getElementById("pf-game").value, clipDurationSec: +document.getElementById("pf-dur").value, audioSensitivity: 1, notes: document.getElementById("pf-notes").value }),
     });
-    closeCreateProfile();
-    loadProfiles();
+    closeCreateProfile(); loadProfiles();
   } catch(e) { alert("Erro ao salvar: " + e.message); }
 }
 
@@ -1382,6 +1232,95 @@ async function deleteProfile(id) {
 }
 
 loadProfiles();
+
+// BAESH
+let baeshJobId = null, baeshPollInterval = null, baeshLastLogLen = 0;
+const baeshLogEl = document.getElementById("baesh-log");
+
+function baeshLogLine(text, cls) {
+  baeshLogEl.classList.add("show");
+  const span = document.createElement("div");
+  if (cls) span.className = cls;
+  span.textContent = text;
+  baeshLogEl.appendChild(span); baeshLogEl.scrollTop = baeshLogEl.scrollHeight;
+}
+
+document.getElementById("baesh-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const form = e.currentTarget;
+  const videoFile = document.getElementById("baesh-video-input").files[0];
+  if (!videoFile) { alert("Selecione um arquivo de v\u00eddeo."); return; }
+  baeshLogEl.innerHTML = "";
+  document.getElementById("baesh-results").style.display = "none";
+  form.querySelector("button.run").disabled = true;
+  const fd = new FormData();
+  fd.append("video",       videoFile);
+  fd.append("sensitivity", document.getElementById("baesh-sensitivity").value);
+  fd.append("minBlurSec",  document.getElementById("baesh-min-blur").value);
+  fd.append("sampleFps",   document.getElementById("baesh-sample-fps").value);
+  baeshLogLine("Enviando v\u00eddeo...");
+  try {
+    const res  = await fetch("/api/clients/baesh/jobs", { method:"POST", body:fd });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Falha ao criar job.");
+    baeshJobId = data.jobId; baeshLastLogLen = 0;
+    baeshPollInterval = setInterval(pollBaeshJob, 1500);
+  } catch (err) {
+    baeshLogLine("Erro: " + err.message, "err");
+    form.querySelector("button.run").disabled = false;
+  }
+});
+
+async function pollBaeshJob() {
+  if (!baeshJobId) return;
+  try {
+    const res = await fetch("/api/jobs/" + baeshJobId);
+    const job = await res.json();
+    for (let i = baeshLastLogLen; i < job.log.length; i++) baeshLogLine(job.log[i]);
+    baeshLastLogLen = job.log.length;
+    if (job.status === "done") {
+      clearInterval(baeshPollInterval); baeshPollInterval = null;
+      baeshLogLine("Concluu\u00eddo!", "ok");
+      document.getElementById("baesh-form").querySelector("button.run").disabled = false;
+      renderBaeshResults(job);
+    } else if (job.status === "error") {
+      clearInterval(baeshPollInterval); baeshPollInterval = null;
+      baeshLogLine("Erro: " + job.error, "err");
+      document.getElementById("baesh-form").querySelector("button.run").disabled = false;
+    }
+  } catch(e) { console.warn("baesh poll err", e); }
+}
+
+function renderBaeshResults(job) {
+  const clip = job.clips[0]; if (!clip) return;
+  document.getElementById("baesh-output-video").src = clip.url;
+  const dlBtn = document.getElementById("baesh-download-btn");
+  dlBtn.href = clip.url; dlBtn.download = "baesh_output.mp4";
+  const cr = job.clientResult || {};
+  const orig = cr.originalDurationSec ?? 0, out = cr.outputDurationSec ?? 0;
+  const removed = cr.totalRemovedSec ?? 0, segs = (cr.removedSegments ?? []).length;
+  document.getElementById("baesh-summary-grid").innerHTML =
+    "<div class=\"baesh-stat\"><div class=\"stat-label\">Dura\u00e7\u00e3o original</div><div class=\"stat-value\">" + orig.toFixed(1) + "s</div></div>" +
+    "<div class=\"baesh-stat\"><div class=\"stat-label\">Dura\u00e7\u00e3o final</div><div class=\"stat-value\">" + out.toFixed(1) + "s</div></div>" +
+    "<div class=\"baesh-stat\"><div class=\"stat-label\">Tempo removido</div><div class=\"stat-value\">" + removed.toFixed(1) + "s</div></div>" +
+    "<div class=\"baesh-stat\"><div class=\"stat-label\">Trechos removidos</div><div class=\"stat-value\">" + segs + "</div></div>";
+  const removedSegs = cr.removedSegments ?? [];
+  if (removedSegs.length > 0) {
+    document.getElementById("baesh-segments-tbody").innerHTML = removedSegs.map((seg, i) =>
+      "<tr><td>" + (i+1) + "</td><td>" + seg.startSec.toFixed(2) + "s</td><td>" + seg.endSec.toFixed(2) + "s</td><td>" + seg.durationSec.toFixed(2) + "s</td><td>" + seg.avgScore.toFixed(1) + "</td></tr>"
+    ).join("");
+    document.getElementById("baesh-segments-card").style.display = "block";
+  } else {
+    document.getElementById("baesh-segments-card").style.display = "none";
+  }
+  document.getElementById("baesh-results").style.display = "block";
+  document.getElementById("baesh-results").scrollIntoView({ behavior:"smooth" });
+}
+
+document.getElementById("baesh-sensitivity").addEventListener("input", function() {
+  document.getElementById("sensitivity-label").textContent = this.value;
+  document.getElementById("sensitivity-val").textContent   = this.value;
+});
 </script>
 </body>
 </html>
