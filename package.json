@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && cp -r src/clients/baesh/ai dist/src/clients/baesh/",
     "dev": "tsx watch src/server.ts",
     "start": "node dist/src/server.js",
     "inspect-molduras": "tsx src/lib/inspectMolduras.ts",

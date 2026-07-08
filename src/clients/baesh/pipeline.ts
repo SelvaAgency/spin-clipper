@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
-import { run, probe } from "../../src/lib/ffmpegUtils.js";
+import { fileURLToPath } from "node:url";
+import { run, probe } from "../../lib/ffmpegUtils.js";
 
 export interface BaeshInput {
   jobId: string;
@@ -39,7 +40,7 @@ export async function runBaeshPipeline(input: BaeshInput): Promise<BaeshResult> 
   const threshold    = Math.round(200 - (sensitivity / 100) * 180);
   const sampleFps    = input.sampleFps  ?? 2;
   const minBlurSec   = input.minBlurSec ?? 0.5;
-  const scriptPath   = path.resolve("clients/baesh/ai/blur_detect.py");
+  const scriptPath   = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "ai/blur_detect.py");
 
   log(`Analisando desfoque (sensibilidade=${sensitivity}, limiar=${threshold}, amostragem=${sampleFps}fps)...`);
 

@@ -13,7 +13,7 @@ import { saveFeedback, getAllFeedback, getFeedbackByJob, getFeedbackStats } from
 import {
   createProfile, getProfile, listProfiles, updateProfile, deleteProfile,
 } from "./lib/creatorProfile.js";
-import { runBaeshPipeline, type BaeshInput } from "../clients/baesh/pipeline.js";
+import { runBaeshPipeline, type BaeshInput } from "./clients/baesh/pipeline.js";
 
 // ── Helpers de verificação de dependências ────────────────────────────────────
 async function checkExists(cmd: string, args: string[]): Promise<boolean> {

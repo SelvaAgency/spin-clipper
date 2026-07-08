@@ -11,5 +11,5 @@
     "resolveJsonModule": true,
     "declaration": false
   },
-  "include": ["src", "scripts", "clients"]
+  "include": ["src", "scripts"]
 }
