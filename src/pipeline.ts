@@ -26,6 +26,7 @@ import {
   type ApprovalResponse,
   type CaptionGroup,
 } from "./lib/jobStore.js";
+import { computeReplayScore } from "./core/replayScore/engine.js";
 
 export interface PipelineInput {
   jobId: string;
@@ -462,6 +463,24 @@ export async function runPipeline(input: PipelineInput): Promise<PipelineResult>
       ` score=${h.score ?? "?"} fonte=${h.source} — ${h.reason}`
     )
   );
+
+  // ─── 7b. Replay Score ─────────────────────────────────────────────────────────
+  try {
+    const srcInfo = await probe(analysisSource);
+    const replayScore = computeReplayScore({
+      jobId: input.jobId,
+      videoDurationSec: srcInfo.durationSec,
+      audioCandidates: rawCandidates,
+      highlights: highlights.map(h => ({
+        startSec: h.startSec,
+        endSec:   h.endSec,
+        score:    h.score,
+        reason:   h.reason,
+        source:   h.source,
+      })),
+    });
+    updateJob(input.jobId, { replayScore });
+  } catch { /* não bloqueia o pipeline se falhar */ }
 
   // ─── 8. Corte + composição dos clipes ────────────────────────────────────────
   const composedClips: Array<{

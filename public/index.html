@@ -104,12 +104,6 @@ canvas.region-canvas{display:block;cursor:default;}
 .clip-meta{padding:10px 12px;font-size:12.5px;color:var(--ink-dim);line-height:1.5;}
 .clip-meta a{color:var(--magenta);text-decoration:none;font-weight:600;}
 .clip-score{display:inline-block;background:rgba(123,79,214,.2);color:var(--violet);border-radius:4px;padding:2px 6px;font-size:11px;font-weight:700;margin-left:4px;}
-.feedback-row{display:flex;gap:6px;padding:8px 12px 10px;border-top:1px solid var(--line);}
-.fb-btn{flex:1;padding:7px 4px;border:1px solid var(--line);border-radius:8px;background:none;color:var(--ink-dim);font-size:13px;cursor:pointer;font-family:var(--sans);transition:all .15s;text-align:center;}
-.fb-btn:hover{border-color:var(--violet);}
-.fb-btn.active-great{background:rgba(61,232,154,.15);border-color:var(--green);color:var(--green);}
-.fb-btn.active-good{background:rgba(123,79,214,.15);border-color:var(--violet);color:var(--violet);}
-.fb-btn.active-bad{background:rgba(255,77,106,.15);border-color:var(--red);color:var(--red);}
 .compilation-banner{background:linear-gradient(135deg,rgba(123,79,214,.15),rgba(232,65,140,.10));border:1px solid var(--violet);border-radius:12px;padding:18px 22px;margin-top:16px;display:flex;align-items:center;justify-content:space-between;gap:12px;}
 .compilation-banner .left b{color:var(--ink);display:block;margin-bottom:2px;}
 .compilation-banner .left span{color:var(--ink-dim);font-size:13px;}
@@ -212,6 +206,32 @@ canvas.region-canvas{display:block;cursor:default;}
 .baesh-approval-stat b{color:var(--ink);}
 .baesh-render-btn{padding:13px 28px;background:linear-gradient(135deg,#00b894,#00cec9);border:none;border-radius:10px;color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:var(--sans);transition:opacity .15s;}
 .baesh-render-btn:disabled{opacity:.4;cursor:not-allowed;}
+/* ── Replay Score ────────────────────────────────────────────────────────── */
+.replay-score-section{margin-bottom:20px;}
+.replay-score-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.replay-score-label{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-dim);font-weight:700;}
+canvas.rs-canvas{width:100%;height:80px;border-radius:8px;background:#0c0716;display:block;cursor:crosshair;}
+.rs-markers-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;}
+.rs-marker{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--ink-dim);background:var(--surface-2);border-radius:20px;padding:2px 8px;border:1px solid var(--line);cursor:pointer;white-space:nowrap;}
+.rs-marker:hover{border-color:var(--ink-dim);}
+.rs-tooltip{position:fixed;background:#1b1130;border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:12px;color:var(--ink);pointer-events:none;z-index:9999;display:none;max-width:220px;line-height:1.4;}
+/* ── Feedback ratings (11 options) ──────────────────────────────────────── */
+.fb-ratings{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;padding:10px 12px;border-top:1px solid var(--line);}
+.fb-rate-btn{padding:6px 4px;border:1px solid var(--line);border-radius:7px;background:none;color:var(--ink-dim);font-size:12px;cursor:pointer;font-family:var(--sans);transition:all .13s;text-align:center;line-height:1.2;}
+.fb-rate-btn:hover{border-color:var(--violet);color:var(--ink);}
+.fb-rate-btn.active{border-color:var(--violet);background:rgba(123,79,214,.18);color:var(--ink);}
+.fb-rate-btn.pos{}.fb-rate-btn.pos.active{border-color:var(--green);background:rgba(61,232,154,.15);color:var(--green);}
+.fb-rate-btn.neg.active{border-color:var(--red);background:rgba(255,77,106,.12);color:var(--red);}
+.fb-free-wrap{padding:0 12px 12px;display:none;border-top:1px solid var(--line);background:var(--surface-3);}
+.fb-free-wrap.open{display:block;}
+.fb-free-wrap textarea{width:100%;margin-top:8px;background:var(--surface-2);border:1px solid var(--line);border-radius:7px;padding:8px 10px;color:var(--ink);font-size:13px;font-family:var(--sans);resize:vertical;min-height:56px;}
+.fb-free-wrap textarea:focus{outline:none;border-color:var(--violet);}
+.fb-save-row{display:flex;align-items:center;justify-content:space-between;margin-top:6px;}
+.fb-saved-badge{font-size:12px;color:var(--green);}
+.fb-save-btn{padding:5px 14px;border:1px solid var(--violet);border-radius:7px;background:rgba(123,79,214,.15);color:var(--violet);font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans);}
+/* ── Quick Clip ──────────────────────────────────────────────────────────── */
+.qc-grid{display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px;margin-bottom:14px;}
+.qc-presets{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;}
 /* Duration presets (Baesh) */
 .baesh-dur-presets{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;}
 .baesh-dur-btn{padding:7px 14px;border:1.5px solid var(--line);border-radius:8px;background:none;color:var(--ink-dim);font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans);transition:all .13s;}
@@ -464,7 +484,39 @@ canvas.region-canvas{display:block;cursor:default;}
   <div class="card" id="results-card" style="display:none;">
     <h2>Clipes gerados</h2>
     <div id="compilation-banner"></div>
+
+    <!-- Replay Score graph -->
+    <div class="replay-score-section" id="replay-score-section" style="display:none;">
+      <div class="replay-score-header">
+        <span class="replay-score-label">Replay Score</span>
+        <span style="font-size:11px;color:var(--ink-dim);">intensidade ao longo do v&iacute;deo &mdash; clique para detalhes</span>
+      </div>
+      <canvas class="rs-canvas" id="rs-canvas" height="80"></canvas>
+      <div class="rs-markers-row" id="rs-markers-row"></div>
+    </div>
+
     <div class="clips" id="clips"></div>
+  </div>
+
+  <!-- Quick Clip section -->
+  <div class="card" id="quick-clip-card">
+    <h2>&#9889; Clip R&aacute;pido</h2>
+    <p style="font-size:13px;color:var(--ink-dim);margin:0 0 14px;line-height:1.5;">Viu um momento ao vivo? Cola a URL + o timestamp e gera o clip direto. Sem processar o VOD inteiro.</p>
+    <div class="url-input-wrap" style="margin-bottom:12px;">
+      <input type="text" id="qc-url" placeholder="https://twitch.tv/videos/... ou youtube.com/..." />
+    </div>
+    <div class="qc-grid">
+      <div class="field" style="margin-top:0;"><label>Timestamp do momento (segundos)</label><input type="number" id="qc-center" min="0" placeholder="ex: 1540" style="width:100%;" /></div>
+      <div class="field" style="margin-top:0;"><label>Contexto antes (s)</label><input type="number" id="qc-before" min="0" max="120" value="20" style="width:100%;" /></div>
+      <div class="field" style="margin-top:0;"><label>Contexto depois (s)</label><input type="number" id="qc-after" min="0" max="120" value="15" style="width:100%;" /></div>
+    </div>
+    <div class="qc-presets">
+      <button type="button" class="preset-btn" onclick="setQcPreset(15,15)">&#177;15s</button>
+      <button type="button" class="preset-btn" onclick="setQcPreset(20,15)">20s antes / 15s depois</button>
+      <button type="button" class="preset-btn" onclick="setQcPreset(30,10)">30s antes / 10s depois</button>
+      <button type="button" class="preset-btn" onclick="setQcPreset(60,20)">1min antes / 20s depois</button>
+    </div>
+    <button type="button" class="run" style="width:auto;padding:12px 28px;" onclick="submitQuickClip()">&#9889; Gerar clip r&aacute;pido</button>
   </div>
 </div>
 </div>
@@ -825,6 +877,8 @@ async function startJob() {
   document.getElementById("results-card").style.display = "none";
   document.getElementById("clips").innerHTML = "";
   document.getElementById("compilation-banner").innerHTML = "";
+  document.getElementById("replay-score-section").style.display = "none";
+  document.getElementById("rs-markers-row").innerHTML = "";
   hideAllApprovals();
   const form = document.getElementById("form");
   form.querySelector("button.run").disabled = true;
@@ -1136,7 +1190,7 @@ document.getElementById("comp-adjust-mesa").addEventListener("click", async () =
 async function loadDefaults() {
   try {
     const res  = await fetch("/api/defaults"), data = await res.json();
-    if (data.spinFinal) {
+    if (data.defaultOutro) {
       document.getElementById("outro-default-row").style.display = "";
       document.getElementById("outro-upload-wrap").style.display = "none";
     }
@@ -1154,44 +1208,45 @@ document.getElementById("opt-captions").addEventListener("change", function() {
   if (!this.checked) document.getElementById("opt-censor").checked = false;
 });
 
-const FEEDBACK_TAGS = [
-  { id:"wrong-moment",    label:"Momento errado",           pos:false },
-  { id:"wrong-dealer",    label:"Dealer incorreto",         pos:false },
-  { id:"bad-crop",        label:"Crop ruim",                pos:false },
-  { id:"bad-duration",    label:"Dura\u00e7\u00e3o ruim", pos:false },
-  { id:"started-late",    label:"Come\u00e7ou tarde",      pos:false },
-  { id:"ended-early",     label:"Terminou cedo",            pos:false },
-  { id:"missed-reaction", label:"Perdeu a rea\u00e7\u00e3o", pos:false },
-  { id:"not-best",        label:"Melhor momento ignorado",  pos:false },
-  { id:"great-cut",       label:"Excelente corte",          pos:true  },
-  { id:"great-crop",      label:"Excelente enquadramento",  pos:true  },
-  { id:"great-timing",    label:"Timing perfeito",          pos:true  },
+const FEEDBACK_RATINGS = [
+  { id:"excellent",         label:"Excelente",       pos:true  },
+  { id:"good",              label:"Bom",              pos:true  },
+  { id:"bad",               label:"Ruim",             pos:false },
+  { id:"too-short",         label:"Muito curto",      pos:false },
+  { id:"too-long",          label:"Muito longo",      pos:false },
+  { id:"cut-early",         label:"Cortou cedo",      pos:false },
+  { id:"cut-late",          label:"Cortou tarde",     pos:false },
+  { id:"not-important",     label:"Sem import\u00e2ncia", pos:false },
+  { id:"weak-reaction",     label:"Rea\u00e7\u00e3o fraca", pos:false },
+  { id:"small-win",         label:"Ganho pequeno",    pos:false },
+  { id:"needs-more-context",label:"+ contexto",       pos:false },
 ];
 
-async function sendFeedback(jobId, clipIndex, rating, card) {
+async function sendFeedback(jobId, clipIndex, rating, btn) {
+  const card = btn.closest(".clip");
+  card.querySelectorAll(".fb-rate-btn").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  const freeWrap = card.querySelector(".fb-free-wrap");
+  if (freeWrap) freeWrap.classList.add("open");
   try {
     await fetch("/api/jobs/" + jobId + "/feedback", {
       method:"POST", headers:{"content-type":"application/json"},
       body: JSON.stringify({ clipIndex, rating }),
     });
-    card.querySelectorAll(".fb-btn").forEach(b => b.classList.remove("active-great","active-good","active-bad"));
-    card.querySelector("[data-rating=\"" + rating + "\"]")?.classList.add("active-" + rating);
-    card.querySelector(".feedback-detail")?.classList.add("open");
   } catch(e) { console.warn("feedback err", e); }
 }
 
-async function saveFeedbackDetail(jobId, clipIndex, detailEl) {
-  const tags    = [...detailEl.querySelectorAll(".chip.active")].map(c => c.dataset.tag);
-  const comment = detailEl.querySelector(".fb-textarea")?.value.trim() || "";
-  const saveBtn = detailEl.querySelector(".fb-save-btn");
+async function saveFeedbackComment(jobId, clipIndex, freeWrapEl) {
+  const comment = freeWrapEl.querySelector("textarea")?.value.trim() || "";
+  const saveBtn = freeWrapEl.querySelector(".fb-save-btn");
   if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = "Salvando..."; }
   try {
     await fetch("/api/jobs/" + jobId + "/feedback", {
       method:"POST", headers:{"content-type":"application/json"},
-      body: JSON.stringify({ clipIndex, tags, comment }),
+      body: JSON.stringify({ clipIndex, comment }),
     });
-    const badge = detailEl.querySelector(".fb-saved-badge");
-    if (badge) badge.textContent = "\u2713 Feedback salvo";
+    const badge = freeWrapEl.querySelector(".fb-saved-badge");
+    if (badge) badge.textContent = "\u2713 Salvo";
     if (saveBtn) saveBtn.style.display = "none";
   } catch(e) {
     if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = "Salvar"; }
@@ -1199,18 +1254,17 @@ async function saveFeedbackDetail(jobId, clipIndex, detailEl) {
   }
 }
 
-function buildFeedbackDetail(jobId, idx) {
-  const negChips = FEEDBACK_TAGS.filter(t => !t.pos).map(t =>
-    "<button class=\"chip\" data-tag=\"" + t.id + "\" onclick=\"this.classList.toggle('active')\">" + t.label + "</button>").join("");
-  const posChips = FEEDBACK_TAGS.filter(t =>  t.pos).map(t =>
-    "<button class=\"chip chip-pos\" data-tag=\"" + t.id + "\" onclick=\"this.classList.toggle('active')\">" + t.label + "</button>").join("");
-  return "<div class=\"feedback-detail\" id=\"fbdetail-" + jobId + "-" + idx + "\">" +
-    "<p class=\"fb-prompt\">O que voc\u00ea achou deste corte? (opcional)</p>" +
-    "<div class=\"chip-section\"><div class=\"chip-section-label\">Pontos a melhorar</div><div class=\"chip-row\">" + negChips + "</div></div>" +
-    "<div class=\"chip-section\"><div class=\"chip-section-label\">Pontos positivos</div><div class=\"chip-row\">" + posChips + "</div></div>" +
-    "<textarea class=\"fb-textarea\" placeholder=\"Coment\u00e1rio livre...\"></textarea>" +
+function buildFeedbackRow(jobId, idx) {
+  const btns = FEEDBACK_RATINGS.map(r =>
+    "<button class=\"fb-rate-btn" + (r.pos ? " pos" : " neg") + "\" data-rating=\"" + r.id +
+    "\" onclick=\"sendFeedback('" + jobId + "'," + idx + ",'" + r.id + "',this)\">" + r.label + "</button>"
+  ).join("");
+  const freeSection =
+    "<div class=\"fb-free-wrap\" id=\"fbfree-" + jobId + "-" + idx + "\">" +
+    "<textarea placeholder=\"Coment\u00e1rio livre (opcional)...\"></textarea>" +
     "<div class=\"fb-save-row\"><span class=\"fb-saved-badge\"></span>" +
-    "<button class=\"fb-save-btn\" onclick=\"saveFeedbackDetail('" + jobId + "'," + idx + ",this.closest('.feedback-detail'))\">Salvar detalhes</button></div></div>";
+    "<button class=\"fb-save-btn\" onclick=\"saveFeedbackComment('" + jobId + "'," + idx + ",this.closest('.fb-free-wrap'))\">Salvar</button></div></div>";
+  return "<div class=\"fb-ratings\">" + btns + "</div>" + freeSection;
 }
 
 function showResults(job) {
@@ -1232,12 +1286,119 @@ function showResults(job) {
       "<div class=\"clip-meta\">" + clip.startSec.toFixed(1) + "s \u2013 " + clip.endSec.toFixed(1) + "s &nbsp;\u00b7&nbsp; " + dur + "s" + scoreTag + "<br/>" +
       "<span style=\"font-size:11px;text-transform:uppercase;\">" + src + "</span><br/>" +
       clip.reason + "<br/><a href=\"" + clip.url + "\" download>baixar</a></div>" +
-      "<div class=\"feedback-row\"><button class=\"fb-btn\" data-rating=\"great\" onclick=\"sendFeedback('" + job.id + "'," + idx + ",'great',this.closest('.clip'))\">\ud83d\udc4d \u00d3timo</button>" +
-      "<button class=\"fb-btn\" data-rating=\"good\" onclick=\"sendFeedback('" + job.id + "'," + idx + ",'good',this.closest('.clip'))\">\ud83d\udc4c Bom</button>" +
-      "<button class=\"fb-btn\" data-rating=\"bad\" onclick=\"sendFeedback('" + job.id + "'," + idx + ",'bad',this.closest('.clip'))\">\ud83d\udc4e Ruim</button></div>" +
-      buildFeedbackDetail(job.id, idx);
+      buildFeedbackRow(job.id, idx);
     clipsEl.appendChild(div);
   });
+
+  // Fetch and render Replay Score if available
+  fetch("/api/jobs/" + job.id + "/replay-score")
+    .then(r => r.ok ? r.json() : null)
+    .then(rs => { if (rs) renderReplayScore(rs, job.clips); })
+    .catch(() => {});
+}
+
+function renderReplayScore(rs, clips) {
+  const section = document.getElementById("replay-score-section");
+  const canvas  = document.getElementById("rs-canvas");
+  const markersRow = document.getElementById("rs-markers-row");
+  if (!section || !canvas || !rs.frames || !rs.frames.length) return;
+  section.style.display = "";
+
+  const W = canvas.offsetWidth || 800;
+  const H = 80;
+  const DPR = window.devicePixelRatio || 1;
+  canvas.width  = W * DPR;
+  canvas.height = H * DPR;
+  canvas.style.width  = W + "px";
+  canvas.style.height = H + "px";
+  const ctx = canvas.getContext("2d");
+  ctx.scale(DPR, DPR);
+
+  const n = rs.frames.length;
+  const toX = t => (t / n) * W;
+  const toY = s => H - (s / 100) * (H - 8) - 4;
+
+  // Background gradient fill under curve
+  const grad = ctx.createLinearGradient(0, 0, 0, H);
+  grad.addColorStop(0, "rgba(123,79,214,0.45)");
+  grad.addColorStop(1, "rgba(123,79,214,0.02)");
+
+  ctx.beginPath();
+  ctx.moveTo(0, H);
+  for (let i = 0; i < n; i++) ctx.lineTo(toX(i), toY(rs.frames[i].score));
+  ctx.lineTo(W, H);
+  ctx.closePath();
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  // Curve line
+  ctx.beginPath();
+  ctx.moveTo(toX(0), toY(rs.frames[0].score));
+  for (let i = 1; i < n; i++) ctx.lineTo(toX(i), toY(rs.frames[i].score));
+  ctx.strokeStyle = "#a07fde";
+  ctx.lineWidth   = 1.5;
+  ctx.stroke();
+
+  // Clip highlight bands
+  for (const clip of (clips || [])) {
+    if (clip.startSec == null) continue;
+    const x1 = toX(clip.startSec), x2 = toX(clip.endSec);
+    ctx.fillStyle = "rgba(232,65,140,0.12)";
+    ctx.fillRect(x1, 0, x2 - x1, H);
+    ctx.fillStyle = "rgba(232,65,140,0.6)";
+    ctx.fillRect(x1, 0, 1.5, H);
+    ctx.fillRect(x2, 0, 1.5, H);
+  }
+
+  // Marker dots
+  const seenMarkers = [];
+  for (const frame of rs.frames) {
+    for (const m of (frame.markers || [])) {
+      const x = toX(m.timeSec), y = toY(rs.frames[Math.round(m.timeSec)]?.score ?? 50);
+      ctx.beginPath();
+      ctx.arc(x, y, 4, 0, Math.PI * 2);
+      ctx.fillStyle = m.color || "#fff";
+      ctx.fill();
+      if (!seenMarkers.find(s => s.emoji === m.emoji)) seenMarkers.push(m);
+    }
+  }
+
+  // Marker legend chips
+  markersRow.innerHTML = "";
+  const uniqueMarkers = Object.values(seenMarkers.reduce((acc, m) => (acc[m.emoji] = m, acc), {}));
+  for (const m of uniqueMarkers) {
+    const chip = document.createElement("div");
+    chip.className = "rs-marker";
+    chip.innerHTML = m.emoji + " <span>" + m.type.replace("-", " ") + "</span>";
+    chip.style.borderColor = m.color;
+    markersRow.appendChild(chip);
+  }
+
+  // Tooltip on hover
+  const tooltip = document.getElementById("rs-tooltip") || (() => {
+    const t = document.createElement("div");
+    t.id = "rs-tooltip"; t.className = "rs-tooltip";
+    document.body.appendChild(t); return t;
+  })();
+  canvas.onmousemove = (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const t = Math.round((x / W) * n);
+    const frame = rs.frames[Math.min(t, n - 1)];
+    if (!frame) return;
+    const mm = formatTimeSec(frame.timeSec);
+    const markerText = frame.markers?.length ? "<br>" + frame.markers.map(m => m.emoji + " " + m.label).join("<br>") : "";
+    tooltip.innerHTML = "<b>" + mm + "</b> \u2014 score <b>" + frame.score + "</b>" + markerText;
+    tooltip.style.display = "block";
+    tooltip.style.left = (e.clientX + 12) + "px";
+    tooltip.style.top  = (e.clientY - 8)  + "px";
+  };
+  canvas.onmouseleave = () => { tooltip.style.display = "none"; };
+}
+
+function formatTimeSec(s) {
+  const m = Math.floor(s / 60), sec = Math.floor(s % 60);
+  return m + ":" + String(sec).padStart(2, "0");
 }
 
 async function loadProfiles() {
@@ -1284,6 +1445,52 @@ async function deleteProfile(id) {
 }
 
 loadProfiles();
+
+// ── Quick Clip ──────────────────────────────────────────────────────────────
+function setQcPreset(before, after) {
+  document.getElementById("qc-before").value = before;
+  document.getElementById("qc-after").value  = after;
+  document.querySelectorAll("#quick-clip-card .preset-btn").forEach(b => b.classList.remove("active"));
+  event.target.classList.add("active");
+}
+
+async function submitQuickClip() {
+  const url    = document.getElementById("qc-url").value.trim();
+  const center = Number(document.getElementById("qc-center").value);
+  const before = Number(document.getElementById("qc-before").value) || 20;
+  const after  = Number(document.getElementById("qc-after").value)  || 15;
+  if (!url)      { alert("Informe a URL do vídeo."); return; }
+  if (!center && center !== 0) { alert("Informe o timestamp do momento (em segundos)."); return; }
+
+  const startSec = Math.max(0, center - before);
+  const endSec   = center + after;
+
+  const btn = document.querySelector("#quick-clip-card .run");
+  btn.disabled = true; btn.textContent = "Gerando...";
+
+  const fd = new FormData();
+  fd.append("mode",       "url");
+  fd.append("urlLink",    url);
+  fd.append("urlStartSec", String(startSec));
+  fd.append("urlEndSec",   String(endSec));
+  fd.append("maxClips",   "1");
+  fd.append("moldura",    "full");
+
+  try {
+    const res = await fetch("/api/jobs", { method:"POST", body: fd });
+    if (!res.ok) { const e = await res.json(); alert("Erro: " + (e.error || res.status)); return; }
+    const { jobId } = await res.json();
+    currentJobId = jobId;
+    document.getElementById("log").classList.add("show");
+    startPolling(jobId);
+    document.getElementById("results-card").scrollIntoView({ behavior:"smooth" });
+    logLine("Clip Rápido iniciado (" + startSec.toFixed(0) + "s – " + endSec.toFixed(0) + "s)…", "wait");
+  } catch(e) {
+    alert("Erro de rede: " + e.message);
+  } finally {
+    btn.disabled = false; btn.textContent = "⚡ Gerar clip rápido";
+  }
+}
 
 // BAESH
 // \u2500\u2500 Baesh: estado \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500

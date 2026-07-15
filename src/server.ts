@@ -79,8 +79,9 @@ app.use("/clips", express.static(OUTPUT_DIR));
 
 // ─── GET /api/defaults ────────────────────────────────────────────────────────
 app.get("/api/defaults", (_req, res) => {
-  const spinFinalPath = path.resolve("assets/defaults/spin_final.mp4");
-  res.json({ spinFinal: fs.existsSync(spinFinalPath) });
+  const defaultOutroPath = path.resolve("assets/defaults/default_outro.mp4");
+  const legacyPath       = path.resolve("assets/defaults/spin_final.mp4");
+  res.json({ defaultOutro: fs.existsSync(defaultOutroPath) || fs.existsSync(legacyPath) });
 });
 
 // ─── GET /health ──────────────────────────────────────────────────────────────
@@ -185,10 +186,12 @@ app.post(
     updateJob(jobId, { status: "running" });
 
     // Outro: usa o arquivo enviado; se ausente e toggle "usar padrão" ativo,
-    // tenta assets/defaults/spin_final.mp4.
-    const defaultOutroPath = path.resolve("assets/defaults/spin_final.mp4");
+    // tenta default_outro.mp4 com fallback para spin_final.mp4 (nome legado).
+    const _outroNew    = path.resolve("assets/defaults/default_outro.mp4");
+    const _outroLegacy = path.resolve("assets/defaults/spin_final.mp4");
+    const _outroDefault = fs.existsSync(_outroNew) ? _outroNew : fs.existsSync(_outroLegacy) ? _outroLegacy : undefined;
     const resolvedOutroPath = outroFile?.path
-      ?? (useDefaultOutro && fs.existsSync(defaultOutroPath) ? defaultOutroPath : undefined);
+      ?? (useDefaultOutro && _outroDefault ? _outroDefault : undefined);
 
     const pipelineInput: PipelineInput = {
       jobId, mode,
@@ -248,6 +251,51 @@ app.post(
     }
   }
 );
+
+// ─── POST /api/clips/trim — Clip rápido: re-corta clipe existente ───────────
+app.post("/api/clips/trim", async (req, res) => {
+  const { jobId, clipIndex, trimStartSec, trimEndSec } = req.body;
+  if (!jobId || clipIndex == null) return res.status(400).json({ error: "jobId e clipIndex são obrigatórios." });
+
+  const job = getJob(jobId);
+  if (!job) return res.status(404).json({ error: "Job não encontrado." });
+
+  const clip = job.clips[Number(clipIndex)];
+  if (!clip) return res.status(404).json({ error: "Clipe não encontrado." });
+
+  // Resolve path from URL: /clips/{jobId}/{filename} → data/output/{jobId}/{filename}
+  const clipFilename = path.basename(clip.url);
+  const clipPath     = path.join(OUTPUT_DIR, jobId, clipFilename);
+  if (!fs.existsSync(clipPath)) return res.status(404).json({ error: "Arquivo do clipe não encontrado no servidor." });
+
+  const start = Number(trimStartSec ?? 0);
+  const end   = Number(trimEndSec ?? 9999);
+  if (isNaN(start) || isNaN(end) || end <= start) return res.status(400).json({ error: "Intervalo inválido." });
+
+  const outName  = clipFilename.replace(/\.mp4$/, `_trim_${Date.now()}.mp4`);
+  const outPath  = path.join(OUTPUT_DIR, jobId, outName);
+
+  try {
+    await run("ffmpeg", [
+      "-ss", String(start),
+      "-i", clipPath,
+      "-t", String(end - start),
+      "-c", "copy",
+      "-y", outPath,
+    ]);
+    res.json({ url: `/clips/${jobId}/${outName}` });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─── GET /api/jobs/:id/replay-score ──────────────────────────────────────────
+app.get("/api/jobs/:id/replay-score", (req, res) => {
+  const job = getJob(req.params.id);
+  if (!job) return res.status(404).json({ error: "Job não encontrado." });
+  if (!job.replayScore) return res.status(404).json({ error: "Replay Score não disponível para este job." });
+  res.json(job.replayScore);
+});
 
 // ─── POST /api/clients/baesh/jobs — Fase 1: análise ─────────────────────────
 app.post(

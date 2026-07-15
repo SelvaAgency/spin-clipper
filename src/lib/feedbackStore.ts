@@ -2,7 +2,12 @@ import fs from "node:fs";
 import path from "node:path";
 import { v4 as uuid } from "uuid";
 
-export type FeedbackRating = "great" | "good" | "bad";
+export type FeedbackRating =
+  | "excellent" | "good" | "bad"
+  | "too-short" | "too-long"
+  | "cut-early" | "cut-late"
+  | "not-important" | "weak-reaction"
+  | "small-win" | "needs-more-context";
 
 export interface ClipFeedback {
   id: string;
@@ -89,11 +94,18 @@ export function getFeedbackStats() {
     .sort(([, a], [, b]) => b - a)
     .map(([tag, count]) => ({ tag, count }));
 
+  const positiveRatings: FeedbackRating[] = ["excellent", "good"];
+  const negativeRatings: FeedbackRating[] = ["bad", "too-short", "too-long", "cut-early", "cut-late", "not-important", "weak-reaction", "small-win", "needs-more-context"];
+  const ratingCount: Record<string, number> = {};
+  for (const f of list) {
+    if (f.rating) ratingCount[f.rating] = (ratingCount[f.rating] ?? 0) + 1;
+  }
+
   return {
     total:        list.length,
-    great:        list.filter(f => f.rating === "great").length,
-    good:         list.filter(f => f.rating === "good").length,
-    bad:          list.filter(f => f.rating === "bad").length,
+    positive:     list.filter(f => f.rating && positiveRatings.includes(f.rating)).length,
+    negative:     list.filter(f => f.rating && negativeRatings.includes(f.rating)).length,
+    byRating:     ratingCount,
     withComments: list.filter(f => f.comment?.trim()).length,
     withTags:     list.filter(f => f.tags && f.tags.length > 0).length,
     topTags,

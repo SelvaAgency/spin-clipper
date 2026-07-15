@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import type { ReplayScore } from "../core/replayScore/types.js";
 
 export type JobStatus =
   | "queued"
@@ -117,6 +118,8 @@ export interface Job {
   clientId?: string;
   /** client-specific result payload */
   clientResult?: unknown;
+  /** Replay Score time-series computed after highlight selection */
+  replayScore?: ReplayScore;
 }
 
 const STORE_PATH = path.resolve("data/jobs.json");
