@@ -1,5 +1,5 @@
 // Coordenadas extraídas automaticamente do canal alpha dos PNGs reais
-// (assets/molduras/MOLDURA_SPIN.png e MOLDURA_SPIN2.png).
+// (assets/molduras/MOLDURA_CASINO.png e MOLDURA_CASINO2.png).
 // Se a moldura mudar de design, rode `npm run inspect-molduras` para regerar isto.
 
 export interface VideoWindow {
@@ -21,7 +21,7 @@ export interface MolduraConfig {
 export const MOLDURAS: Record<string, MolduraConfig> = {
   split: {
     id: "split",
-    file: "MOLDURA_SPIN.png",
+    file: "MOLDURA_CASINO.png",
     canvasWidth: 1080,
     canvasHeight: 1920,
     windows: [
@@ -33,7 +33,7 @@ export const MOLDURAS: Record<string, MolduraConfig> = {
   },
   full: {
     id: "full",
-    file: "MOLDURA_SPIN2.png",
+    file: "MOLDURA_CASINO2.png",
     canvasWidth: 1080,
     canvasHeight: 1920,
     windows: [

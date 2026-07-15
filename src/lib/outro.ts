@@ -4,7 +4,7 @@ const CANVAS_W = 1080;
 const CANVAS_H = 1920;
 
 /**
- * Junta o clipe com a vinheta final (ex: "spin final.mp4"). Reencoda os dois
+ * Junta o clipe com a vinheta final (outro/end card). Reencoda os dois
  * pro mesmo formato antes de concatenar — concat demuxer exige streams
  * compatíveis, e a vinheta provavelmente tem fps/codec diferente do clipe.
  * Se algum dos dois não tiver áudio (comum em vinhetas só com logo), gera

@@ -252,10 +252,10 @@ canvas.rs-canvas{width:100%;height:80px;border-radius:8px;background:#0c0716;dis
     <h1>Clipper</h1>
     <p class="clients-sub">Selecione o cliente para continuar</p>
     <div class="client-grid">
-      <div class="client-card" onclick="showView('spin')" style="border-color:rgba(123,79,214,.4);">
+      <div class="client-card" onclick="showView('casino')" style="border-color:rgba(123,79,214,.4);">
         <div class="client-card-icon" style="background:rgba(123,79,214,.2);">&#127916;</div>
-        <h3>Spin</h3>
-        <p>Highlights de streaming: detecta rea&ccedil;&otilde;es, recorta, comp&otilde;e moldura, legenda.</p>
+        <h3>Clipper de Casino</h3>
+        <p>Highlights de jogos ao vivo: detecta rea&ccedil;&otilde;es, recorta, comp&otilde;e moldura, legenda.</p>
         <div class="client-arrow" style="color:#7b4fd6;">Acessar <span>&#8594;</span></div>
       </div>
       <div class="client-card" onclick="showView('baesh')" style="border-color:rgba(0,184,148,.4);">
@@ -268,11 +268,11 @@ canvas.rs-canvas{width:100%;height:80px;border-radius:8px;background:#0c0716;dis
   </div>
 </div>
 
-<div id="view-spin" style="display:none;">
+<div id="view-casino" style="display:none;">
 <div class="wrap">
   <button class="back-btn" onclick="showView('clients')">&#8592; Clientes</button>
   <header>
-    <div class="brand">selva agency <b>/</b> spin clipper</div>
+    <div class="brand">selva agency <b>/</b> clipper de casino</div>
     <button class="btn btn-cancel" onclick="openProfilesModal()">Perfis</button>
   </header>
   <h1>Sobe o v&iacute;deo bruto, sai o clipe pronto.</h1>
@@ -330,11 +330,11 @@ canvas.rs-canvas{width:100%;height:80px;border-radius:8px;background:#0c0716;dis
     <div class="check-group" id="outro-default-row" style="display:none;margin-bottom:10px;">
       <label class="check-row">
         <input type="checkbox" id="opt-use-default-outro" checked />
-        <span><b>Utilizar v&iacute;deo final padr&atilde;o</b> (spin_final.mp4)</span>
+        <span><b>Utilizar v&iacute;deo final padr&atilde;o</b> (outro padr&atilde;o)</span>
       </label>
     </div>
     <div id="outro-upload-wrap" class="drop-grid single">
-      <label class="drop" id="drop-outro"><input type="file" name="outro" accept="video/*" /><span class="label">Outro / spin final.mp4</span><span class="hint-inline">opcional &mdash; arraste ou clique</span></label>
+      <label class="drop" id="drop-outro"><input type="file" name="outro" accept="video/*" /><span class="label">Outro / v&iacute;deo final</span><span class="hint-inline">opcional &mdash; arraste ou clique</span></label>
     </div>
 
     <div class="divider"></div>
@@ -647,10 +647,10 @@ canvas.rs-canvas{width:100%;height:80px;border-radius:8px;background:#0c0716;dis
 <script>
 function showView(view) {
   document.getElementById("view-clients").style.display = "none";
-  document.getElementById("view-spin").style.display    = "none";
+  document.getElementById("view-casino").style.display    = "none";
   document.getElementById("view-baesh").style.display   = "none";
   if (view === "clients") document.getElementById("view-clients").style.display = "block";
-  else if (view === "spin") document.getElementById("view-spin").style.display = "block";
+  else if (view === "casino") document.getElementById("view-casino").style.display = "block";
   else if (view === "baesh") document.getElementById("view-baesh").style.display = "block";
   window.scrollTo(0, 0);
 }

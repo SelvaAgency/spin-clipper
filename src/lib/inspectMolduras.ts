@@ -55,7 +55,7 @@ function findWindows(width: number, height: number, alpha: Uint8Array): VideoWin
 }
 
 function main() {
-  for (const file of ["MOLDURA_SPIN.png", "MOLDURA_SPIN2.png"]) {
+  for (const file of ["MOLDURA_CASINO.png", "MOLDURA_CASINO2.png"]) {
     const filePath = path.join(ASSETS_DIR, file);
     const { width, height, alpha } = loadAlpha(filePath);
     const windows = findWindows(width, height, alpha);

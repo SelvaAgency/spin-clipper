@@ -135,13 +135,13 @@ app.post(
     const detectGameCropEnabled      = req.body.detectGameCrop     === "true";
     const useDefaultOutro            = req.body.useDefaultOutro    === "true";
 
-    // Beep: usa arquivo enviado ou escaneia assets/sfx/ por censura_spin*.{mp3,wav}
+    // Beep: usa arquivo enviado ou escaneia assets/sfx/ por censura_casino*.{mp3,wav}
     let resolvedBeepPaths: string[] | undefined;
     if (beepFile?.path) {
       resolvedBeepPaths = [beepFile.path];
     } else if (enableCensorship && fs.existsSync(BEEP_DIR)) {
       const found = fs.readdirSync(BEEP_DIR)
-        .filter((f) => /^censura_spin.*\.(mp3|wav|ogg|aac)$/i.test(f))
+        .filter((f) => /^censura_casino.*\.(mp3|wav|ogg|aac)$/i.test(f))
         .map((f) => path.join(BEEP_DIR, f))
         .sort();
       if (found.length > 0) resolvedBeepPaths = found;
@@ -533,8 +533,8 @@ app.delete("/api/profiles/:id", (req, res) => {
 
 app.get("/api/clients", (_req, res) => {
   res.json([
-    { id: "spin",  name: "Spin",  description: "Highlights de streaming", colors: { primary: "#7b4fd6", accent: "#e8418c" } },
-    { id: "baesh", name: "Baesh", description: "Editor automático de vídeos de produto", colors: { primary: "#00b894", accent: "#00cec9" } },
+    { id: "casino", name: "Clipper de Casino", description: "Highlights de jogos ao vivo: detecta reações, recorta, compõe moldura, legenda.", colors: { primary: "#7b4fd6", accent: "#e8418c" } },
+    { id: "baesh",  name: "Baesh",             description: "Editor automático de vídeos de produto",                                          colors: { primary: "#00b894", accent: "#00cec9" } },
   ]);
 });
 
@@ -542,11 +542,11 @@ app.listen(PORT, async () => {
   console.log(`\nclipper rodando em http://localhost:${PORT}`);
   await printDependencies();
   const beepCount = fs.existsSync(BEEP_DIR)
-    ? fs.readdirSync(BEEP_DIR).filter((f) => /^censura_spin.*\.(mp3|wav|ogg|aac)$/i.test(f)).length
+    ? fs.readdirSync(BEEP_DIR).filter((f) => /^censura_casino.*\.(mp3|wav|ogg|aac)$/i.test(f)).length
     : 0;
   if (beepCount > 0) {
     console.log(`  ✓ ${beepCount} arquivo(s) de beep em assets/sfx/`);
   } else {
-    console.log("  ! nenhum censura_spin*.mp3/wav em assets/sfx/ — censura de áudio desativada");
+    console.log("  ! nenhum censura_casino*.mp3/wav em assets/sfx/ — censura de áudio desativada");
   }
 });
